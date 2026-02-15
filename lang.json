@@ -1,0 +1,50 @@
+{
+    "en": {
+        "l1": "Some checks are being performed...",
+        "l2": "The checks have been completed",
+        "l3": "Nmap Target IP:",
+        "l4": "Scan with Nmap:",
+        "l5": "ADB Target IP:",
+        "l6": "ADB Connect:",
+        "l7": "Connect&Find",
+        "l8": "Input Keyevents",
+        "l9": "Usefull Commands",
+        "l10": "Danger Zone",
+        "l11": "Every Commands",
+        "l12": "Learn ADB",
+        "l13": "Choose IP",
+        "l14": "Finded IPs"
+    },
+    "tr": {
+        "l1": "Bazı gerekli ayarlar kontrol ediliyor...",
+        "l2": "Kontrol etme tamamlandı",
+        "l3": "Nmap Hedef IP:",
+        "l4": "Nmap ile tara:",
+        "l5": "ADB Hedef IP:",
+        "l6": "ADB Bağlan:",
+        "l7": "Bağlan&Bul",
+        "l8": "Tuş Komutlari",
+        "l9": "Kullanisli komutlar",
+        "l10": "Kritik islemler",
+        "l11": "Butun komutlar",
+        "l12": "ADB ogren",
+        "l13": "IP seç",
+        "l14": "Bulunan IP'ler"
+    },
+    "pt": {
+        "l1": "Some checks are being performed...",
+        "l2": "The checks have been completed",
+        "l3": "Nmap Target IP:",
+        "l4": "Scan with Nmap:",
+        "l5": "ADB Target IP:",
+        "l6": "ADB Connect:",
+        "l7": "Connect&Find",
+        "l8": "Input Keyevents",
+        "l9": "Usefull Commands",
+        "l10": "Danger Zone",
+        "l11": "Every Commands",
+        "l12": "Learn ADB",
+        "l13": "Choose IP",
+        "l14": "Finded IPs"
+    }
+}
