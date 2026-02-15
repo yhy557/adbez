@@ -13,7 +13,8 @@
         "l11": "Every Commands",
         "l12": "Learn ADB",
         "l13": "Choose IP",
-        "l14": "Finded IPs"
+        "l14": "Finded IPs",
+        "l15": "Stop"
     },
     "tr": {
         "l1": "Bazı gerekli ayarlar kontrol ediliyor...",
@@ -29,7 +30,8 @@
         "l11": "Butun komutlar",
         "l12": "ADB ogren",
         "l13": "IP seç",
-        "l14": "Bulunan IP'ler"
+        "l14": "Bulunan IP'ler",
+        "l15": "Durdur"
     },
     "pt": {
         "l1": "Some checks are being performed...",
@@ -45,6 +47,7 @@
         "l11": "Every Commands",
         "l12": "Learn ADB",
         "l13": "Choose IP",
-        "l14": "Finded IPs"
+        "l14": "Finded IPs",
+        "l15": "Stop"
     }
 }
