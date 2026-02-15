@@ -148,29 +148,6 @@ def founded_enter_choosed_ip(event, ip):
     if menu_frame_founded.winfo_exists() and menu_frame_founded.winfo_viewable():
         tab1_input2.delete(0, "end")
         tab1_input2.insert(0, ip)
-
-#CATCHING WINDOW SIZE FOR IP MENU
-def catch_size(event):
-    global paned_window, upper_frame
-    if event.widget == root:
-        if menu_frame.winfo_viewable() and menu_frame.winfo_exists():
-            menu_frame.place_forget()
-            print("menu_frame is deleted")
-        else:
-            print("menu_frame is null")
-        if menu_frame_founded.winfo_viewable() and menu_frame_founded.winfo_exists():
-            menu_frame_founded.place_forget()
-            print("menu_frame_founded is deleted")
-        if event.height > 600:
-            print(event.height)
-            paned_window.paneconfigure(upper_frame, minsize=350, height=550)
-            print("Minsize ayarlandı")
-
-#FOR CATCHING CURRENT TAB
-def on_tab_selected(event):
-    selected_tab = event.widget.select()
-    tab_text = event.widget.tab(selected_tab, "text")
-    print(tab_text)
         
 #FOR MESSAGE BALLON, GEMINI GIVED ME THIS CODE------------------
 class Tooltip:
@@ -201,10 +178,30 @@ class Tooltip:
         if self.tooltip_window:
             self.tooltip_window.destroy()
             self.tooltip_window = None
-#---------------------------------------------------------------
-#FOR ERROR MESSAGES---------------------------------------------
 
-#---------------------------------------------------------------
+#CATCHING WINDOW SIZE FOR IP MENU
+def catch_size(event):
+    global paned_window, upper_frame
+    if event.widget == root:
+        if menu_frame.winfo_viewable() and menu_frame.winfo_exists():
+            menu_frame.place_forget()
+            print("menu_frame is deleted")
+        else:
+            print("menu_frame is null")
+        if menu_frame_founded.winfo_viewable() and menu_frame_founded.winfo_exists():
+            menu_frame_founded.place_forget()
+            print("menu_frame_founded is deleted")
+        if event.height > 600:
+            print(event.height)
+            paned_window.paneconfigure(upper_frame, minsize=350, height=550)
+            print("Minsize ayarlandı")
+
+#FOR CATCHING CURRENT TAB
+def on_tab_selected(event):
+    selected_tab = event.widget.select()
+    tab_text = event.widget.tab(selected_tab, "text")
+    print(tab_text)
+
 def scanning_animation(count=0):
     global stopla
     ip = tab1_input.get()
@@ -239,49 +236,6 @@ def add_ips_in_menu(ip):
     #for i in range(ips_length):
     #    texts = f"founded_menu_frame_in{i}"
     #    texts = Button(menu_frame_founded, text=f"{founded_ips[{i}]}")
-
-def update_all_widgets(lang_code):
-    global current_lang
-    current_lang = lang_code
-    new_texts = data[lang_code]
-
-    tabs = [
-        (tab_connect, "l7"),
-        (tab_keyevents, "l9"),
-        (tab_usefull, "l10"),
-        (tab_danger, "l11"),
-        (tab_everything, "l12"),
-        (tab_learn, "l13")
-    ]
-
-    for tab_widget, json_key in tabs:
-        if json_key in new_texts:
-            main_sections.tab(tab_widget, text=new_texts[json_key])
-    
-    try:
-        with open("lang.json", "r", encoding="utf-8") as f:
-            full_data = json.load(f)
-        selected_texts = full_data[lang_code]
-        
-        def recursive_update(container):
-            for widget in container.winfo_children():
-                w_name = str(widget).split('.')[-1]
-                
-                if w_name in selected_texts:
-                    try:
-                        widget.config(text=selected_texts[w_name])
-                    except:
-                        pass
-
-                if widget.winfo_children():
-                    recursive_update(widget)
-
-        recursive_update(root)
-        root.update_idletasks()
-        print(f"Language changed to: {lang_code}")
-        
-    except Exception as e:
-        print(f"Language update error: {e}")
 
 def find(event):
     t = threading.Thread(target=try_find)
@@ -345,6 +299,48 @@ def try_find():
         print(f"Can't deleted stop button: {e}")
     log_text.config(state="disabled")
     return
+
+def update_all_widgets(lang_code):
+    global current_lang
+    current_lang = lang_code
+    new_texts = data[lang_code]
+
+    tabs = [
+        (tab_connect, "l7"),
+        (tab_keyevents, "l9"),
+        (tab_usefull, "l10"),
+        (tab_danger, "l11"),
+        (tab_everything, "l12"),
+        (tab_learn, "l13")
+    ]
+
+    for tab_widget, json_key in tabs:
+        if json_key in new_texts:
+            main_sections.tab(tab_widget, text=new_texts[json_key])
+    
+    try:
+        with open("lang.json", "r", encoding="utf-8") as f:
+            full_data = json.load(f)
+        selected_texts = full_data[lang_code]
+        
+        def recursive_update(container):
+            for widget in container.winfo_children():
+                w_name = str(widget).split('.')[-1]
+
+                if w_name in selected_texts:
+                    try:
+                        widget.config(text=selected_texts[w_name])
+                    except:
+                        pass
+                if widget.winfo_children():
+                    recursive_update(widget)
+
+        recursive_update(root)
+        root.update_idletasks()
+        print(f"Language changed to: {lang_code}")
+    except Exception as e:
+        print(f"Language update error: {e}")
+
 def update_ui(output):
     log_text.config(state="normal")
     log_text.insert("end", f"\n {output}")
@@ -451,7 +447,7 @@ def maximize_window():
 root = Tk()
 root.title("Burada")
 root.bind("<Map>", on_deiconify)
-root.geometry("800x500")
+root.geometry("1000x700")
 root.overrideredirect(True)
 root.config(bg='black')
 root.attributes('-transparentcolor', 'black')
@@ -597,7 +593,7 @@ tab1_lang_button = Button(lang_btn_conatiner, text="Languages", width=10, height
 tab1_choose_ip = ttk.Button(nmap_input_row, text=data[current_lang]["l13"], name="l13", takefocus=False)
 tab1_finded_ip = ttk.Button(adb_input_row, text=data[current_lang]["l14"], name="l14", takefocus=False)
 #STOP NMAP BUTTON
-tab1_stop_nmap = ttk.Button(nmap_btn_container,text="Stop",takefocus=False, style="Redbg.TButton")
+tab1_stop_nmap = ttk.Button(nmap_btn_container,text=data[current_lang]["l15"], name="l15",takefocus=False, style="Redbg.TButton")
 
 # NMAP IP MENU
 menu_frame = Frame(upper_frame,background="red")
@@ -606,9 +602,6 @@ menu_frame_in1 = Button(menu_frame,text="192.168.1.0/24")
 menu_frame_in2 = Button(menu_frame,text="127.0.0.0/24")
 #ADB IP MENU
 menu_frame_founded = Frame(upper_frame, background="red")
-#ADD FINDED IPS
-length = len(founded_ips)
-founded_menu_frame_in1 = Button(menu_frame_founded, text="Naber")
 log_text = Text(lower_frame, height=1)
 #LANGUAGES MENU
 menu_frame_lang = Frame(upper_frame, background="red")
@@ -624,12 +617,14 @@ tab1_label_failed.grid(row=0, column=0, sticky="w", padx=(0,5))
 tab1_input.grid(row=0, column=1, sticky="ew")
 tab1_choose_ip.grid(row=0, column=2, sticky="we", padx=(5,0))
 tab1_nmap_buton.grid(row=0, column=0, sticky="ew")
+nmap_btn_container.columnconfigure(0, minsize=100)
 
 tab1_label2.grid(row=4, column=0, sticky="n", padx=(0, 100), pady=(10, 0))
 tab1_label_failed2.grid(row=0, column=0, sticky="w", padx=(0,5))
 tab1_input2.grid(row=0, column=1, sticky="ew")
 tab1_finded_ip.grid(row=0, column=2, sticky="ew", padx=(5,0))
 tab1_connect_buton.grid(row=7, column=0, sticky="ew", padx=(300))
+upper_frame.columnconfigure(0, minsize=100)
 log_text.pack(fill=BOTH, expand=True)
 
 
