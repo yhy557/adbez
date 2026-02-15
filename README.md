@@ -11,3 +11,6 @@
 **No need to download extra libraries**
 
 ### Curren features
+* You can search with nmap
+* You can connect to ip adresses with adb
+* The ip adresses from the results when you search with nmap are automatically added into the "Founded ips" option located next to the adb connectioon box, so you can easily connect to ip adresses.
