@@ -11,6 +11,7 @@ except Exception:
 import random
 import time
 import os
+import json
 import subprocess
 import threading
 import json
@@ -19,6 +20,9 @@ from datetime import datetime
 import platform
 import re
 from pathlib import Path
+
+with open("lang.json", "r", encoding="utf-8") as e:
+    data = json.load(e)
 
 def show_in_taskbar(root):
     GWL_EXSTYLE = -20
@@ -35,7 +39,7 @@ def show_in_taskbar(root):
     root.after(10, root.deiconify)
 
 def app_startup():
-    print("Some checks are being performed...")
+    print(f"{data[current_lang]["l1"]}")
     default_path = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(default_path, "check.json")
 
@@ -58,9 +62,10 @@ def app_startup():
     #CONTROLLING SOMETHINGS
     with open(file_path, "r", encoding="utf-8") as file:
         content = file.read()
-    print("The checks have been completed")
+    print(f"{data[current_lang]["l2"]}")
 
 button_references = []
+current_lang = "en"
 
 #For IP menu
 def open_ip_menu(event):
@@ -101,6 +106,29 @@ def open_founded_ip_menu(event):
         menu_frame_founded.place(x=(buton_x - buton_xp), y=(buton_y - buton_yp)+tab1_finded_ip.winfo_height(), width=tab1_finded_ip.winfo_width(), anchor="nw")
         root.update_idletasks()
         now_x,now_y = menu_frame_founded.winfo_rootx(),menu_frame_founded.winfo_rooty()
+        print(f"Created founded menu at: {now_x, now_y}")
+    except Exception as e:
+        print(f"[E]Menu cant be created: {e}")
+
+def open_lang_menu(event):
+    print("clicked")
+    root.update_idletasks()
+    if menu_frame_lang.winfo_viewable():
+        menu_frame_lang.place_forget()
+        print("menu_frame_lang is deleted")
+        return
+    buton_x,buton_y = tab1_lang_button.winfo_rootx(),tab1_lang_button.winfo_rooty()
+    buton_xp,buton_yp = tab_connect.winfo_rootx(),tab_connect.winfo_rooty()
+
+    print("Real screen:",buton_x, buton_y)
+    print("This window:",buton_xp, buton_yp)
+    try:
+        menu_frame_lang.place(x=(buton_x - buton_xp), y=(buton_y - buton_yp)+tab1_lang_button.winfo_height(), width=tab1_lang_button.winfo_width(), anchor="nw")
+        menu_frame_lang1.pack(fill=X)
+        menu_frame_lang2.pack(fill=X)
+        menu_frame_lang3.pack(fill=X)
+        root.update_idletasks()
+        now_x,now_y = menu_frame_lang.winfo_rootx(),menu_frame_lang.winfo_rooty()
         print(f"Created founded menu at: {now_x, now_y}")
     except Exception as e:
         print(f"[E]Menu cant be created: {e}")
@@ -211,7 +239,49 @@ def add_ips_in_menu(ip):
     #for i in range(ips_length):
     #    texts = f"founded_menu_frame_in{i}"
     #    texts = Button(menu_frame_founded, text=f"{founded_ips[{i}]}")
+
+def update_all_widgets(lang_code):
+    global current_lang
+    current_lang = lang_code
+    new_texts = data[lang_code]
+
+    tabs = [
+        (tab_connect, "l7"),
+        (tab_keyevents, "l9"),
+        (tab_usefull, "l10"),
+        (tab_danger, "l11"),
+        (tab_everything, "l12"),
+        (tab_learn, "l13")
+    ]
+
+    for tab_widget, json_key in tabs:
+        if json_key in new_texts:
+            main_sections.tab(tab_widget, text=new_texts[json_key])
     
+    try:
+        with open("lang.json", "r", encoding="utf-8") as f:
+            full_data = json.load(f)
+        selected_texts = full_data[lang_code]
+        
+        def recursive_update(container):
+            for widget in container.winfo_children():
+                w_name = str(widget).split('.')[-1]
+                
+                if w_name in selected_texts:
+                    try:
+                        widget.config(text=selected_texts[w_name])
+                    except:
+                        pass
+
+                if widget.winfo_children():
+                    recursive_update(widget)
+
+        recursive_update(root)
+        root.update_idletasks()
+        print(f"Language changed to: {lang_code}")
+        
+    except Exception as e:
+        print(f"Language update error: {e}")
 
 def find(event):
     t = threading.Thread(target=try_find)
@@ -417,11 +487,9 @@ sizegrip2.pack(side="left", anchor="nw")
 title_bar = tk.Frame(main_area, bg="#2d2d2d", height=30)
 title_bar.pack(fill="x")
 
-
 title_bar.bind("<ButtonPress-1>", start_move)
 title_bar.bind("<ButtonRelease-1>", stop_move)
 title_bar.bind("<B1-Motion>", on_move)
-
 
 title_label = Label(title_bar, text="ADBTalk - Project", bg="#2d2d2d", fg="white", font=("Arial", 9))
 title_label.pack(side="left", padx=10)
@@ -464,12 +532,12 @@ tab_everything = ttk.Frame(main_sections)
 tab_learn = ttk.Frame(main_sections)
 
 #PLACEMENT
-main_sections.add(tab_connect, text="Connect&Find" )
-main_sections.add(tab_keyevents, text="Input Keyevents")
-main_sections.add(tab_usefull, text="Usefull commands")
-main_sections.add(tab_danger, text="Danger Zone")
-main_sections.add(tab_everything, text="Every commands")
-main_sections.add(tab_learn, text="Learn ADB")
+main_sections.add(tab_connect, text=data[current_lang]["l7"])
+main_sections.add(tab_keyevents, text=data[current_lang]["l8"])
+main_sections.add(tab_usefull, text=data[current_lang]["l9"])
+main_sections.add(tab_danger, text=data[current_lang]["l10"])
+main_sections.add(tab_everything, text=data[current_lang]["l11"])
+main_sections.add(tab_learn, text=data[current_lang]["l12"])
 
 #BLOCKS-----------------------------------------------
 #-CAN BE ENLARGED FOR LOG TEXTS
@@ -498,7 +566,9 @@ nmap_btn_container = ttk.Frame(upper_frame)
 nmap_btn_container.grid(row=3, column=0,sticky="ew", padx=(300))
 nmap_btn_container.columnconfigure(0, weight=1)
 nmap_btn_container.columnconfigure(1, weight=0)
-
+#-LANGUAGE BUTTON ROW
+lang_btn_conatiner = ttk.Frame(upper_frame)
+lang_btn_conatiner.grid(row=0, column=0, sticky="nw")
 #-----------------------------------------------------
 
 #PLACEMENT CONFIGURATION
@@ -510,20 +580,22 @@ upper_frame.columnconfigure(2, weight=0)
 
 
 #DEFINITION
-tab1_label = ttk.Label(upper_frame, text="Nmap Target IP:")
+tab1_label = ttk.Label(upper_frame, text=data[current_lang]["l3"], name="l3")
 tab1_input = ttk.Entry(nmap_input_row)
-tab1_nmap_buton = Button(nmap_btn_container, text="Scan Nmap:")
-tab1_label2 = ttk.Label(upper_frame, text="ADB Target IP:")
+tab1_nmap_buton = Button(nmap_btn_container, text=data[current_lang]["l4"], name="l4")
+tab1_label2 = ttk.Label(upper_frame, text=data[current_lang]["l5"], name="l5")
 tab1_input2 = ttk.Entry(adb_input_row)
-tab1_connect_buton = Button(upper_frame, text="ADB connect")
+tab1_connect_buton = Button(upper_frame, text=data[current_lang]["l6"], name="l6")
 
 tab1_label_failed = Label(nmap_input_row, text="", foreground="red",width=20)
 tab1_label_failed2 = Label(adb_input_row, text="", foreground="red",width=20)
 
+tab1_lang_button = Button(lang_btn_conatiner, text="Languages", width=10, height="1", bg="lightblue")
+
 #I WANT TO USE MENUBUTTON BUT IT CAN'T DO THE FEATURES I WANT,SO WE WILL CREATE OUR OWN MENU
 #tab1_choose_ip = ttk.Menubutton(nmap_input_row, text="Choose")
-tab1_choose_ip = ttk.Button(nmap_input_row, text="Choose IP", takefocus=False)
-tab1_finded_ip = ttk.Button(adb_input_row, text="Finded IPs", takefocus=False)
+tab1_choose_ip = ttk.Button(nmap_input_row, text=data[current_lang]["l13"], name="l13", takefocus=False)
+tab1_finded_ip = ttk.Button(adb_input_row, text=data[current_lang]["l14"], name="l14", takefocus=False)
 #STOP NMAP BUTTON
 tab1_stop_nmap = ttk.Button(nmap_btn_container,text="Stop",takefocus=False, style="Redbg.TButton")
 
@@ -538,8 +610,15 @@ menu_frame_founded = Frame(upper_frame, background="red")
 length = len(founded_ips)
 founded_menu_frame_in1 = Button(menu_frame_founded, text="Naber")
 log_text = Text(lower_frame, height=1)
+#LANGUAGES MENU
+menu_frame_lang = Frame(upper_frame, background="red")
+menu_frame_lang1 = Button(menu_frame_lang, text="English")
+menu_frame_lang2 = Button(menu_frame_lang, text="Turkce")
+menu_frame_lang3 = Button(menu_frame_lang, text="Português")
+
 
 #PLACEMENT
+tab1_lang_button.grid(row=0, column=0, sticky="nsew")
 tab1_label.grid(row=1, column=0, sticky="n", padx=(0, 100), pady=(10, 0))
 tab1_label_failed.grid(row=0, column=0, sticky="w", padx=(0,5))
 tab1_input.grid(row=0, column=1, sticky="ew")
@@ -555,6 +634,7 @@ log_text.pack(fill=BOTH, expand=True)
 
 
 #BUTTON EVENTS-----------------------------------------------
+tab1_lang_button.bind("<Button-1>", open_lang_menu)
 tab1_choose_ip.bind("<Button-1>", open_ip_menu)
 tab1_nmap_buton.bind("<Button-1>", find)
 tab1_connect_buton.bind("<Button-1>", connect)
@@ -565,6 +645,11 @@ main_sections.bind("<<NotebookTabChanged>>", on_tab_selected)
 #nmap ip menu events
 menu_frame_in1.bind("<Button-1>", enter_choosed_ip)
 menu_frame_in2.bind("<Button-1>", enter_choosed_ip)
+#lang menu events
+menu_frame_lang1.bind("<Button-1>", lambda event: update_all_widgets("en"))
+menu_frame_lang2.bind("<Button-1>", lambda event: update_all_widgets("tr"))
+menu_frame_lang3.bind("<Button-1>", lambda event: update_all_widgets("pt"))
+
 
 #stop nmap button event
 tab1_stop_nmap.bind("<Button-1>", stop_nmap)
