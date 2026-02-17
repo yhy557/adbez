@@ -245,6 +245,7 @@ def find(event):
 current_ip_has_adb = False
 founded_ips = []
 stopla = False
+stopla2 = False
 current_process = None
 def try_find():
     global stopla, current_process, current_ip_has_adb, founded_ips
@@ -260,7 +261,7 @@ def try_find():
         print(f"x degeri: {x}, y degeri:{y}")
         tab1_label_failed.place(x=x-250,y=y-70)
         print("Nothing has writed")
-        tab1_label_failed.config(text="Failed.Please write a IP address")
+        tab1_label_failed.config(text="Failed.Please write an IP address")
         root.after(5000, lambda: tab1_label_failed.place_forget())
         return
     stopla = False
@@ -303,7 +304,7 @@ def try_find():
         root.after(0, lambda:tab1_stop_nmap.grid_forget())
         print("stop button is being deleted")
     except Exception as e:
-        print(f"Can't deleted stop button: {e}")
+        print(f"Can't deleting stop button: {e}")
     log_text.config(state="disabled")
     return
 
@@ -318,7 +319,9 @@ def update_all_widgets(lang_code):
         (tab_usefull, "l10"),
         (tab_danger, "l11"),
         (tab_everything, "l12"),
-        (tab_learn, "l13")
+        (tab_learn, "l13"),
+        (tab_terminal, "l16"),
+        (tab_settings, "l17")
     ]
 
     for tab_widget, json_key in tabs:
@@ -351,6 +354,7 @@ def update_all_widgets(lang_code):
 def update_ui(output):
     log_text.config(state="normal")
     log_text.insert("end", f"\n {output}")
+    log_text.see("end")
     log_text.config(state="disabled")
 
 def connect(event):
@@ -372,14 +376,37 @@ def try_connect():
         print(f"x degeri: {x}, y degeri:{y}")
         tab1_label_failed2.place(x=x-250,y=y-70)
         tab1_label_failed2.config(text="Failed.Please write an IP address")
-        root.after(5000, lambda: tab1_label_failed2.config(text=""))
+        root.after(5000, lambda: tab1_label_failed2.place_forget())
         return
-    else:
+    stopla2 = False
+    
+    try:
+        current_process_adb = subprocess.Popen(
+            [finded_path, "connect", writing],
+                stdout=subprocess.PIPE,
+                text=True,
+                startupinfo=si
+        )
+        tab1_stop_adb.grid(row=0, column=1, padx=(5,0))
+        full_output = ""
+        while True:
+            line = current_process_adb.stdout.readline()
+            if not line or stopla2:
+                break
+            full_output += line
+            root.after(0, lambda l=line: update_ui(l))
+        current_process_adb.stdout.close()
+        current_process_adb.wait()
+        if not stopla2:
+            stopla2 = True
+            root.after(0, lambda: update_ui("Connected"))
         try:
-            current_process_adb = subprocess.Popen([finded_path, "connect", writing], startupinfo=si)
-            tab1_stop_adb.grid(row=0, column=0, padx=(5,0))
-        except Exception as e:
-            print(f"Can't start adb connect: {e}")
+            root.after(0, lambda: tab1_stop_adb.grid_forget())
+            print("stop button is being deleted")
+        except:
+            print(f"Can't deleting stop button: {e}")
+    except Exception as e:
+        print(f"Can't start adb connect: {e}")
 def stop_adb(event):
     global current_process_adb
     system_os = platform.system()
@@ -498,6 +525,7 @@ def maximize_window():
 
 #MAIN PANEL
 root = Tk()
+root.minsize(500,300)
 root.title("AdbEz")
 root.bind("<Map>", on_deiconify)
 root.geometry("1000x700")
@@ -553,22 +581,18 @@ max_btn = Button(title_bar, text="▢", bg="#2d2d2d", fg="white", bd=0,
                  command=maximize_window, width=4, font=("Arial", 10))
 max_btn.pack(side="right", fill="y")
 
-
 close_btn = Button(title_bar, text="✕", bg="#2d2d2d", fg="white", bd=0, 
                       activebackground="red", command=root.destroy, width=4)
 close_btn.pack(side="right", fill="y")
-
 style.configure("Redbg.TButton", background="red")
 
 #CATCHING SIZE OF THE WINDOW FOR IP MENU
 root.bind("<Configure>", catch_size)
-
 frm = ttk.Frame(main_area, style="Siyah.TFrame",padding=10)
 frm.pack(fill=BOTH, expand=True)
 
 main_sections = ttk.Notebook(frm)
 main_sections.pack(fill=BOTH, expand=True)
-
 main_sections.config()
 
 #DEFINITION
@@ -578,6 +602,8 @@ tab_usefull = ttk.Frame(main_sections)
 tab_danger = ttk.Frame(main_sections)
 tab_everything = ttk.Frame(main_sections)
 tab_learn = ttk.Frame(main_sections)
+tab_terminal = ttk.Frame(main_sections)
+tab_settings = ttk.Frame(main_sections)
 
 #PLACEMENT
 main_sections.add(tab_connect, text=data[current_lang]["l7"])
@@ -586,12 +612,14 @@ main_sections.add(tab_usefull, text=data[current_lang]["l9"])
 main_sections.add(tab_danger, text=data[current_lang]["l10"])
 main_sections.add(tab_everything, text=data[current_lang]["l11"])
 main_sections.add(tab_learn, text=data[current_lang]["l12"])
+main_sections.add(tab_terminal, text=data[current_lang]["l16"])
+main_sections.add(tab_settings, text=data[current_lang]["l17"])
 
 #BLOCKS-----------------------------------------------
 #-CAN BE ENLARGED FOR LOG TEXTS
-paned_window = PanedWindow(tab_connect, orient=VERTICAL, bd=1, relief="sunken", sashwidth=4, sashrelief="sunken", background="gray")
+paned_window = PanedWindow(tab_connect, orient=VERTICAL, bd=1, relief="sunken", sashwidth=4, sashrelief="sunken")
 paned_window.pack(fill=BOTH,expand=True)
-upper_frame = Frame(paned_window, background="gray")
+upper_frame = Frame(paned_window)
 paned_window.add(upper_frame, minsize=300)
 lower_frame = Frame(paned_window)
 paned_window.add(lower_frame,minsize=50)
@@ -622,14 +650,12 @@ nmap_btn_container.columnconfigure(1, weight=0)
 lang_btn_conatiner = ttk.Frame(upper_frame)
 lang_btn_conatiner.grid(row=0, column=0, sticky="nw")
 #-----------------------------------------------------
-
 #PLACEMENT CONFIGURATION
 upper_frame.rowconfigure(0, weight=1)
 upper_frame.rowconfigure(8, weight=1)
 upper_frame.columnconfigure(0, weight=1)
 upper_frame.columnconfigure(1, weight=0)
 upper_frame.columnconfigure(2, weight=1)
-
 
 #DEFINITION
 tab1_label = ttk.Label(upper_frame, text=data[current_lang]["l3"], name="l3")
@@ -638,8 +664,8 @@ tab1_nmap_buton = Button(nmap_btn_container, text=data[current_lang]["l4"], name
 tab1_label2 = ttk.Label(upper_frame, text=data[current_lang]["l5"], name="l5")
 tab1_input2 = ttk.Entry(adb_input_row)
 tab1_connect_buton = Button(adb_btn_container, text=data[current_lang]["l6"], name="l6")
-tab1_label_failed = Label(upper_frame, text="", foreground="red",width=26, background="yellow")
-tab1_label_failed2 = Label(upper_frame, text="", foreground="red",width=26, background="yellow")
+tab1_label_failed = Label(upper_frame, text="", foreground="red",width=26)
+tab1_label_failed2 = Label(upper_frame, text="", foreground="red",width=26)
 tab1_lang_button = Button(lang_btn_conatiner, text="Languages", width=10, height="1", bg="lightblue")
 
 #I WANT TO USE MENUBUTTON BUT IT CAN'T DO THE FEATURES I WANT,SO WE WILL CREATE OUR OWN MENU
@@ -666,13 +692,14 @@ menu_frame_lang3 = Button(menu_frame_lang, text="Português")
 
 #PLACEMENT
 tab1_lang_button.grid(row=0, column=0, sticky="nsew")
-tab1_label.grid(row=1, column=1, sticky="n", pady=(10, 0))
-tab1_input.grid(row=0, column=1, sticky="ew")
+
+tab1_label.grid(row=1, column=1, sticky="n", pady=(0, 5), padx=(0, 285))
+tab1_input.grid(row=0, column=1, sticky="ew", pady=(0, 10))
 tab1_choose_ip.grid(row=0, column=2, sticky="we", padx=(15,0))
 tab1_nmap_buton.grid(row=0, column=0, sticky="ew")
 nmap_btn_container.columnconfigure(0, minsize=100)
 
-tab1_label2.grid(row=4, column=1, sticky="n", pady=(10, 0))
+tab1_label2.grid(row=4, column=1, sticky="n", padx=(0, 295))
 tab1_input2.grid(row=0, column=1, sticky="ew")
 tab1_finded_ip.grid(row=0, column=2, sticky="ew", padx=(15,0))
 tab1_connect_buton.grid(row=0, column=0, sticky="ew",padx=(5,0))
@@ -705,4 +732,5 @@ tab1_stop_adb.bind("<Button-1>", stop_adb)
 paned_window.bind("<B1-Motion>", changed_paned)
 
 app_startup()
+show_in_taskbar(root)
 root.mainloop()
