@@ -567,24 +567,44 @@ title_bar.bind("<ButtonPress-1>", start_move)
 title_bar.bind("<ButtonRelease-1>", stop_move)
 title_bar.bind("<B1-Motion>", on_move)
 
-title_label = Label(title_bar, text="ADBTalk - Project", bg="#2d2d2d", fg="white", font=("Arial", 9))
+title_label = Label(title_bar, text="ADBez", bg="#2d2d2d", fg="white", font=("Arial", 9))
 title_label.pack(side="left", padx=10)
+
+def on_enter_max(event):
+    max_btn.config(bg="lightblue")
+def leave_enter_max(event):
+    max_btn.config(bg="#2d2d2d")
+def on_enter_min(event):
+    min_btn.config(bg="lightblue")
+def leave_enter_min(event):
+    min_btn.config(bg="#2d2d2d")
+def on_enter_close(event):
+    close_btn.config(bg="red")
+def leave_enter_close(event):
+    close_btn.config(bg="#2d2d2d")
 
 min_btn = Button(title_bar, text="—", bg="#2d2d2d", fg="white", bd=0, 
                  activebackground="#404040", activeforeground="white",
                  command=minimize_window, width=4, font=("Arial", 9))
 min_btn.pack(side="right", fill="y")
+min_btn.bind("<Enter>", on_enter_min)
+min_btn.bind("<Leave>", leave_enter_min)
 
 #FULL SCREEN(□)
+
 max_btn = Button(title_bar, text="▢", bg="#2d2d2d", fg="white", bd=0, 
                  activebackground="#404040", activeforeground="white",
                  command=maximize_window, width=4, font=("Arial", 10))
 max_btn.pack(side="right", fill="y")
+max_btn.bind("<Enter>", on_enter_max)
+max_btn.bind("<Leave>", leave_enter_max)
 
 close_btn = Button(title_bar, text="✕", bg="#2d2d2d", fg="white", bd=0, 
                       activebackground="red", command=root.destroy, width=4)
 close_btn.pack(side="right", fill="y")
 style.configure("Redbg.TButton", background="red")
+close_btn.bind("<Enter>", on_enter_close)
+close_btn.bind("<Leave>", leave_enter_close)
 
 #CATCHING SIZE OF THE WINDOW FOR IP MENU
 root.bind("<Configure>", catch_size)
@@ -695,7 +715,7 @@ tab1_lang_button.grid(row=0, column=0, sticky="nsew")
 
 tab1_label.grid(row=1, column=1, sticky="n", pady=(0, 5), padx=(0, 285))
 tab1_input.grid(row=0, column=1, sticky="ew", pady=(0, 10))
-tab1_choose_ip.grid(row=0, column=2, sticky="we", padx=(15,0))
+tab1_choose_ip.grid(row=0, column=2, sticky="we", padx=(15,0), pady=(0,10))
 tab1_nmap_buton.grid(row=0, column=0, sticky="ew")
 nmap_btn_container.columnconfigure(0, minsize=100)
 
