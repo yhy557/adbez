@@ -66,6 +66,7 @@ def app_startup():
 
 button_references = []
 current_lang = "en"
+current_process_adb = None
 
 #For IP menu
 def open_ip_menu(event):
@@ -252,9 +253,15 @@ def try_find():
     main_path_py = os.path.join(default_path, "now_logs.txt")
 
     if not ip:
+        #WE ARE GETTING ENTRY COORDINATES TO THE FAILED_LABELS
+        root.update_idletasks()
+        x = tab1_input.winfo_rootx()
+        y = tab1_input.winfo_rooty()
+        print(f"x degeri: {x}, y degeri:{y}")
+        tab1_label_failed.place(x=x-250,y=y-70)
         print("Nothing has writed")
         tab1_label_failed.config(text="Failed.Please write a IP address")
-        root.after(5000, lambda: tab1_label_failed.config(text=""))
+        root.after(5000, lambda: tab1_label_failed.place_forget())
         return
     stopla = False
     
@@ -347,17 +354,57 @@ def update_ui(output):
     log_text.config(state="disabled")
 
 def connect(event):
-    print("ADB tıkladın")
+    print("Clicked ADB")
     t = threading.Thread(target=try_connect)
     t.start()
 
 def try_connect():
+    global current_process_adb
     writing = tab1_input2.get()
+    print(writing)
+    si = subprocess.STARTUPINFO()
+    si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
     if not writing:
-        tab1_label_failed2.config(text="Failed.Please write a IP address")
+        #WE ARE GETTING ENTRY COORDINATES TO THE FAILED_LABELS
+        root.update_idletasks()
+        x = tab1_input2.winfo_rootx()
+        y = tab1_input2.winfo_rooty()
+        print(f"x degeri: {x}, y degeri:{y}")
+        tab1_label_failed2.place(x=x-250,y=y-70)
+        tab1_label_failed2.config(text="Failed.Please write an IP address")
         root.after(5000, lambda: tab1_label_failed2.config(text=""))
         return
-    
+    else:
+        try:
+            current_process_adb = subprocess.Popen([finded_path, "connect", writing], startupinfo=si)
+            tab1_stop_adb.grid(row=0, column=0, padx=(5,0))
+        except Exception as e:
+            print(f"Can't start adb connect: {e}")
+def stop_adb(event):
+    global current_process_adb
+    system_os = platform.system()
+    if current_process_adb and current_process_adb.poll() is None:
+        try:
+            if system_os == "Windows":
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+                subprocess.call(['taskkill', '/F', '/T', '/PID', str(current_process_adb.pid)], 
+                                startupinfo=startupinfo)
+            else:
+                import signal
+                try:
+                    os.kill(current_process_adb.pid, signal.SIGTERM)
+                except:
+                    os.kill(current_process_adb.pid, signal.SIGKILL)
+            print("Adb being stopped")
+            root.after(20, lambda: update_ui("\n[!] ADB connect is terminated"))
+            root.after(0, lambda: tab1_stop_adb.grid_forget())
+        except Exception as e:
+            print(f"Nmap scan is can't terminated: {e}")
+    else:
+        tab1_stop_adb.grid_forget()
+
 def stop_nmap(event):
     global current_process, stopla
     if current_process:
@@ -377,11 +424,17 @@ def stop_nmap(event):
                     os.kill(current_process.pid, signal.SIGKILL)
 
             stopla = True
-            print("Nmap durduruldu")
+            print("Nmap stopped")
             root.after(20, lambda: update_ui("\n[!] NMAP scan is terminated"))
             root.after(0, lambda: tab1_stop_nmap.grid_forget())
         except Exception as e:
             print(f"Nmap scan is can't terminated: {e}")
+
+def adb_connect(event):
+    clicked = event.widget
+    clicked_label = clicked.cget("text")
+    print(clicked_label)
+
 
 tries = [
     "C:/platform-tools/adb.exe",
@@ -395,9 +448,9 @@ for path in tries:
         finded_path = path
 
 if finded_path:
-    print(f"Bulundu: {finded_path}")
+    print(f"Found: {finded_path}")
 else:
-    print("Bulunamadı")
+    print("Not found")
 
 def devices():
     print("a")
@@ -445,12 +498,11 @@ def maximize_window():
 
 #MAIN PANEL
 root = Tk()
-root.title("Burada")
+root.title("AdbEz")
 root.bind("<Map>", on_deiconify)
 root.geometry("1000x700")
 root.overrideredirect(True)
-root.config(bg='black')
-root.attributes('-transparentcolor', 'black')
+root.config(bg='#1e1e1e')
 root.rowconfigure(0, weight=1)
 root.columnconfigure(0, weight=1)
 style = ttk.Style()
@@ -537,9 +589,9 @@ main_sections.add(tab_learn, text=data[current_lang]["l12"])
 
 #BLOCKS-----------------------------------------------
 #-CAN BE ENLARGED FOR LOG TEXTS
-paned_window = PanedWindow(tab_connect, orient=VERTICAL, bd=1, relief="sunken", sashwidth=4, sashrelief="sunken")
+paned_window = PanedWindow(tab_connect, orient=VERTICAL, bd=1, relief="sunken", sashwidth=4, sashrelief="sunken", background="gray")
 paned_window.pack(fill=BOTH,expand=True)
-upper_frame = Frame(paned_window)
+upper_frame = Frame(paned_window, background="gray")
 paned_window.add(upper_frame, minsize=300)
 lower_frame = Frame(paned_window)
 paned_window.add(lower_frame,minsize=50)
@@ -547,20 +599,24 @@ root.update_idletasks()
 root.after(100, lambda: paned_window.sash_place(0, 0, 420))
 #-NMAP INPUT ROW
 nmap_input_row = Frame(upper_frame)
-nmap_input_row.grid(row=2, column=0, sticky="ew",padx=(10))
+nmap_input_row.grid(row=2, column=1, sticky="ew",padx=(10))
+nmap_input_row.columnconfigure(1, minsize=300)
 nmap_input_row.columnconfigure(0,weight=0)
 nmap_input_row.columnconfigure(1,weight=1)
 nmap_input_row.columnconfigure(2,weight=0)
 #-ADB INPUT ROW
 adb_input_row = Frame(upper_frame)
-adb_input_row.grid(row=6, column=0, sticky="ew", padx=(10))
+adb_btn_container = Frame(upper_frame)
+adb_btn_container.grid(row=7,column=1, sticky="n")
+adb_input_row.grid(row=6, column=1, sticky="ew", padx=(10))
+
 adb_input_row.columnconfigure(0,weight=0)
 adb_input_row.columnconfigure(1,weight=1)
 adb_input_row.columnconfigure(2,weight=0)
 #-NMAP BUTTON ROW
 nmap_btn_container = ttk.Frame(upper_frame)
-nmap_btn_container.grid(row=3, column=0,sticky="ew", padx=(300))
-nmap_btn_container.columnconfigure(0, weight=1)
+nmap_btn_container.grid(row=3, column=1,sticky="n")
+nmap_btn_container.columnconfigure(0, weight=0)
 nmap_btn_container.columnconfigure(1, weight=0)
 #-LANGUAGE BUTTON ROW
 lang_btn_conatiner = ttk.Frame(upper_frame)
@@ -571,8 +627,8 @@ lang_btn_conatiner.grid(row=0, column=0, sticky="nw")
 upper_frame.rowconfigure(0, weight=1)
 upper_frame.rowconfigure(8, weight=1)
 upper_frame.columnconfigure(0, weight=1)
-upper_frame.columnconfigure(1, weight=1)
-upper_frame.columnconfigure(2, weight=0)
+upper_frame.columnconfigure(1, weight=0)
+upper_frame.columnconfigure(2, weight=1)
 
 
 #DEFINITION
@@ -581,20 +637,18 @@ tab1_input = ttk.Entry(nmap_input_row)
 tab1_nmap_buton = Button(nmap_btn_container, text=data[current_lang]["l4"], name="l4")
 tab1_label2 = ttk.Label(upper_frame, text=data[current_lang]["l5"], name="l5")
 tab1_input2 = ttk.Entry(adb_input_row)
-tab1_connect_buton = Button(upper_frame, text=data[current_lang]["l6"], name="l6")
-
-tab1_label_failed = Label(nmap_input_row, text="", foreground="red",width=20)
-tab1_label_failed2 = Label(adb_input_row, text="", foreground="red",width=20)
-
+tab1_connect_buton = Button(adb_btn_container, text=data[current_lang]["l6"], name="l6")
+tab1_label_failed = Label(upper_frame, text="", foreground="red",width=26, background="yellow")
+tab1_label_failed2 = Label(upper_frame, text="", foreground="red",width=26, background="yellow")
 tab1_lang_button = Button(lang_btn_conatiner, text="Languages", width=10, height="1", bg="lightblue")
 
 #I WANT TO USE MENUBUTTON BUT IT CAN'T DO THE FEATURES I WANT,SO WE WILL CREATE OUR OWN MENU
 #tab1_choose_ip = ttk.Menubutton(nmap_input_row, text="Choose")
 tab1_choose_ip = ttk.Button(nmap_input_row, text=data[current_lang]["l13"], name="l13", takefocus=False)
 tab1_finded_ip = ttk.Button(adb_input_row, text=data[current_lang]["l14"], name="l14", takefocus=False)
-#STOP NMAP BUTTON
+#STOP NMAP-ADB BUTTON
 tab1_stop_nmap = ttk.Button(nmap_btn_container,text=data[current_lang]["l15"], name="l15",takefocus=False, style="Redbg.TButton")
-
+tab1_stop_adb = ttk.Button(adb_btn_container, text=data[current_lang]["l15"], name="l15", takefocus=False, style="Redbg.TButton")
 # NMAP IP MENU
 menu_frame = Frame(upper_frame,background="red")
 print(tab1_choose_ip.winfo_width())
@@ -612,19 +666,16 @@ menu_frame_lang3 = Button(menu_frame_lang, text="Português")
 
 #PLACEMENT
 tab1_lang_button.grid(row=0, column=0, sticky="nsew")
-tab1_label.grid(row=1, column=0, sticky="n", padx=(0, 100), pady=(10, 0))
-tab1_label_failed.grid(row=0, column=0, sticky="w", padx=(0,5))
+tab1_label.grid(row=1, column=1, sticky="n", pady=(10, 0))
 tab1_input.grid(row=0, column=1, sticky="ew")
-tab1_choose_ip.grid(row=0, column=2, sticky="we", padx=(5,0))
+tab1_choose_ip.grid(row=0, column=2, sticky="we", padx=(15,0))
 tab1_nmap_buton.grid(row=0, column=0, sticky="ew")
 nmap_btn_container.columnconfigure(0, minsize=100)
 
-tab1_label2.grid(row=4, column=0, sticky="n", padx=(0, 100), pady=(10, 0))
-tab1_label_failed2.grid(row=0, column=0, sticky="w", padx=(0,5))
+tab1_label2.grid(row=4, column=1, sticky="n", pady=(10, 0))
 tab1_input2.grid(row=0, column=1, sticky="ew")
-tab1_finded_ip.grid(row=0, column=2, sticky="ew", padx=(5,0))
-tab1_connect_buton.grid(row=7, column=0, sticky="ew", padx=(300))
-upper_frame.columnconfigure(0, minsize=100)
+tab1_finded_ip.grid(row=0, column=2, sticky="ew", padx=(15,0))
+tab1_connect_buton.grid(row=0, column=0, sticky="ew",padx=(5,0))
 log_text.pack(fill=BOTH, expand=True)
 
 
@@ -648,6 +699,7 @@ menu_frame_lang3.bind("<Button-1>", lambda event: update_all_widgets("pt"))
 
 #stop nmap button event
 tab1_stop_nmap.bind("<Button-1>", stop_nmap)
+tab1_stop_adb.bind("<Button-1>", stop_adb)
 
 #CATCHING PANED WINDOW EVENT
 paned_window.bind("<B1-Motion>", changed_paned)
