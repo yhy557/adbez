@@ -38,22 +38,22 @@
         "l17": "Ayarlar"
     },
     "pt": {
-        "l1": "Some checks are being performed...",
-        "l2": "The checks have been completed",
-        "l3": "Nmap Target IP:",
-        "l4": "Scan with Nmap:",
-        "l5": "ADB Target IP:",
-        "l6": "ADB Connect:",
-        "l7": "Connect&Find",
-        "l8": "Input Keyevents",
-        "l9": "Usefull Commands",
-        "l10": "Danger Zone",
-        "l11": "Every Commands",
-        "l12": "Learn ADB",
-        "l13": "Choose IP",
-        "l14": "Finded IPs",
-        "l15": "Stop",
+        "l1": "Algumas verificações estão sendo processadas...",
+        "l2": "As verificações foram completadas com sucesso ",
+        "l3": "IP do alvo Nmap:",
+        "l4": "Escanear com Nmap:",
+        "l5": "IP do alvo ADB:",
+        "l6": "Conectar com ADB:",
+        "l7": "Connectar & Encontrar",
+        "l8": "Teclas de eventos de entrada",
+        "l9": "Comandos úteis",
+        "l10": "Zona perigosa",
+        "l11": "Todos comandos",
+        "l12": "Aprenda ADB",
+        "l13": "Escolher IP",
+        "l14": "IPs encontrados",
+        "l15": "Parar",
         "l16": "Terminal",
-        "l17": "Settings"
+        "l17": "Configurações"
     }
 }
