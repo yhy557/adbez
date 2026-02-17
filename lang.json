@@ -14,7 +14,9 @@
         "l12": "Learn ADB",
         "l13": "Choose IP",
         "l14": "Finded IPs",
-        "l15": "Stop"
+        "l15": "Stop",
+        "l16": "Terminal",
+        "l17": "Settings"
     },
     "tr": {
         "l1": "Bazı gerekli ayarlar kontrol ediliyor...",
@@ -31,7 +33,9 @@
         "l12": "ADB ogren",
         "l13": "IP seç",
         "l14": "Bulunan IP'ler",
-        "l15": "Durdur"
+        "l15": "Durdur",
+        "l16": "Terminal",
+        "l17": "Ayarlar"
     },
     "pt": {
         "l1": "Some checks are being performed...",
@@ -48,6 +52,8 @@
         "l12": "Learn ADB",
         "l13": "Choose IP",
         "l14": "Finded IPs",
-        "l15": "Stop"
+        "l15": "Stop",
+        "l16": "Terminal",
+        "l17": "Settings"
     }
 }
