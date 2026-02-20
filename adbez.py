@@ -315,13 +315,14 @@ def update_all_widgets(lang_code):
 
     tabs = [
         (tab_connect, "l7"),
-        (tab_keyevents, "l9"),
-        (tab_usefull, "l10"),
-        (tab_danger, "l11"),
-        (tab_everything, "l12"),
-        (tab_learn, "l13"),
+        (tab_keyevents, "l8"),
+        (tab_usefull, "l9"),
+        (tab_danger, "l10"),
+        (tab_everything, "l11"),
+        (tab_learn, "l12"),
         (tab_terminal, "l16"),
-        (tab_settings, "l17")
+        (tab_settings, "l17"),
+        (tab_connected, "l18")
     ]
 
     for tab_widget, json_key in tabs:
@@ -400,6 +401,7 @@ def try_connect():
         if not stopla2:
             stopla2 = True
             root.after(0, lambda: update_ui("Connected"))
+            connected_devices.config(text=writing)
         try:
             root.after(0, lambda: tab1_stop_adb.grid_forget())
             print("stop button is being deleted")
@@ -456,11 +458,6 @@ def stop_nmap(event):
             root.after(0, lambda: tab1_stop_nmap.grid_forget())
         except Exception as e:
             print(f"Nmap scan is can't terminated: {e}")
-
-def adb_connect(event):
-    clicked = event.widget
-    clicked_label = clicked.cget("text")
-    print(clicked_label)
 
 
 tries = [
@@ -605,7 +602,6 @@ min_btn.bind("<Enter>", on_enter_min)
 min_btn.bind("<Leave>", leave_enter_min)
 
 #FULL SCREEN(□)
-
 max_btn = Button(title_bar, text="▢", bg="#2d2d2d", fg="white", bd=0, 
                  activebackground="#404040", activeforeground="white",
                  command=maximize_window, width=4, font=("Arial", 10))
@@ -638,6 +634,7 @@ tab_everything = ttk.Frame(main_sections)
 tab_learn = ttk.Frame(main_sections)
 tab_terminal = ttk.Frame(main_sections)
 tab_settings = ttk.Frame(main_sections)
+tab_connected = ttk.Frame(main_sections)
 
 #PLACEMENT
 main_sections.add(tab_connect, text=data[current_lang]["l7"])
@@ -648,6 +645,7 @@ main_sections.add(tab_everything, text=data[current_lang]["l11"])
 main_sections.add(tab_learn, text=data[current_lang]["l12"])
 main_sections.add(tab_terminal, text=data[current_lang]["l16"])
 main_sections.add(tab_settings, text=data[current_lang]["l17"])
+main_sections.add(tab_connected, text=data[current_lang]["l18"])
 
 #BLOCKS-----------------------------------------------
 #-TAB_CONNECT LAYOUTS
@@ -704,19 +702,19 @@ scrollable_content.bind("<Configure>", on_frame_configure)
 #WINDOWS-----------------------
 canvas2.bind_all("<MouseWheel>", _on_mousewheel)
 #------------------------------
-#LINUX------------------------
+#LINUX-------------------------
 canvas2.bind_all("<Button-4>", _on_scroll_up)
 canvas2.bind_all("<Button-5>", _on_scroll_down)
 #------------------------------
 search = Entry(scrollable_content, textvariable="Naber")
 search.pack()
-key_names = ["HOME", "BACK", "RECENT", "POWER", "VOL_UP", "VOL_DOWN", "MUTE", "ENTER"]
-for i in key_names:
-    btn = Button(scrollable_content, text=f"{i}")
-    btn.pack
+for i in range(20):
+    name = f"Input keyevent {i}"
+    buton = Button(scrollable_content, text=name)
+    buton.pack()
+
 for widget in  scrollable_content.winfo_children():
     widget.pack_configure(pady=1)
-
 #---------------------------------------------------
 #-----------------------------------------------------
 #PLACEMENT CONFIGURATION
@@ -736,6 +734,11 @@ tab1_connect_buton = Button(adb_btn_container, text=data[current_lang]["l6"], na
 tab1_label_failed = Label(upper_frame, text="", foreground="red",width=26)
 tab1_label_failed2 = Label(upper_frame, text="", foreground="red",width=26)
 tab1_lang_button = Button(lang_btn_conatiner, text="Languages", width=10, height="1", bg="lightblue")
+
+connected_devices = Label(upper_frame, text="Connected IPs \n a", background="red")
+connected_devicesips = Label(upper_frame, text="aaaa", background="red")
+connected_devices.grid(row=0, column=2, sticky="ne")
+connected_devicesips.grid(row=1, column=2, sticky="ne")
 
 #I WANT TO USE MENUBUTTON BUT IT CAN'T DO THE FEATURES I WANT,SO WE WILL CREATE OUR OWN MENU
 #tab1_choose_ip = ttk.Menubutton(nmap_input_row, text="Choose")
@@ -758,7 +761,6 @@ menu_frame_lang1 = Button(menu_frame_lang, text="English")
 menu_frame_lang2 = Button(menu_frame_lang, text="Turkce")
 menu_frame_lang3 = Button(menu_frame_lang, text="Português")
 
-
 #PLACEMENT
 tab1_lang_button.grid(row=0, column=0, sticky="nsew")
 
@@ -773,7 +775,6 @@ tab1_input2.grid(row=0, column=1, sticky="ew")
 tab1_finded_ip.grid(row=0, column=2, sticky="ew", padx=(15,0))
 tab1_connect_buton.grid(row=0, column=0, sticky="ew",padx=(5,0))
 log_text.pack(fill=BOTH, expand=True)
-
 
 #BUTTON EVENTS-----------------------------------------------
 tab1_lang_button.bind("<Button-1>", open_lang_menu)
@@ -791,7 +792,6 @@ menu_frame_in2.bind("<Button-1>", enter_choosed_ip)
 menu_frame_lang1.bind("<Button-1>", lambda event: update_all_widgets("en"))
 menu_frame_lang2.bind("<Button-1>", lambda event: update_all_widgets("tr"))
 menu_frame_lang3.bind("<Button-1>", lambda event: update_all_widgets("pt"))
-
 
 #stop nmap button event
 tab1_stop_nmap.bind("<Button-1>", stop_nmap)
