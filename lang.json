@@ -16,7 +16,8 @@
         "l14": "Finded IPs",
         "l15": "Stop",
         "l16": "Terminal",
-        "l17": "Settings"
+        "l17": "Settings",
+        "l18": "Connected"
     },
     "tr": {
         "l1": "Bazı gerekli ayarlar kontrol ediliyor...",
@@ -35,7 +36,8 @@
         "l14": "Bulunan IP'ler",
         "l15": "Durdur",
         "l16": "Terminal",
-        "l17": "Ayarlar"
+        "l17": "Ayarlar",
+        "l18": "Bağlanıldı"
     },
     "pt": {
         "l1": "Algumas verificações estão sendo processadas...",
@@ -54,6 +56,7 @@
         "l14": "IPs encontrados",
         "l15": "Parar",
         "l16": "Terminal",
-        "l17": "Configurações"
+        "l17": "Configurações",
+        "l18": "Connected"
     }
 }
