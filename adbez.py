@@ -523,6 +523,20 @@ def maximize_window():
     else:
         root.state('zoomed')
 
+#FOR SCROLLING
+def on_frame_configure(event):
+    canvas2.configure(scrollregion=canvas2.bbox("all"))
+def _on_mousewheel(event):
+    # Windows and MacOS
+    canvas2.yview_scroll(int(-1*(event.delta/120)), "units")
+
+#FOR LINUX
+def _on_scroll_up(event):
+    canvas2.yview_scroll(-1, "units")
+
+def _on_scroll_down(event):
+    canvas2.yview_scroll(1, "units")
+
 #MAIN PANEL
 root = Tk()
 root.minsize(500,300)
@@ -636,7 +650,7 @@ main_sections.add(tab_terminal, text=data[current_lang]["l16"])
 main_sections.add(tab_settings, text=data[current_lang]["l17"])
 
 #BLOCKS-----------------------------------------------
-#-CAN BE ENLARGED FOR LOG TEXTS
+#-TAB_CONNECT LAYOUTS
 paned_window = PanedWindow(tab_connect, orient=VERTICAL, bd=1, relief="sunken", sashwidth=4, sashrelief="sunken")
 paned_window.pack(fill=BOTH,expand=True)
 upper_frame = Frame(paned_window)
@@ -645,6 +659,15 @@ lower_frame = Frame(paned_window)
 paned_window.add(lower_frame,minsize=50)
 root.update_idletasks()
 root.after(100, lambda: paned_window.sash_place(0, 0, 420))
+#-TAB_KEYEVENTS LAYOUTS
+paned_window2 = PanedWindow(tab_keyevents, orient=HORIZONTAL, bd=1, relief="sunken", sashwidth=4, sashrelief="sunken" )
+upper_frame2 = Frame(paned_window2)
+paned_window2.add(upper_frame2, minsize=700)
+paned_window2.pack(fill=BOTH,expand=True, anchor="w", side="left")
+lower_frame2 = Frame(paned_window2)
+paned_window2.add(lower_frame2,minsize=50)
+upper_frame2.config(bg="red")
+lower_frame2.config(bg="blue")
 #-NMAP INPUT ROW
 nmap_input_row = Frame(upper_frame)
 nmap_input_row.grid(row=2, column=1, sticky="ew",padx=(10))
@@ -669,6 +692,32 @@ nmap_btn_container.columnconfigure(1, weight=0)
 #-LANGUAGE BUTTON ROW
 lang_btn_conatiner = ttk.Frame(upper_frame)
 lang_btn_conatiner.grid(row=0, column=0, sticky="nw")
+#TAB_KEYEVENTS--------------------------------------
+canvas2 = Canvas(upper_frame2, bg="red", highlightthickness=0)
+canvas2.pack(side="left", fill="both", expand=True)
+scrollable_bar = ttk.Scrollbar(upper_frame2, orient="vertical", command=canvas2.yview)
+scrollable_bar.pack(fill=Y, side="right", anchor="e")
+canvas2.configure(yscrollcommand=scrollable_bar.set)
+scrollable_content = Frame(canvas2, bg="red")
+canvas2.create_window((0, 0), window=scrollable_content, anchor="nw")
+scrollable_content.bind("<Configure>", on_frame_configure)
+#WINDOWS-----------------------
+canvas2.bind_all("<MouseWheel>", _on_mousewheel)
+#------------------------------
+#LINUX------------------------
+canvas2.bind_all("<Button-4>", _on_scroll_up)
+canvas2.bind_all("<Button-5>", _on_scroll_down)
+#------------------------------
+search = Entry(scrollable_content, textvariable="Naber")
+search.pack()
+key_names = ["HOME", "BACK", "RECENT", "POWER", "VOL_UP", "VOL_DOWN", "MUTE", "ENTER"]
+for i in key_names:
+    btn = Button(scrollable_content, text=f"{i}")
+    btn.pack
+for widget in  scrollable_content.winfo_children():
+    widget.pack_configure(pady=1)
+
+#---------------------------------------------------
 #-----------------------------------------------------
 #PLACEMENT CONFIGURATION
 upper_frame.rowconfigure(0, weight=1)
