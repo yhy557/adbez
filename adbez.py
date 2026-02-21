@@ -365,7 +365,7 @@ def connect(event):
 
 def try_connect():
     global current_process_adb
-    writing = tab1_input2.get()
+    writing = tab1_input2.get().strip()
     print(writing)
     si = subprocess.STARTUPINFO()
     si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
@@ -398,10 +398,13 @@ def try_connect():
             root.after(0, lambda l=line: update_ui(l))
         current_process_adb.stdout.close()
         current_process_adb.wait()
-        if not stopla2:
+        if "conected" in full_output.lower():
             stopla2 = True
             root.after(0, lambda: update_ui("Connected"))
-            connected_devices.config(text=writing)
+            connected_label_text = connected_devicesips.cget("text")
+            new_writing = f"{connected_label_text}\n{writing}"
+            connected_devicesips.configure(background="lightblue")
+            connected_devicesips.config(text=new_writing)
         try:
             root.after(0, lambda: tab1_stop_adb.grid_forget())
             print("stop button is being deleted")
@@ -538,6 +541,7 @@ def _on_scroll_down(event):
 root = Tk()
 root.minsize(500,300)
 root.title("AdbEz")
+root.config(background="gray")
 root.bind("<Map>", on_deiconify)
 root.geometry("1000x700")
 root.overrideredirect(True)
@@ -649,16 +653,16 @@ main_sections.add(tab_connected, text=data[current_lang]["l18"])
 
 #BLOCKS-----------------------------------------------
 #-TAB_CONNECT LAYOUTS
-paned_window = PanedWindow(tab_connect, orient=VERTICAL, bd=1, relief="sunken", sashwidth=4, sashrelief="sunken")
+paned_window = PanedWindow(tab_connect, orient=VERTICAL, bd=1, relief="sunken", sashwidth=4, sashrelief="sunken", background="black")
 paned_window.pack(fill=BOTH,expand=True)
 upper_frame = Frame(paned_window)
 paned_window.add(upper_frame, minsize=300)
-lower_frame = Frame(paned_window)
+lower_frame = Frame(paned_window, background="black")
 paned_window.add(lower_frame,minsize=50)
 root.update_idletasks()
 root.after(100, lambda: paned_window.sash_place(0, 0, 420))
 #-TAB_KEYEVENTS LAYOUTS
-paned_window2 = PanedWindow(tab_keyevents, orient=HORIZONTAL, bd=1, relief="sunken", sashwidth=4, sashrelief="sunken" )
+paned_window2 = PanedWindow(tab_keyevents, orient=HORIZONTAL, bd=1, relief="sunken", sashwidth=4, sashrelief="sunken")
 upper_frame2 = Frame(paned_window2)
 paned_window2.add(upper_frame2, minsize=700)
 paned_window2.pack(fill=BOTH,expand=True, anchor="w", side="left")
@@ -735,10 +739,14 @@ tab1_label_failed = Label(upper_frame, text="", foreground="red",width=26)
 tab1_label_failed2 = Label(upper_frame, text="", foreground="red",width=26)
 tab1_lang_button = Button(lang_btn_conatiner, text="Languages", width=10, height="1", bg="lightblue")
 
-connected_devices = Label(upper_frame, text="Connected IPs \n a", background="red")
-connected_devicesips = Label(upper_frame, text="aaaa", background="red")
-connected_devices.grid(row=0, column=2, sticky="ne")
-connected_devicesips.grid(row=1, column=2, sticky="ne")
+connected_container = ttk.Frame(upper_frame)
+connected_container.grid(row=0, column=2, sticky="ne")
+
+connected_devices = Label(connected_container, text="Connected IPs")
+connected_devicesips = Label(connected_container, text="")
+is_text_empty = connected_devicesips.cget("text")
+connected_devices.grid(row=0, column=0, sticky="ne")
+connected_devicesips.grid(row=1, column=0 , sticky="nsew")
 
 #I WANT TO USE MENUBUTTON BUT IT CAN'T DO THE FEATURES I WANT,SO WE WILL CREATE OUR OWN MENU
 #tab1_choose_ip = ttk.Menubutton(nmap_input_row, text="Choose")
