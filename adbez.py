@@ -561,14 +561,14 @@ tab1_connect_buton = Button(adb_btn_container, text=data[current_lang]["l6"], na
 tab1_label_failed = Label(upper_frame, text="", foreground="red",width=26)
 tab1_label_failed2 = Label(upper_frame, text="", foreground="red",width=26)
 tab1_lang_button = Button(lang_btn_conatiner, text="Languages", width=10, height="1", bg="lightblue")
-tab1_disconnect_button = Button(adb_btn_container, text="disconnect")
+tab1_disconnect_button = Button(adb_btn_container, text=data[current_lang]["l19"], name="l19")
 tab1_disconnect_button.grid(row=1, column=0)
 tab1_disconnect_button.bind("<Button-1>", disconnect_ip)
 
 connected_container = ttk.Frame(upper_frame)
 connected_container.grid(row=0, column=2, sticky="ne")
 
-connected_devices = Label(connected_container, text="Connected IPs")
+connected_devices = Label(connected_container, text=data[current_lang]["l20"], name="l20")
 connected_devicesips = Label(connected_container)
 is_text_empty = connected_devicesips.cget("text")
 connected_devices.grid(row=0, column=0, sticky="ne")
