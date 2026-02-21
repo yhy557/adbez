@@ -2,7 +2,6 @@ from tkinter import *
 from tkinter import font
 from tkinter import ttk
 import tkinter as tk
-
 import ctypes
 try:
     ctypes.windll.shcore.SetProcessDpiAwareness(1)
@@ -19,6 +18,9 @@ from datetime import datetime
 import platform
 import re
 from pathlib import Path
+#MY FILES
+from adb_connect import *
+from nmap_scan import *
 
 with open("lang.json", "r", encoding="utf-8") as e:
     data = json.load(e)
@@ -43,20 +45,27 @@ def app_startup():
     file_path = os.path.join(default_path, "check.json")
 
     now = datetime.now()
+    #if not os.path.exists(file_path):
     json_default_data = {
         "last_entered": f"{now}",
         "last_commands": {},
-        "finded_ips": {}
+        "connected_ips": {}
     }
+    #else:
+    #    pass
 
     if not os.path.exists(file_path):
         with open(file_path, "w") as f:
             json.dump(json_default_data, f, indent=4, ensure_ascii=False)
             pass
+        check_data = json_default_data
     else:
-        with open(file_path, "w") as f:
-            json.dump(json_default_data, f, indent=4, ensure_ascii=False)
-            pass
+        with open(file_path, "r", encoding="utf-8") as f:
+            check_data = json.load(f)
+            #json.dump(json_default_data, f, indent=4, ensure_ascii=False)
+            #pass
+    json_ip = check_data["connected_ips"]
+    connected_devicesips.configure(text="\n".join(json_ip.keys()))
 
     #CONTROLLING SOMETHINGS
     with open(file_path, "r", encoding="utf-8") as file:
@@ -96,13 +105,13 @@ def open_founded_ip_menu(event):
         menu_frame_founded.place_forget()
         print("menu_frame_founded is deleted")
         return
-    buton_x,buton_y = tab1_finded_ip.winfo_rootx(),tab1_finded_ip.winfo_rooty()
+    buton_x,buton_y = tab1_found_ip.winfo_rootx(),tab1_found_ip.winfo_rooty()
     buton_xp,buton_yp = tab_connect.winfo_rootx(),tab_connect.winfo_rooty()
 
     print("Real screen:",buton_x, buton_y)
     print("This window:",buton_xp, buton_yp)
     try:
-        menu_frame_founded.place(x=(buton_x - buton_xp), y=(buton_y - buton_yp)+tab1_finded_ip.winfo_height(), width=tab1_finded_ip.winfo_width(), anchor="nw")
+        menu_frame_founded.place(x=(buton_x - buton_xp), y=(buton_y - buton_yp)+tab1_found_ip.winfo_height(), width=tab1_found_ip.winfo_width(), anchor="nw")
         root.update_idletasks()
         now_x,now_y = menu_frame_founded.winfo_rootx(),menu_frame_founded.winfo_rooty()
         print(f"Created founded menu at: {now_x, now_y}")
@@ -201,222 +210,6 @@ def on_tab_selected(event):
     tab_text = event.widget.tab(selected_tab, "text")
     print(tab_text)
 
-def add_ips_in_menu(ip):
-    print("Hello i am add_ips_menu")
-    new_button = Button(menu_frame_founded, text=f"{ip}")
-    new_button.pack(fill="x")
-    new_button.bind("<Button-1>", lambda event, ip=ip: founded_enter_choosed_ip(event, ip))
-    button_references.append(new_button)
-    print(f"Founded ipsss: {new_button}")
-
-    #ips_length = len(founded_ips)
-    #for i in range(ips_length):
-    #    texts = f"founded_menu_frame_in{i}"
-    #    texts = Button(menu_frame_founded, text=f"{founded_ips[{i}]}")
-
-class nmap_scan:
-    def __init__(self):
-        self.current_process = None
-        self.stopla = False
-        self.founded_ips = []
-        self.current_ip_has_adb = False
-        t = threading.Thread(target=self.try_find)
-        t.start()
-    def try_find(self):
-        ip = tab1_input.get()
-        default_path = os.path.dirname(os.path.abspath(__file__))
-        main_path_py = os.path.join(default_path, "now_logs.txt")
-
-        if not ip:
-            #WE ARE GETTING ENTRY COORDINATES TO THE FAILED_LABELS
-            root.update_idletasks()
-            x = tab1_input.winfo_rootx()
-            y = tab1_input.winfo_rooty()
-            print(f"x degeri: {x}, y degeri:{y}")
-            tab1_label_failed.place(x=x-250,y=y-70)
-            print("Nothing has writed")
-            tab1_label_failed.config(text="Failed.Please write an IP address")
-            root.after(5000, lambda: tab1_label_failed.place_forget())
-            return
-        self.stopla = False
-        
-        log_text.config(state="normal")
-        log_text.insert("1.0", f"[{ip}]Scanning all ports...")
-        root.after(0, self.scanning_animation)
-        root.after(100, lambda: tab1_stop_nmap.grid(row=0, column=1, sticky="w",padx=(5,0)))
-
-        self.current_process = subprocess.Popen(f"nmap {ip}", shell=True, stdout=subprocess.PIPE, text=True)
-
-        full_output = ""
-        while True:
-            line = self.current_process.stdout.readline()
-            if not line or self.stopla:
-                break
-            full_output += line
-            root.after(0, lambda l=line: update_ui(l))
-        self.current_process.stdout.close()
-        self.current_process.wait()
-
-        with open(fr"{main_path_py}", "r+", encoding="utf-8") as file:
-            content = file.read()
-            file.seek(0)
-            file.write(full_output)
-            file.truncate()
-        for lines in content.splitlines():
-            check_ips = re.search(r'(\d+\.\d+\.\d+\.\d+)', lines)
-            if check_ips:
-                checked_ips = check_ips.group(1)
-                if checked_ips not in self.founded_ips:
-                    self.founded_ips.append(checked_ips)
-                    root.after(0, lambda ip=checked_ips: add_ips_in_menu(ip))
-        print("Dosya buraya kaydedildi:", os.path.abspath("now_logs.txt"))
-        root.after(2000, lambda: self.write_founded_ips())
-        if not self.stopla:
-            self.stopla = True
-            root.after(0, lambda: update_ui("Scan completed"))
-        try:
-            root.after(0, lambda:tab1_stop_nmap.grid_forget())
-            print("stop button is being deleted")
-        except Exception as e:
-            print(f"Can't deleting stop button: {e}")
-        log_text.config(state="disabled")
-        return
-    def stop_nmap(self):
-        if self.current_process:
-            system_os = platform.system()
-            try:
-                if system_os == "Windows":
-                    startupinfo = subprocess.STARTUPINFO()
-                    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-
-                    subprocess.call(['taskkill', '/F', '/T', '/PID', str(self.current_process.pid)], 
-                                    startupinfo=startupinfo)
-                else:
-                    import signal
-                    try:
-                        os.kill(self.current_process.pid, signal.SIGTERM)
-                        self.current_process.wait(1)
-                    except subprocess.TimeoutExpired:
-                        print("The process is resisting, so it will be killed directly...")
-                        os.kill(self.current_process.pid, signal.SIGKILL)
-
-                self.stopla = True
-                print("Nmap stopped")
-                root.after(20, lambda: update_ui("\n[!] NMAP scan is terminated"))
-                root.after(0, lambda: tab1_stop_nmap.grid_forget())
-            except Exception as e:
-                print(f"Nmap scan is can't terminated: {e}")
-
-    def scanning_animation(self, count=0):
-        ip = tab1_input.get()
-        if not self.stopla:
-            dots = [".", "..", "..."]
-            log_text.config(state="normal")
-            log_text.delete("1.0", "end")
-            log_text.insert("1.0", "Status: Scanning" + dots[count % 3] + f"[{ip}]")
-            log_text.config(state="disabled")
-
-            root.after(500,lambda: self.scanning_animation(count + 1))
-        else:
-            log_text.config(state="normal")
-            log_text.delete("1.0", "1.end")
-            log_text.insert("1.0", "Status: Scanning Completed")
-            log_text.config(state="disabled")
-            return
-    def write_founded_ips(self):
-        print(f"IPs ===  {self.founded_ips}")
-class adb_connect:
-    def __init__(self):
-        self.current_process_adb = None
-        self.stopla2 = False
-        print("Clicked ADB")
-        t = threading.Thread(target=self.try_connect)
-        t.start()
-    def try_connect(self):
-        writing = tab1_input2.get().strip()
-        print(writing)
-        si = subprocess.STARTUPINFO()
-        si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        if not writing:
-            #WE ARE GETTING ENTRY COORDINATES TO THE FAILED_LABELS
-            root.update_idletasks()
-            x = tab1_input2.winfo_rootx()
-            y = tab1_input2.winfo_rooty()
-            print(f"x value: {x}, y value:{y}")
-            tab1_label_failed2.place(x=x-250,y=y-70)
-            tab1_label_failed2.config(text="Failed.Please write an IP address")
-            root.after(5000, lambda: tab1_label_failed2.place_forget())
-            return
-        self.stopla2 = False
-        try:
-            self.current_process_adb = subprocess.Popen(
-                [finded_path, "connect", writing],
-                    stdout=subprocess.PIPE,
-                    text=True,
-                    startupinfo=si
-            )
-            tab1_stop_adb.grid(row=0, column=1, padx=(5,0))
-            full_output = ""
-            while True:
-                line = self.current_process_adb.stdout.readline()
-                if not line or self.stopla2:
-                    break
-                full_output += line
-                root.after(0, lambda l=line: update_ui(l))
-            self.current_process_adb.stdout.close()
-            self.current_process_adb.wait()
-            connected_label_text = connected_devicesips.cget("text")
-            connected_label_list = connected_label_text.split()
-            new_writing = f"{writing}"
-            for i in full_output.lower().split():
-                if i == "connected":
-                    self.stopla2 = True
-                    root.after(0, lambda: update_ui("Connected"))
-                    if connected_label_text == "":
-                        connected_devicesips.configure(background="lightblue")
-                        connected_devicesips.config(text=new_writing)
-                    for i in connected_label_list:
-                        if i == new_writing:
-                            print(f"Already connected {new_writing}")
-                            pass
-                        else:
-                            new_writing = f"{connected_label_text}\n{writing}"
-                            connected_devicesips.configure(background="lightblue")
-                            connected_devicesips.config(text=new_writing)
-            try:
-                root.after(0, lambda: tab1_stop_adb.grid_forget())
-                print("stop button is being deleted")
-            except Exception as e:
-                print(f"Can't deleting stop button: {e}")
-        except Exception as e:
-            print(f"Can't start adb connect: {e}")
-    def stop_adb(self):
-        system_os = platform.system()
-        if self.current_process_adb and self.current_process_adb.poll() is None:
-            try:
-                if system_os == "Windows":
-                    startupinfo = subprocess.STARTUPINFO()
-                    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-
-                    subprocess.call(['taskkill', '/F', '/T', '/PID', str(self.current_process_adb.pid)], 
-                                    startupinfo=startupinfo)
-                else:
-                    import signal
-                    try:
-                        os.kill(self.current_process_adb.pid, signal.SIGTERM)
-                        self.current_process_adb.wait(1)
-                    except subprocess.TimeoutExpired:
-                        print(f"The process is resisting, so it will be killed directly...")
-                        os.kill(self.current_process_adb.pid, signal.SIGKILL)
-                print("Adb being stopped")
-                root.after(20, lambda: update_ui("\n[!] ADB connect is terminated"))
-                root.after(0, lambda: tab1_stop_adb.grid_forget())
-            except Exception as e:
-                print(f"Nmap scan is can't terminated: {e}")
-        else:
-            tab1_stop_adb.grid_forget()
-
-
 def update_all_widgets(lang_code):
     global current_lang
     current_lang = lang_code
@@ -467,36 +260,36 @@ def update_ui(output):
     log_text.insert("end", f"\n {output}")
     log_text.see("end")
     log_text.config(state="disabled")
-
 #TO ACCESS THE FUNCTIONS WITHIN THE CLASS-
 active_adb = None
 def connect(event):
     global active_adb
-    active_adb = adb_connect()
+    active_adb = adb_connect(tab1_input2,root, tab1_label_failed2,found_path, tab1_stop_adb, connected_devicesips, update_ui)
 def stop_adb_event(event):
     if active_adb:
         active_adb.stop_adb()
 active_nmap = None
 def scan(event):
     global active_nmap
-    active_nmap = nmap_scan()
+    active_nmap = nmap_scan(tab1_input, log_text, tab1_label_failed, tab1_stop_nmap, root, update_ui, menu_frame_founded, founded_enter_choosed_ip, button_references)
 def stop_nmap_event(event):
     if active_nmap:
         active_nmap.stop_nmap()
 #-----------------------------------------
+
 tries = [
     "C:/platform-tools/adb.exe",
     os.path.expanduser("~") + "/AppData/Local/Android/Sdk/platform-tools/adb.exe"
 ]
 
-finded_path = None
+found_path = None
 
 for path in tries:
     if os.path.exists(path):
-        finded_path = path
+        found_path = path
 
-if finded_path:
-    print(f"Found: {finded_path}")
+if found_path:
+    print(f"Found: {found_path}")
 else:
     print("Not found")
 
@@ -630,11 +423,18 @@ def disconnect_ip(event):
     background_color = upper_frame.cget("background")
     try:
         subprocess.Popen(
-            [finded_path, "disconnect", label_text],
+            [found_path, "disconnect", label_text],
             stdout=subprocess.PIPE,
             text=True
         )
         print(f"Disconnected to {label_text}")
+        with open("check.json", "r", encoding="utf-8") as f:
+            check_data = json.load(f)
+        ip_to_remove = label_text.strip()
+        if ip_to_remove in check_data["connected_ips"]:
+            del check_data["connected_ips"][ip_to_remove]
+        with open("check.json", "w", encoding="utf-8") as fi:
+            json.dump(check_data, fi, indent=4)
         for i in connected_ips_list:
             if i == label_text:
                 connected_ips_list.remove(i)
@@ -805,7 +605,7 @@ connected_devicesips.grid(row=1, column=0 , sticky="nsew")
 #I WANT TO USE MENUBUTTON BUT IT CAN'T DO THE FEATURES I WANT,SO WE WILL CREATE OUR OWN MENU
 #tab1_choose_ip = ttk.Menubutton(nmap_input_row, text="Choose")
 tab1_choose_ip = Button(nmap_input_row, text=data[current_lang]["l13"], name="l13", takefocus=False, width=10)
-tab1_finded_ip = ttk.Button(adb_input_row, text=data[current_lang]["l14"], name="l14", takefocus=False)
+tab1_found_ip = ttk.Button(adb_input_row, text=data[current_lang]["l14"], name="l14", takefocus=False)
 #STOP NMAP-ADB BUTTON
 tab1_stop_nmap = ttk.Button(nmap_btn_container,text=data[current_lang]["l15"], name="l15",takefocus=False, style="Redbg.TButton")
 tab1_stop_adb = ttk.Button(adb_btn_container, text=data[current_lang]["l15"], name="l15", takefocus=False, style="Redbg.TButton")
@@ -834,7 +634,7 @@ nmap_btn_container.columnconfigure(0, minsize=100)
 
 tab1_label2.grid(row=4, column=1, sticky="n", padx=(0, 295))
 tab1_input2.grid(row=0, column=1, sticky="ew")
-tab1_finded_ip.grid(row=0, column=2, sticky="ew", padx=(15,0))
+tab1_found_ip.grid(row=0, column=2, sticky="ew", padx=(15,0))
 tab1_connect_buton.grid(row=0, column=0, sticky="ew",padx=(5,0))
 log_text.pack(fill=BOTH, expand=True)
 
@@ -844,7 +644,7 @@ tab1_choose_ip.bind("<Button-1>", open_ip_menu)
 #tab1_nmap_buton.bind("<Button-1>", find)
 tab1_nmap_buton.bind("<Button-1>", scan)
 tab1_connect_buton.bind("<Button-1>", connect)
-tab1_finded_ip.bind("<Button-1>", open_founded_ip_menu)
+tab1_found_ip.bind("<Button-1>", open_founded_ip_menu)
 
 main_sections.bind("<<NotebookTabChanged>>", on_tab_selected)
 
