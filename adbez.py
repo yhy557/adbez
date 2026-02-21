@@ -367,7 +367,7 @@ def try_connect():
         root.update_idletasks()
         x = tab1_input2.winfo_rootx()
         y = tab1_input2.winfo_rooty()
-        print(f"x degeri: {x}, y degeri:{y}")
+        print(f"x value: {x}, y value:{y}")
         tab1_label_failed2.place(x=x-250,y=y-70)
         tab1_label_failed2.config(text="Failed.Please write an IP address")
         root.after(5000, lambda: tab1_label_failed2.place_forget())
@@ -391,13 +391,14 @@ def try_connect():
             root.after(0, lambda l=line: update_ui(l))
         current_process_adb.stdout.close()
         current_process_adb.wait()
-        if "conected" in full_output.lower():
-            stopla2 = True
-            root.after(0, lambda: update_ui("Connected"))
-            connected_label_text = connected_devicesips.cget("text")
-            new_writing = f"{connected_label_text}\n{writing}"
-            connected_devicesips.configure(background="lightblue")
-            connected_devicesips.config(text=new_writing)
+        for i in full_output.lower().split():
+            if i == "connected":
+                stopla2 = True
+                root.after(0, lambda: update_ui("Connected"))
+                connected_label_text = connected_devicesips.cget("text")
+                new_writing = f"{connected_label_text}\n{writing}"
+                connected_devicesips.configure(background="lightblue")
+                connected_devicesips.config(text=new_writing)
         try:
             root.after(0, lambda: tab1_stop_adb.grid_forget())
             print("stop button is being deleted")
@@ -590,6 +591,29 @@ def on_enter_close(event):
     close_btn.config(bg="red")
 def leave_enter_close(event):
     close_btn.config(bg="#2d2d2d")
+def disconnect_ip(event):
+    root.update_idletasks()
+    label_text = tab1_input2.get().strip()
+    print("current ip address: ", label_text)
+    print("Clicked disconnect")
+    connected_ips_text = connected_devicesips.cget("text")
+    connected_ips_list = connected_ips_text.split()
+    try:
+        subprocess.Popen(
+            [finded_path, "disconnect", label_text],
+            stdout=subprocess.PIPE,
+            text=True
+        )
+        print(f"Disconnected to {label_text}")
+        for i in connected_ips_list:
+            if i == label_text:
+                connected_ips_list.remove(i)
+                new_text = "\n".join(connected_ips_list)
+                root.update_idletasks()
+                connected_devicesips.configure(text=new_text)
+                print("Deleted ip")
+    except Exception as e:
+        print("Error: {e}")
 
 min_btn = Button(title_bar, text="—", bg="#2d2d2d", fg="white", bd=0, 
                  activebackground="#404040", activeforeground="white",
@@ -731,6 +755,9 @@ tab1_connect_buton = Button(adb_btn_container, text=data[current_lang]["l6"], na
 tab1_label_failed = Label(upper_frame, text="", foreground="red",width=26)
 tab1_label_failed2 = Label(upper_frame, text="", foreground="red",width=26)
 tab1_lang_button = Button(lang_btn_conatiner, text="Languages", width=10, height="1", bg="lightblue")
+tab1_disconnect_button = Button(adb_btn_container, text="disconnect")
+tab1_disconnect_button.grid(row=1, column=0)
+tab1_disconnect_button.bind("<Button-1>", disconnect_ip)
 
 connected_container = ttk.Frame(upper_frame)
 connected_container.grid(row=0, column=2, sticky="ne")
