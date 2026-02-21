@@ -13,11 +13,13 @@
         "l11": "Every Commands",
         "l12": "Learn ADB",
         "l13": "Choose IP",
-        "l14": "Finded IPs",
+        "l14": "Found IPs",
         "l15": "Stop",
         "l16": "Terminal",
         "l17": "Settings",
-        "l18": "Connected"
+        "l18": "Connected",
+        "l19": "Disconnect",
+        "l20": "Connected IPs"
     },
     "tr": {
         "l1": "Bazı gerekli ayarlar kontrol ediliyor...",
@@ -37,7 +39,9 @@
         "l15": "Durdur",
         "l16": "Terminal",
         "l17": "Ayarlar",
-        "l18": "Bağlanıldı"
+        "l18": "Bağlanıldı",
+        "l19": "Bağlantıyı kes",
+        "l20": "Bağlanılan IP'ler"
     },
     "pt": {
         "l1": "Algumas verificações estão sendo processadas...",
@@ -57,6 +61,8 @@
         "l15": "Parar",
         "l16": "Terminal",
         "l17": "Configurações",
-        "l18": "Connected"
+        "l18": "Connected",
+        "l19": "Disconnect",
+        "l20": "Connected IPs"
     }
 }
