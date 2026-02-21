@@ -21,6 +21,7 @@ from pathlib import Path
 #MY FILES
 from adb_connect import *
 from nmap_scan import *
+from checks import *
 
 with open("lang.json", "r", encoding="utf-8") as e:
     data = json.load(e)
@@ -38,39 +39,6 @@ def show_in_taskbar(root):
     
     root.withdraw()
     root.after(10, root.deiconify)
-
-def app_startup():
-    print(f"{data[current_lang]["l1"]}")
-    default_path = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(default_path, "check.json")
-
-    now = datetime.now()
-    #if not os.path.exists(file_path):
-    json_default_data = {
-        "last_entered": f"{now}",
-        "last_commands": {},
-        "connected_ips": {}
-    }
-    #else:
-    #    pass
-
-    if not os.path.exists(file_path):
-        with open(file_path, "w") as f:
-            json.dump(json_default_data, f, indent=4, ensure_ascii=False)
-            pass
-        check_data = json_default_data
-    else:
-        with open(file_path, "r", encoding="utf-8") as f:
-            check_data = json.load(f)
-            #json.dump(json_default_data, f, indent=4, ensure_ascii=False)
-            #pass
-    json_ip = check_data["connected_ips"]
-    connected_devicesips.configure(text="\n".join(json_ip.keys()))
-
-    #CONTROLLING SOMETHINGS
-    with open(file_path, "r", encoding="utf-8") as file:
-        content = file.read()
-    print(f"{data[current_lang]["l2"]}")
 
 button_references = []
 current_lang = "en"
@@ -275,6 +243,10 @@ def scan(event):
 def stop_nmap_event(event):
     if active_nmap:
         active_nmap.stop_nmap()
+def checks():
+    checker = startup_check()
+    checker.app_startup(connected_devicesips, current_lang, data)
+    
 #-----------------------------------------
 
 tries = [
@@ -663,6 +635,6 @@ tab1_stop_adb.bind("<Button-1>", stop_adb_event)
 #CATCHING PANED WINDOW EVENT
 paned_window.bind("<B1-Motion>", changed_paned)
 
-app_startup()
+checks()
 show_in_taskbar(root)
 root.mainloop()
