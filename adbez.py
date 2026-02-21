@@ -281,6 +281,32 @@ class nmap_scan:
             print(f"Can't deleting stop button: {e}")
         log_text.config(state="disabled")
         return
+    def stop_nmap(self):
+        if self.current_process:
+            system_os = platform.system()
+            try:
+                if system_os == "Windows":
+                    startupinfo = subprocess.STARTUPINFO()
+                    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+                    subprocess.call(['taskkill', '/F', '/T', '/PID', str(self.current_process.pid)], 
+                                    startupinfo=startupinfo)
+                else:
+                    import signal
+                    try:
+                        os.kill(self.current_process.pid, signal.SIGTERM)
+                        self.current_process.wait(1)
+                    except subprocess.TimeoutExpired:
+                        print("The process is resisting, so it will be killed directly...")
+                        os.kill(self.current_process.pid, signal.SIGKILL)
+
+                self.stopla = True
+                print("Nmap stopped")
+                root.after(20, lambda: update_ui("\n[!] NMAP scan is terminated"))
+                root.after(0, lambda: tab1_stop_nmap.grid_forget())
+            except Exception as e:
+                print(f"Nmap scan is can't terminated: {e}")
+
     def scanning_animation(self, count=0):
         ip = tab1_input.get()
         if not self.stopla:
@@ -378,7 +404,9 @@ class adb_connect:
                     import signal
                     try:
                         os.kill(self.current_process_adb.pid, signal.SIGTERM)
-                    except:
+                        self.current_process_adb.wait(1)
+                    except subprocess.TimeoutExpired:
+                        print(f"The process is resisting, so it will be killed directly...")
                         os.kill(self.current_process_adb.pid, signal.SIGKILL)
                 print("Adb being stopped")
                 root.after(20, lambda: update_ui("\n[!] ADB connect is terminated"))
@@ -422,7 +450,8 @@ def update_all_widgets(lang_code):
                 if w_name in selected_texts:
                     try:
                         widget.config(text=selected_texts[w_name])
-                    except:
+                    except Exception as e:
+                        print(f"An error occurred while updating and finding widgets: {e}")
                         pass
                 if widget.winfo_children():
                     recursive_update(widget)
@@ -439,6 +468,7 @@ def update_ui(output):
     log_text.see("end")
     log_text.config(state="disabled")
 
+#TO ACCESS THE FUNCTIONS WITHIN THE CLASS-
 active_adb = None
 def connect(event):
     global active_adb
@@ -446,33 +476,14 @@ def connect(event):
 def stop_adb_event(event):
     if active_adb:
         active_adb.stop_adb()
-
-def stop_nmap(event):
-    global current_process, stopla
-    if current_process:
-        system_os = platform.system()
-        try:
-            if system_os == "Windows":
-                startupinfo = subprocess.STARTUPINFO()
-                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-
-                subprocess.call(['taskkill', '/F', '/T', '/PID', str(current_process.pid)], 
-                                startupinfo=startupinfo)
-            else:
-                import signal
-                try:
-                    os.kill(current_process.pid, signal.SIGTERM)
-                except:
-                    os.kill(current_process.pid, signal.SIGKILL)
-
-            stopla = True
-            print("Nmap stopped")
-            root.after(20, lambda: update_ui("\n[!] NMAP scan is terminated"))
-            root.after(0, lambda: tab1_stop_nmap.grid_forget())
-        except Exception as e:
-            print(f"Nmap scan is can't terminated: {e}")
-
-
+active_nmap = None
+def scan(event):
+    global active_nmap
+    active_nmap = nmap_scan()
+def stop_nmap_event(event):
+    if active_nmap:
+        active_nmap.stop_nmap()
+#-----------------------------------------
 tries = [
     "C:/platform-tools/adb.exe",
     os.path.expanduser("~") + "/AppData/Local/Android/Sdk/platform-tools/adb.exe"
@@ -830,7 +841,7 @@ log_text.pack(fill=BOTH, expand=True)
 tab1_lang_button.bind("<Button-1>", open_lang_menu)
 tab1_choose_ip.bind("<Button-1>", open_ip_menu)
 #tab1_nmap_buton.bind("<Button-1>", find)
-tab1_nmap_buton.bind("<Button-1>", lambda event: nmap_scan())
+tab1_nmap_buton.bind("<Button-1>", scan)
 tab1_connect_buton.bind("<Button-1>", connect)
 tab1_finded_ip.bind("<Button-1>", open_founded_ip_menu)
 
@@ -845,7 +856,7 @@ menu_frame_lang2.bind("<Button-1>", lambda event: update_all_widgets("tr"))
 menu_frame_lang3.bind("<Button-1>", lambda event: update_all_widgets("pt"))
 
 #stop nmap button event
-tab1_stop_nmap.bind("<Button-1>", stop_nmap)
+tab1_stop_nmap.bind("<Button-1>", stop_nmap_event)
 tab1_stop_adb.bind("<Button-1>", stop_adb_event)
 
 #CATCHING PANED WINDOW EVENT
