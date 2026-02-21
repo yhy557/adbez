@@ -537,6 +537,7 @@ def minimize_window():
 def on_deiconify(event):
     if not root.overrideredirect():
         root.overrideredirect(True)
+        root.after(10, lambda: show_in_taskbar(root))
 
 def maximize_window():
     if root.state() == 'zoomed':
