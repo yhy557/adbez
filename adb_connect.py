@@ -5,7 +5,7 @@ import os
 import json
 
 class adb_connect:
-    def __init__(self, tab1_input2, root,tab1_label_failed2,found_path,tab1_stop_adb,connected_devicesips, update_ui, connected_devicesips2):
+    def __init__(self, tab1_input2, root,tab1_label_failed2,found_path,tab1_stop_adb,connected_devicesips, update_ui, connected_devicesips2, test_counter):
         self.tab1_input2 = tab1_input2
         self.root = root
         self.tab1_label_failed2 = tab1_label_failed2
@@ -14,6 +14,8 @@ class adb_connect:
         self.connected_devicesips = connected_devicesips
         self.connected_devicesips2 = connected_devicesips2
         self.update_ui = update_ui
+        self.test_counter = test_counter
+        self.test_counter_check = []
         self.current_process_adb = None
         self.stopla2 = False
         print("Clicked ADB")
@@ -64,8 +66,11 @@ class adb_connect:
                     check_data["connected_ips"][new_writing] = "connected"
                     with open("check.json", "w", encoding="utf-8") as fi:
                         json.dump(check_data, fi, indent=4)
+                    self.test_counter += 1
                     self.connected_devicesips2.grid(row=1, column=0 , sticky="nsew")
-                    self.connected_devicesips2.configure(text=new_writing)
+                    self.test_counter_check[0].configure(text=new_writing)
+                    self.test_counter_check.append(self.connected_devicesips2)
+                    print("List of check ips",self.test_counter_check)
                     if connected_label_text == "":
                         self.connected_devicesips.configure(background="lightblue")
                         self.connected_devicesips.config(text=new_writing)
@@ -77,6 +82,9 @@ class adb_connect:
                             new_writing = f"{connected_label_text}\n{writing}"
                             self.connected_devicesips.configure(background="lightblue")
                             self.connected_devicesips.config(text=new_writing)
+                if i == "failed":
+                    print("Stop button is deleted")
+                    self.tab1_stop_adb.grid_forget()
             try:
                 self.root.after(0, lambda: self.tab1_stop_adb.grid_forget())
                 print("stop button is being deleted")
