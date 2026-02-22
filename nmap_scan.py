@@ -47,7 +47,7 @@ class nmap_scan:
         self.root.after(0, self.scanning_animation)
         self.root.after(100, lambda: self.tab1_stop_nmap.grid(row=0, column=1, sticky="w",padx=(5,0)))
 
-        self.current_process = subprocess.Popen(f"nmap {ip}", shell=True, stdout=subprocess.PIPE, text=True)
+        self.current_process = subprocess.Popen(["nmap", ip], shell=False, stdout=subprocess.PIPE, text=True)
 
         full_output = ""
         while True:
