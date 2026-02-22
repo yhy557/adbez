@@ -5,13 +5,14 @@ import os
 import json
 
 class adb_connect:
-    def __init__(self, tab1_input2, root,tab1_label_failed2,found_path,tab1_stop_adb,connected_devicesips, update_ui):
+    def __init__(self, tab1_input2, root,tab1_label_failed2,found_path,tab1_stop_adb,connected_devicesips, update_ui, connected_devicesips2):
         self.tab1_input2 = tab1_input2
         self.root = root
         self.tab1_label_failed2 = tab1_label_failed2
         self.found_path = found_path
         self.tab1_stop_adb = tab1_stop_adb
         self.connected_devicesips = connected_devicesips
+        self.connected_devicesips2 = connected_devicesips2
         self.update_ui = update_ui
         self.current_process_adb = None
         self.stopla2 = False
@@ -63,6 +64,8 @@ class adb_connect:
                     check_data["connected_ips"][new_writing] = "connected"
                     with open("check.json", "w", encoding="utf-8") as fi:
                         json.dump(check_data, fi, indent=4)
+                    self.connected_devicesips2.grid(row=1, column=0 , sticky="nsew")
+                    self.connected_devicesips2.configure(text=new_writing)
                     if connected_label_text == "":
                         self.connected_devicesips.configure(background="lightblue")
                         self.connected_devicesips.config(text=new_writing)
