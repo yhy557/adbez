@@ -68,8 +68,8 @@ class adb_connect:
                         json.dump(check_data, fi, indent=4)
                     self.test_counter += 1
                     self.connected_devicesips2.grid(row=1, column=0 , sticky="nsew")
-                    self.test_counter_check[0].configure(text=new_writing)
                     self.test_counter_check.append(self.connected_devicesips2)
+                    self.test_counter_check[0].configure(text=new_writing)
                     print("List of check ips",self.test_counter_check)
                     if connected_label_text == "":
                         self.connected_devicesips.configure(background="lightblue")
