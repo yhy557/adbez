@@ -1,13 +1,6 @@
 from tkinter import *
 from tkinter import font
 from tkinter import ttk
-import tkinter as tk
-import ctypes
-try:
-    ctypes.windll.shcore.SetProcessDpiAwareness(1)
-except Exception:
-    ctypes.windll.user32.SetProcessDPIAware()
-
 import random
 import time
 import os
@@ -24,22 +17,32 @@ import nmap_scan as nmaps
 from checks import *
 from scroll_buttons import *
 
+import tkinter as tk
+if platform.system() == "Windows":
+    import ctypes
+    try:
+        ctypes.windll.shcore.SetProcessDpiAwareness(1)
+    except Exception:
+        ctypes.windll.user32.SetProcessDPIAware()
+
+
 with open("lang.json", "r", encoding="utf-8") as e:
     data = json.load(e)
 
-def show_in_taskbar(root):
-    GWL_EXSTYLE = -20
-    WS_EX_APPWINDOW = 0x00040000
-    WS_EX_TOOLWINDOW = 0x00000080
-    
-    hwnd = ctypes.windll.user32.GetParent(root.winfo_id())
-    style = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
-    style = style & ~WS_EX_TOOLWINDOW
-    style = style | WS_EX_APPWINDOW
-    ctypes.windll.user32.SetWindowLongW(hwnd, GWL_EXSTYLE, style)
-    
-    root.withdraw()
-    root.after(10, root.deiconify)
+if platform.system() == "Windows":
+    def show_in_taskbar(root):
+        GWL_EXSTYLE = -20
+        WS_EX_APPWINDOW = 0x00040000
+        WS_EX_TOOLWINDOW = 0x00000080
+        
+        hwnd = ctypes.windll.user32.GetParent(root.winfo_id())
+        style = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
+        style = style & ~WS_EX_TOOLWINDOW
+        style = style | WS_EX_APPWINDOW
+        ctypes.windll.user32.SetWindowLongW(hwnd, GWL_EXSTYLE, style)
+        
+        root.withdraw()
+        root.after(10, root.deiconify)
 
 button_references = []
 current_lang = "en"
@@ -112,23 +115,6 @@ class Tooltip:
             self.tooltip_window.destroy()
             self.tooltip_window = None
 
-#CATCHING WINDOW SIZE FOR IP MENU
-def catch_size(event):
-    global paned_window, upper_frame
-    if event.widget == root:
-        if menu_frame.winfo_viewable() and menu_frame.winfo_exists():
-            menu_frame.place_forget()
-            print("menu_frame is deleted")
-        else:
-            print("menu_frame is null")
-        if menu_frame_founded.winfo_viewable() and menu_frame_founded.winfo_exists():
-            menu_frame_founded.place_forget()
-            print("menu_frame_founded is deleted")
-        if event.height > 600:
-            print(event.height)
-            paned_window.paneconfigure(upper_frame, minsize=350, height=550)
-            print("Minsize ayarlandı")
-
 
 def on_tab_selected(event):
     global load_clicked
@@ -139,6 +125,11 @@ def on_tab_selected(event):
     selected_tab = event.widget.select()
     tab_text = event.widget.tab(selected_tab, "text")
     btn_instance.load_again()
+    for m in all_menu:
+        if m.winfo_viewable() and m.winfo_exists():
+            m.place_forget()
+        else:
+            print(f"{m} is null")
     print(tab_text)
 
 def update_all_widgets(lang_code):
@@ -204,7 +195,7 @@ def stop_adb_event(event):
 active_nmap = None
 def scan(event):
     global active_nmap
-    active_nmap = nmaps.nmao_scan(tab1_input, log_text, tab1_label_failed, tab1_stop_nmap, root, update_ui, menu_frame_founded, founded_enter_choosed_ip, button_references)
+    active_nmap = nmaps.nmap_scan(tab1_input, log_text, tab1_label_failed, tab1_stop_nmap, root, update_ui, menu_frame_founded, founded_enter_choosed_ip, button_references)
 def stop_nmap_event(event):
     if active_nmap:
         active_nmap.stop_nmap()
@@ -229,10 +220,6 @@ if found_path:
     print(f"Found: {found_path}")
 else:
     print("Not found")
-
-def devices():
-    print("a")
-    return
 
 def start_move(event):
     root.x = event.x
@@ -384,6 +371,20 @@ min_btn.pack(side="right", fill="y")
 min_btn.bind("<Enter>", on_enter)
 min_btn.bind("<Leave>", leave_enter)
 
+def catch_size(event):
+    global paned_window, upper_frame
+    if event.widget == root:
+        for m in all_menu:
+            if m.winfo_viewable() and m.winfo_exists():
+                m.place_forget()
+                print(f"{m} is deleted")
+            else:
+                print(f"{m} is null")
+        if event.height > 600:
+            print(event.height)
+            paned_window.paneconfigure(upper_frame, minsize=350, height=550)
+            print("Minsize is set")
+
 #FULL SCREEN(□)
 max_btn = Button(title_bar, text="▢", bg="#2d2d2d", fg="white", bd=0, 
                  activebackground="#404040", activeforeground="white",
@@ -511,10 +512,6 @@ search.grid(row=0, column=1)
 tab2_category_button = Button(up_bar, text="Categories")
 tab2_category_button.bind("<Button-1>", lambda event: open_menu(event, menu_frame_category, tab2_category_button, tab_keyevents))
 tab2_category_button.grid(row=0, column=2)
-
-
-#for widget in  scrollable_content.winfo_children():
-#    widget.pack_configure(pady=1)
 #---------------------------------------------------
 #-----------------------------------------------------
 
@@ -650,12 +647,14 @@ tab1_stop_adb.bind("<Button-1>", stop_adb_event)
 #CATCHING PANED WINDOW EVENT
 paned_window.bind("<B1-Motion>", changed_paned)
 
-
 #FOR CATCHING CURRENT TAB
 def delete_widgets():
     for widgets in tab2_seperate_scroll_BTN.winfo_children()[60:]:
         widgets.pack_forget()
         print("Widgets deleting")
+
+#CATCHING WINDOW SIZE FOR IP MENU
+all_menu = [menu_frame, menu_frame_founded, menu_frame_lang, menu_frame_category]
 
 checks()
 show_in_taskbar(root)
