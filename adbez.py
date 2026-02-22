@@ -208,12 +208,15 @@ def on_tab_selected(event):
     delete_widgets()
     selected_tab = event.widget.select()
     tab_text = event.widget.tab(selected_tab, "text")
+    btn_instance.load_again()
     print(tab_text)
 
 def update_all_widgets(lang_code):
     global current_lang
     current_lang = lang_code
     new_texts = data[lang_code]
+    btn_instance.current_lang = lang_code
+    btn_instance.load_again()
 
     tabs = [
         (tab_connect, "l7"),
@@ -626,7 +629,9 @@ btn_instance = buttons(
     tab2_load_more_btn,
     tab2_seperate_scroll_LOAD,
     keyevents_buttons,
-    keyevents_labels
+    keyevents_labels,
+    data,
+    current_lang
 )
 
 connected_container = ttk.Frame(upper_frame)
