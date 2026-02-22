@@ -19,8 +19,8 @@ import platform
 import re
 from pathlib import Path
 #MY FILES
-from adb_connect import *
-from nmap_scan import *
+import adb_connect as adbc
+import nmap_scan as nmaps
 from checks import *
 from scroll_buttons import *
 
@@ -44,89 +44,24 @@ def show_in_taskbar(root):
 button_references = []
 current_lang = "en"
 
-#For IP menu
-def open_ip_menu(event):
-    print("tiklandi")
+def open_menu(event, frame, choosen_button, selected_tab):
+    print("Test")
     root.update_idletasks()
-    if menu_frame.winfo_viewable():
-        menu_frame.place_forget()
-        print("menu_frame is deleted")
+    if frame.winfo_viewable():
+        frame.place_forget()
+        print(f"{frame} is deleted")
         return
-    buton_x,buton_y = tab1_choose_ip.winfo_rootx(),tab1_choose_ip.winfo_rooty()
-    buton_xp,buton_yp = tab_connect.winfo_rootx(),tab_connect.winfo_rooty()
+    buton_x,buton_y = choosen_button.winfo_rootx(),choosen_button.winfo_rooty()
+    buton_xp,buton_yp = selected_tab.winfo_rootx(),selected_tab.winfo_rooty()
 
     print("Real screen:",buton_x, buton_y)
     print("This window:",buton_xp, buton_yp)
     try:
-        menu_frame.place(x=(buton_x - buton_xp), y=(buton_y - buton_yp)-tab1_choose_ip.winfo_height(), width=tab1_choose_ip.winfo_width(), anchor="w")
-        menu_frame_in1.pack(fill=X)
-        menu_frame_in2.pack(fill=X)
+        frame.place(x=(buton_x - buton_xp) + choosen_button.winfo_width(), y=(buton_y - buton_yp), width=choosen_button.winfo_width(), anchor="nw")
+        for child in frame.winfo_children():
+            child.pack(fill=X)
         root.update_idletasks()
-        now_x,now_y = menu_frame.winfo_rootx(),menu_frame.winfo_rooty()
-        print(f"Created menu at: {now_x, now_y}")
-    except Exception as e:
-        print(f"[E]Menu cant be created: {e}")
-
-def open_founded_ip_menu(event):
-    print("tiklandi")
-    root.update_idletasks()
-    if menu_frame_founded.winfo_viewable():
-        menu_frame_founded.place_forget()
-        print("menu_frame_founded is deleted")
-        return
-    buton_x,buton_y = tab1_found_ip.winfo_rootx(),tab1_found_ip.winfo_rooty()
-    buton_xp,buton_yp = tab_connect.winfo_rootx(),tab_connect.winfo_rooty()
-
-    print("Real screen:",buton_x, buton_y)
-    print("This window:",buton_xp, buton_yp)
-    try:
-        menu_frame_founded.place(x=(buton_x - buton_xp), y=(buton_y - buton_yp)+tab1_found_ip.winfo_height(), width=tab1_found_ip.winfo_width(), anchor="nw")
-        root.update_idletasks()
-        now_x,now_y = menu_frame_founded.winfo_rootx(),menu_frame_founded.winfo_rooty()
-        print(f"Created founded menu at: {now_x, now_y}")
-    except Exception as e:
-        print(f"[E]Menu cant be created: {e}")
-
-def open_lang_menu(event):
-    print("clicked")
-    root.update_idletasks()
-    if menu_frame_lang.winfo_viewable():
-        menu_frame_lang.place_forget()
-        print("menu_frame_lang is deleted")
-        return
-    buton_x,buton_y = tab1_lang_button.winfo_rootx(),tab1_lang_button.winfo_rooty()
-    buton_xp,buton_yp = tab_connect.winfo_rootx(),tab_connect.winfo_rooty()
-
-    print("Real screen:",buton_x, buton_y)
-    print("This window:",buton_xp, buton_yp)
-    try:
-        menu_frame_lang.place(x=(buton_x - buton_xp), y=(buton_y - buton_yp)+tab1_lang_button.winfo_height(), width=tab1_lang_button.winfo_width(), anchor="nw")
-        menu_frame_lang1.pack(fill=X)
-        menu_frame_lang2.pack(fill=X)
-        menu_frame_lang3.pack(fill=X)
-        root.update_idletasks()
-        now_x,now_y = menu_frame_lang.winfo_rootx(),menu_frame_lang.winfo_rooty()
-        print(f"Created founded menu at: {now_x, now_y}")
-    except Exception as e:
-        print(f"[E]Menu cant be created: {e}")
-
-def open_category_menu(event):
-    print("clicked")
-    root.update_idletasks()
-    if menu_frame_category.winfo_viewable():
-        menu_frame_category.place_forget()
-        print("menu_frame_category is deleted")
-        return
-    buton_x,buton_y = tab2_category_button.winfo_rootx(),tab2_category_button.winfo_rooty()
-    buton_xp,buton_yp = tab_keyevents.winfo_rootx(),tab_keyevents.winfo_rooty()
-
-    print("Real screen:",buton_x, buton_y)
-    print("This window:",buton_xp, buton_yp)
-    try:
-        menu_frame_category.place(x=(buton_x - buton_xp) + tab2_category_button.winfo_width(), y=(buton_y - buton_yp), width=tab2_category_button.winfo_width(), anchor="nw")
-        menu_frame_category_in1.pack(fill=X)
-        root.update_idletasks()
-        now_x,now_y = menu_frame_category.winfo_rootx(),menu_frame_category.winfo_rooty()
+        now_x,now_y = frame.winfo_rootx(),frame.winfo_rooty()
         print(f"Created founded menu at: {now_x, now_y}")
     except Exception as e:
         print(f"[E]Menu cant be created: {e}")
@@ -194,11 +129,6 @@ def catch_size(event):
             paned_window.paneconfigure(upper_frame, minsize=350, height=550)
             print("Minsize ayarlandı")
 
-#FOR CATCHING CURRENT TAB
-def delete_widgets():
-    for widgets in tab2_seperate_scroll_BTN.winfo_children()[60:]:
-        widgets.pack_forget()
-        print("Widgets deleting")
 
 def on_tab_selected(event):
     global load_clicked
@@ -267,14 +197,14 @@ def update_ui(output):
 active_adb = None
 def connect(event):
     global active_adb
-    active_adb = adb_connect(tab1_input2,root, tab1_label_failed2,found_path, tab1_stop_adb, connected_devicesips, update_ui, connected_devicesips2, test_counter)
+    active_adb = adbc.adb_connect(tab1_input2,root, tab1_label_failed2,found_path, tab1_stop_adb, connected_devicesips, update_ui, connected_devicesips2, test_counter)
 def stop_adb_event(event):
     if active_adb:
         active_adb.stop_adb()
 active_nmap = None
 def scan(event):
     global active_nmap
-    active_nmap = nmap_scan(tab1_input, log_text, tab1_label_failed, tab1_stop_nmap, root, update_ui, menu_frame_founded, founded_enter_choosed_ip, button_references)
+    active_nmap = nmaps.nmao_scan(tab1_input, log_text, tab1_label_failed, tab1_stop_nmap, root, update_ui, menu_frame_founded, founded_enter_choosed_ip, button_references)
 def stop_nmap_event(event):
     if active_nmap:
         active_nmap.stop_nmap()
@@ -407,18 +337,10 @@ title_bar.bind("<B1-Motion>", on_move)
 title_label = Label(title_bar, text="ADBez", bg="#2d2d2d", fg="white", font=("Arial", 9))
 title_label.pack(side="left", padx=10)
 
-def on_enter_max(event):
-    max_btn.config(bg="lightblue")
-def leave_enter_max(event):
-    max_btn.config(bg="#2d2d2d")
-def on_enter_min(event):
-    min_btn.config(bg="lightblue")
-def leave_enter_min(event):
-    min_btn.config(bg="#2d2d2d")
-def on_enter_close(event):
-    close_btn.config(bg="red")
-def leave_enter_close(event):
-    close_btn.config(bg="#2d2d2d")
+def on_enter(event):
+    event.widget.configure(bg="lightblue")
+def leave_enter(event):
+    event.widget.configure(bg="#2d2d2d")
 def disconnect_ip(event):
     root.update_idletasks()
     label_text = tab1_input2.get().strip()
@@ -459,23 +381,23 @@ min_btn = Button(title_bar, text="—", bg="#2d2d2d", fg="white", bd=0,
                  activebackground="#404040", activeforeground="white",
                  command=minimize_window, width=4, font=("Arial", 9))
 min_btn.pack(side="right", fill="y")
-min_btn.bind("<Enter>", on_enter_min)
-min_btn.bind("<Leave>", leave_enter_min)
+min_btn.bind("<Enter>", on_enter)
+min_btn.bind("<Leave>", leave_enter)
 
 #FULL SCREEN(□)
 max_btn = Button(title_bar, text="▢", bg="#2d2d2d", fg="white", bd=0, 
                  activebackground="#404040", activeforeground="white",
                  command=maximize_window, width=4, font=("Arial", 10))
 max_btn.pack(side="right", fill="y")
-max_btn.bind("<Enter>", on_enter_max)
-max_btn.bind("<Leave>", leave_enter_max)
+max_btn.bind("<Enter>", on_enter)
+max_btn.bind("<Leave>", leave_enter)
 
 close_btn = Button(title_bar, text="✕", bg="#2d2d2d", fg="white", bd=0, 
                       activebackground="red", command=root.destroy, width=4)
 close_btn.pack(side="right", fill="y")
 style.configure("Redbg.TButton", background="red")
-close_btn.bind("<Enter>", on_enter_close)
-close_btn.bind("<Leave>", leave_enter_close)
+close_btn.bind("<Enter>", on_enter)
+close_btn.bind("<Leave>", leave_enter)
 
 #CATCHING SIZE OF THE WINDOW FOR IP MENU
 root.bind("<Configure>", catch_size)
@@ -587,7 +509,7 @@ canvas2.bind_all("<Button-5>", _on_scroll_down)
 search = Entry(up_bar, text="Hi")
 search.grid(row=0, column=1)
 tab2_category_button = Button(up_bar, text="Categories")
-tab2_category_button.bind("<Button-1>", open_category_menu)
+tab2_category_button.bind("<Button-1>", lambda event: open_menu(event, menu_frame_category, tab2_category_button, tab_keyevents))
 tab2_category_button.grid(row=0, column=2)
 
 
@@ -686,7 +608,7 @@ menu_frame_lang2 = Button(menu_frame_lang, text="Turkce")
 menu_frame_lang3 = Button(menu_frame_lang, text="Português")
 #CATEGORY MENU
 menu_frame_category = Frame(upper_frame2, background="blue")
-menu_frame_category_in1 = Button(menu_frame,text="192.168.1.0/24", font=custom_font)
+menu_frame_category_in1 = Button(menu_frame_category,text="192.168.1.0/24", font=custom_font)
 
 #PLACEMENT
 tab1_lang_button.grid(row=0, column=0, sticky="nsew")
@@ -704,12 +626,12 @@ tab1_connect_buton.grid(row=0, column=0, sticky="ew",padx=(5,0))
 log_text.pack(fill=BOTH, expand=True)
 
 #BUTTON EVENTS-----------------------------------------------
-tab1_lang_button.bind("<Button-1>", open_lang_menu)
-tab1_choose_ip.bind("<Button-1>", open_ip_menu)
+tab1_lang_button.bind("<Button-1>", lambda event: open_menu(event, menu_frame_lang, tab1_lang_button, tab_connect))
+tab1_choose_ip.bind("<Button-1>", lambda event: open_menu(event, menu_frame, tab1_choose_ip, tab_connect))
 #tab1_nmap_buton.bind("<Button-1>", find)
 tab1_nmap_buton.bind("<Button-1>", scan)
 tab1_connect_buton.bind("<Button-1>", connect)
-tab1_found_ip.bind("<Button-1>", open_founded_ip_menu)
+tab1_found_ip.bind("<Button-1>", lambda event: open_menu(event, menu_frame_founded, tab1_found_ip, tab_connect))
 
 main_sections.bind("<<NotebookTabChanged>>", on_tab_selected)
 
@@ -728,6 +650,12 @@ tab1_stop_adb.bind("<Button-1>", stop_adb_event)
 #CATCHING PANED WINDOW EVENT
 paned_window.bind("<B1-Motion>", changed_paned)
 
+
+#FOR CATCHING CURRENT TAB
+def delete_widgets():
+    for widgets in tab2_seperate_scroll_BTN.winfo_children()[60:]:
+        widgets.pack_forget()
+        print("Widgets deleting")
 
 checks()
 show_in_taskbar(root)
