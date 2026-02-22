@@ -267,7 +267,7 @@ def update_ui(output):
 active_adb = None
 def connect(event):
     global active_adb
-    active_adb = adb_connect(tab1_input2,root, tab1_label_failed2,found_path, tab1_stop_adb, connected_devicesips, update_ui)
+    active_adb = adb_connect(tab1_input2,root, tab1_label_failed2,found_path, tab1_stop_adb, connected_devicesips, update_ui, connected_devicesips2)
 def stop_adb_event(event):
     if active_adb:
         active_adb.stop_adb()
@@ -361,7 +361,7 @@ def _on_scroll_down(event):
 
 #MAIN PANEL
 root = Tk()
-root.minsize(500,300)
+root.minsize(800,350)
 root.title("AdbEz")
 root.config(background="gray")
 root.bind("<Map>", on_deiconify)
@@ -435,6 +435,7 @@ def disconnect_ip(event):
             text=True
         )
         print(f"Disconnected to {label_text}")
+        connected_devicesips2.grid_forget()
         with open("check.json", "r", encoding="utf-8") as f:
             check_data = json.load(f)
         ip_to_remove = label_text.strip()
@@ -518,19 +519,23 @@ paned_window.add(lower_frame,minsize=50)
 root.update_idletasks()
 root.after(100, lambda: paned_window.sash_place(0, 0, 420))
 #-TAB_KEYEVENTS LAYOUTS
-paned_window2 = PanedWindow(tab_keyevents, orient=HORIZONTAL, bd=1, relief="sunken", sashwidth=4, sashrelief="sunken")
+paned_window2 = PanedWindow(tab_keyevents, orient=HORIZONTAL, bd=1, relief="sunken", sashwidth=4, sashrelief="sunken", bg="black")
 upper_frame2 = Frame(paned_window2)
 paned_window2.add(upper_frame2, minsize=700)
 paned_window2.pack(fill=BOTH,expand=True, anchor="w", side="left")
 lower_frame2 = Frame(paned_window2)
 paned_window2.add(lower_frame2,minsize=50)
 lower_frame2_log_label = Frame(lower_frame2)
-lower_frame2_log_label.grid(row=0, column=0)
+lower_frame2_connected_ips = Frame(lower_frame2)
+lower_frame2_connected_ips.grid(row=0, column=1)
+lower_frame2_log_label.grid(row=1, column=0)
+lower_frame2_connected_ips.configure(bg="yellow")
 
 upper_frame2.config(bg="red")
 lower_frame2.config(bg="lightblue")
 lower_frame2.rowconfigure(2, weight=1)
 lower_frame2.grid_columnconfigure(0, weight=1)
+paned_window2.paneconfigure(lower_frame2, minsize=1)
 #-NMAP INPUT ROW
 nmap_input_row = Frame(upper_frame)
 nmap_input_row.grid(row=2, column=1, sticky="ew",padx=(10))
@@ -559,17 +564,17 @@ lang_btn_conatiner.grid(row=0, column=0, sticky="nw")
 canvas2 = Canvas(upper_frame2, bg="red", highlightthickness=0)
 canvas2.pack(side="left", fill="both", expand=True)
 scrollable_bar = ttk.Scrollbar(upper_frame2, orient="vertical", command=canvas2.yview)
-scrollable_bar.pack(fill=Y, side="right", anchor="e")
+scrollable_bar.pack(fill=Y, side="right", anchor="e", expand=True)
 canvas2.configure(yscrollcommand=scrollable_bar.set)
 scrollable_content = Frame(canvas2, bg="red")
-canvas2.create_window((0, 0), window=scrollable_content, anchor="nw")
+canvas_window = canvas2.create_window((0, 0), window=scrollable_content, anchor="nw")
 scrollable_content.bind("<Configure>", on_frame_configure)
 tab2_seperate_scroll_BTN = Frame(scrollable_content)
 tab2_seperate_scroll_LOAD = Frame(scrollable_content)
 up_bar = Frame(scrollable_content)
-up_bar.pack()
-tab2_seperate_scroll_BTN.pack()
-tab2_seperate_scroll_LOAD.pack()
+up_bar.pack(expand=True)
+tab2_seperate_scroll_BTN.pack(expand=True, fill=X)
+tab2_seperate_scroll_LOAD.pack(expand=True, fill=X)
 up_bar.columnconfigure(0, weight=1)
 up_bar.columnconfigure(3, weight=1)
 #WINDOWS-----------------------
@@ -590,6 +595,11 @@ tab2_category_button.grid(row=0, column=2)
 #    widget.pack_configure(pady=1)
 #---------------------------------------------------
 #-----------------------------------------------------
+
+#FOR EXPAND WINDOW
+def on_canvas_resize(event):
+    canvas2.itemconfig(canvas_window, width=event.width)
+canvas2.bind("<Configure>", on_canvas_resize)
 #PLACEMENT CONFIGURATION
 upper_frame.rowconfigure(0, weight=1)
 upper_frame.rowconfigure(8, weight=1)
@@ -621,8 +631,18 @@ tab2_load_more_btn = Button(tab2_seperate_scroll_LOAD, text="Load more...")
 tab2_load_more_btn.pack()
 tab2_load_more_btn.bind("<Button-1>", lambda e: btn_instance.called_test_function())
 
+connected_container2 = ttk.Frame(lower_frame2)
+connected_container2.grid(row=0, column=0, sticky="n")
+
+
+connected_devices2 = Label(connected_container2, text=data[current_lang]["l20"], name="l20")
+connected_devicesips2 = Checkbutton(connected_container2)
+is_text_empty2 = connected_devicesips2.cget("text")
+connected_devices2.grid(row=0, column=0, sticky="ne")
+
 keyevents_buttons = []
 keyevents_labels = []
+background_color = upper_frame.cget("background")
 btn_instance = buttons(
     tab2_seperate_scroll_BTN,
     root,
@@ -631,7 +651,8 @@ btn_instance = buttons(
     keyevents_buttons,
     keyevents_labels,
     data,
-    current_lang
+    current_lang,
+    background_color
 )
 
 connected_container = ttk.Frame(upper_frame)
