@@ -267,7 +267,7 @@ def update_ui(output):
 active_adb = None
 def connect(event):
     global active_adb
-    active_adb = adb_connect(tab1_input2,root, tab1_label_failed2,found_path, tab1_stop_adb, connected_devicesips, update_ui, connected_devicesips2)
+    active_adb = adb_connect(tab1_input2,root, tab1_label_failed2,found_path, tab1_stop_adb, connected_devicesips, update_ui, connected_devicesips2, test_counter)
 def stop_adb_event(event):
     if active_adb:
         active_adb.stop_adb()
@@ -634,7 +634,7 @@ tab2_load_more_btn.bind("<Button-1>", lambda e: btn_instance.called_test_functio
 connected_container2 = ttk.Frame(lower_frame2)
 connected_container2.grid(row=0, column=0, sticky="n")
 
-
+test_counter = 0
 connected_devices2 = Label(connected_container2, text=data[current_lang]["l20"], name="l20")
 connected_devicesips2 = Checkbutton(connected_container2)
 is_text_empty2 = connected_devicesips2.cget("text")
