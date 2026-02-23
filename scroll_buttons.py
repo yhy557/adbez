@@ -34,7 +34,7 @@ class buttons:
             test_label.pack(side="right", expand=True, fill=X)
             name = f"Input keyevent {i+1}"
             button = Button(row_frame, text=name, bg="lightblue")
-            button.pack()
+            button.pack(expand=False)
             self.keyevents_buttons.append(button)
             self.keyevents_labels.append(test_label)
         print(self.keyevents_labels)
@@ -108,6 +108,8 @@ class buttons:
             self.load2()
         elif self.load_clicked == 3:
             self.load3()
+        elif self.load_clicked == 4:
+            self.load4()
         else:
             print("All keyevents loaded")
 
@@ -130,10 +132,10 @@ class buttons:
             row_frame = Frame(self.tab2_seperate_scroll_BTN)
             row_frame.pack(fill=X, pady=2)
             test_label = Label(row_frame, text="Test", width=65)
-            test_label.pack(side="right", expand=True)
+            test_label.pack(side="right", expand=True, fill=X)
             name = f"Input keyevent {i+1}"
             button = Button(row_frame, text=name, bg="lightblue")
-            button.pack()
+            button.pack(expand=False)
             self.keyevents_buttons.append(button)
             self.keyevents_labels.append(test_label)
         self.keyevents_labels[60].configure(text=self.data[self.current_lang]["l81"])
@@ -208,10 +210,10 @@ class buttons:
             row_frame = Frame(self.tab2_seperate_scroll_BTN)
             row_frame.pack(fill=X, pady=2)
             test_label = Label(row_frame, text="Test", width=65)
-            test_label.pack(side="right", expand=True)
+            test_label.pack(side="right", expand=True, fill=X)
             name = f"Input keyevent {i+1}"
             button = Button(row_frame, text=name, bg="lightblue")
-            button.pack()
+            button.pack(expand=False)
             self.keyevents_buttons.append(button)
             self.keyevents_labels.append(test_label)
         self.keyevents_labels[120].configure(text=self.data[self.current_lang]["l141"])
@@ -286,10 +288,10 @@ class buttons:
             row_frame = Frame(self.tab2_seperate_scroll_BTN)
             row_frame.pack(fill=X, pady=2)
             test_label = Label(row_frame, text="Test", width=65)
-            test_label.pack(side="right", expand=True)
+            test_label.pack(side="right", expand=True, fill=X)
             name = f"Input keyevent {i+1}"
             button = Button(row_frame, text=name, bg="lightblue")
-            button.pack()
+            button.pack(expand=False)
             self.keyevents_buttons.append(button)
             self.keyevents_labels.append(test_label)
         self.keyevents_labels[180].configure(text=self.data[self.current_lang]["l201"])
@@ -356,6 +358,20 @@ class buttons:
         self.root.after(101, lambda: self.tab2_load_more_btn.pack())
     #SEPERATE
     def load4(self):
+        print("Tıklandı44444-----------------------------------------")
+        self.root.update_idletasks()
+        self.tab2_load_more_btn.pack_forget()
+        self.tab2_seperate_scroll_LOAD.pack_forget()
+        for i in range(240, 288):
+            row_frame = Frame(self.tab2_seperate_scroll_BTN)
+            row_frame.pack(fill=X, pady=2)
+            test_label = Label(row_frame, text="Test", width=65)
+            test_label.pack(side="right", expand=True, fill=X)
+            name = f"Input keyevent {i+1}"
+            button = Button(row_frame, text=name, bg="lightblue")
+            button.pack(expand=False)
+            self.keyevents_buttons.append(button)
+            self.keyevents_labels.append(test_label)
         self.keyevents_labels[240].configure(text=self.data[self.current_lang]["l261"])
         self.keyevents_labels[241].configure(text=self.data[self.current_lang]["l262"])
         self.keyevents_labels[242].configure(text=self.data[self.current_lang]["l263"])
