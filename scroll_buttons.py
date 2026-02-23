@@ -20,21 +20,42 @@ class buttons:
         self.load_first()
 
 
-    def change_bg(self,event):
-        event.widget.configure(background="lightgray")
-    def change_bg_leave(self, event):
-        event.widget.configure(background=self.background_color)
+    def change_bg(self,event, color):
+        event.widget.configure(background=color)
+    def change_bg_leave(self, event, color):
+        event.widget.configure(background=color)
     def load_first(self):
+        self.tab2_seperate_scroll_BTN.columnconfigure(0, weight=1)
         for i in range(60):
             row_frame = Frame(self.tab2_seperate_scroll_BTN)
-            row_frame.pack(fill=X, pady=2)
-            test_label = Label(row_frame, text="Test")
-            test_label.bind("<Enter>", self.change_bg)
-            test_label.bind("<Leave>", self.change_bg_leave)
-            test_label.pack(side="right", expand=True, fill=X)
+            row_frame.grid(sticky="ew")
+            row_frame.columnconfigure(1, weight=1)
+            test_label = Label(row_frame,
+                   text="> STATUS: ONLINE",
+                   fg="#aaaaaa",
+                   bg="#1a1a1a",
+                   justify="left",
+                   wraplength=350)
+
+            test_label.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
+            test_label.bind("<Leave>", lambda event: self.change_bg_leave(event, "#121212"))
+            test_label.grid(row=0, column=1, sticky="ew")
             name = f"Input keyevent {i+1}"
-            button = Button(row_frame, text=name, bg="lightblue")
-            button.pack(expand=False)
+            button = Button(row_frame,
+                text=name,
+                font=("Consolas", 10),
+                fg="white",
+                bg="#2d2d2d",
+                activeforeground="white",
+                activebackground="#3d3d3d",
+                bd=0,
+                relief="flat",
+                padx=15,
+                pady=4,
+                cursor="hand2")
+            button.grid(row=0, column=0, sticky="w")
+            button.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
+            button.bind("<Leave>", lambda event: self.change_bg_leave(event, "#2d2d2d"))
             self.keyevents_buttons.append(button)
             self.keyevents_labels.append(test_label)
         print(self.keyevents_labels)
@@ -116,7 +137,7 @@ class buttons:
     #IF LANGUAGES CHANGED, LOAD AGAIN
     def load_again(self):
         for widgets in self.tab2_seperate_scroll_BTN.winfo_children()[:60]:
-            widgets.pack_forget()
+            widgets.destroy()
             print("Widgets deleting")
         self.keyevents_buttons.clear()
         self.keyevents_labels.clear()
@@ -128,14 +149,39 @@ class buttons:
         self.root.update_idletasks()
         self.tab2_load_more_btn.pack_forget()
         self.tab2_seperate_scroll_LOAD.pack_forget()
+        self.tab2_seperate_scroll_BTN.columnconfigure(0, weight=1)
         for i in range(60, 120):
             row_frame = Frame(self.tab2_seperate_scroll_BTN)
-            row_frame.pack(fill=X, pady=2)
-            test_label = Label(row_frame, text="Test", width=65)
-            test_label.pack(side="right", expand=True, fill=X)
+            row_frame.grid(sticky="ew")
+            row_frame.columnconfigure(1, weight=1)
+            test_label = Label(row_frame,
+                   text="> STATUS: ONLINE",
+                   font=("Consolas", 10),
+                   fg="#aaaaaa",
+                   bg="#1a1a1a",
+                   justify="left",
+                   wraplength=500)
+
+            test_label.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
+            test_label.bind("<Leave>", lambda event: self.change_bg_leave(event, "#121212"))
+            test_label.grid(row=0, column=1, sticky="ew")
             name = f"Input keyevent {i+1}"
-            button = Button(row_frame, text=name, bg="lightblue")
-            button.pack(expand=False)
+            button = Button(row_frame,
+                text=name,
+                font=("Consolas", 10),
+                fg="white",
+                bg="#2d2d2d",
+                activeforeground="white",
+                activebackground="#3d3d3d",
+                bd=0,
+                relief="flat",
+                padx=15,
+                pady=4,
+                cursor="hand2",
+                wraplength=450)
+            button.grid(row=0, column=0, sticky="w")
+            button.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
+            button.bind("<Leave>", lambda event: self.change_bg_leave(event, "#2d2d2d"))
             self.keyevents_buttons.append(button)
             self.keyevents_labels.append(test_label)
         self.keyevents_labels[60].configure(text=self.data[self.current_lang]["l81"])
@@ -206,14 +252,38 @@ class buttons:
         self.root.update_idletasks()
         self.tab2_load_more_btn.pack_forget()
         self.tab2_seperate_scroll_LOAD.pack_forget()
+        self.tab2_seperate_scroll_BTN.columnconfigure(0, weight=1)
         for i in range(120, 180):
             row_frame = Frame(self.tab2_seperate_scroll_BTN)
-            row_frame.pack(fill=X, pady=2)
-            test_label = Label(row_frame, text="Test", width=65)
-            test_label.pack(side="right", expand=True, fill=X)
+            row_frame.grid(sticky="ew")
+            row_frame.columnconfigure(1, weight=1)
+            test_label = Label(row_frame,
+                   text="> STATUS: ONLINE",
+                   font=("Consolas", 10),
+                   fg="#aaaaaa",
+                   bg="#1a1a1a",
+                   justify="left",
+                   wraplength=450)
+
+            test_label.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
+            test_label.bind("<Leave>", lambda event: self.change_bg_leave(event, "#121212"))
+            test_label.grid(row=0, column=1, sticky="ew")
             name = f"Input keyevent {i+1}"
-            button = Button(row_frame, text=name, bg="lightblue")
-            button.pack(expand=False)
+            button = Button(row_frame,
+                text=name,
+                font=("Consolas", 10),
+                fg="white",
+                bg="#2d2d2d",
+                activeforeground="white",
+                activebackground="#3d3d3d",
+                bd=0,
+                relief="flat",
+                padx=15,
+                pady=4,
+                cursor="hand2")
+            button.grid(row=0, column=0, sticky="w")
+            button.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
+            button.bind("<Leave>", lambda event: self.change_bg_leave(event, "#2d2d2d"))
             self.keyevents_buttons.append(button)
             self.keyevents_labels.append(test_label)
         self.keyevents_labels[120].configure(text=self.data[self.current_lang]["l141"])
@@ -284,14 +354,38 @@ class buttons:
         self.root.update_idletasks()
         self.tab2_load_more_btn.pack_forget()
         self.tab2_seperate_scroll_LOAD.pack_forget()
+        self.tab2_seperate_scroll_BTN.columnconfigure(0, weight=1)
         for i in range(180, 240):
             row_frame = Frame(self.tab2_seperate_scroll_BTN)
-            row_frame.pack(fill=X, pady=2)
-            test_label = Label(row_frame, text="Test", width=65)
-            test_label.pack(side="right", expand=True, fill=X)
+            row_frame.grid(sticky="ew")
+            row_frame.columnconfigure(1, weight=1)
+            test_label = Label(row_frame,
+                   text="> STATUS: ONLINE",
+                   font=("Consolas", 10),
+                   fg="#aaaaaa",
+                   bg="#1a1a1a",
+                   justify="left",
+                   wraplength=450)
+
+            test_label.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
+            test_label.bind("<Leave>", lambda event: self.change_bg_leave(event, "#121212"))
+            test_label.grid(row=0, column=1, sticky="ew")
             name = f"Input keyevent {i+1}"
-            button = Button(row_frame, text=name, bg="lightblue")
-            button.pack(expand=False)
+            button = Button(row_frame,
+                text=name,
+                font=("Consolas", 10),
+                fg="white",
+                bg="#2d2d2d",
+                activeforeground="white",
+                activebackground="#3d3d3d",
+                bd=0,
+                relief="flat",
+                padx=15,
+                pady=4,
+                cursor="hand2")
+            button.grid(row=0, column=0, sticky="w")
+            button.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
+            button.bind("<Leave>", lambda event: self.change_bg_leave(event, "#2d2d2d"))
             self.keyevents_buttons.append(button)
             self.keyevents_labels.append(test_label)
         self.keyevents_labels[180].configure(text=self.data[self.current_lang]["l201"])
@@ -362,14 +456,38 @@ class buttons:
         self.root.update_idletasks()
         self.tab2_load_more_btn.pack_forget()
         self.tab2_seperate_scroll_LOAD.pack_forget()
+        self.tab2_seperate_scroll_BTN.columnconfigure(0, weight=1)
         for i in range(240, 288):
             row_frame = Frame(self.tab2_seperate_scroll_BTN)
-            row_frame.pack(fill=X, pady=2)
-            test_label = Label(row_frame, text="Test", width=65)
-            test_label.pack(side="right", expand=True, fill=X)
+            row_frame.grid(sticky="ew")
+            row_frame.columnconfigure(1, weight=1)
+            test_label = Label(row_frame,
+                   text="> STATUS: ONLINE",
+                   font=("Consolas", 10),
+                   fg="#aaaaaa",
+                   bg="#1a1a1a",
+                   justify="left",
+                   wraplength=450)
+
+            test_label.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
+            test_label.bind("<Leave>", lambda event: self.change_bg_leave(event, "#121212"))
+            test_label.grid(row=0, column=1, sticky="ew")
             name = f"Input keyevent {i+1}"
-            button = Button(row_frame, text=name, bg="lightblue")
-            button.pack(expand=False)
+            button = Button(row_frame,
+                text=name,
+                font=("Consolas", 10),
+                fg="white",
+                bg="#2d2d2d",
+                activeforeground="white",
+                activebackground="#3d3d3d",
+                bd=0,
+                relief="flat",
+                padx=15,
+                pady=4,
+                cursor="hand2")
+            button.grid(row=0, column=0, sticky="w")
+            button.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
+            button.bind("<Leave>", lambda event: self.change_bg_leave(event, "#2d2d2d"))
             self.keyevents_buttons.append(button)
             self.keyevents_labels.append(test_label)
         self.keyevents_labels[240].configure(text=self.data[self.current_lang]["l261"])
