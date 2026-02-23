@@ -19,6 +19,6 @@
 
 ### Input keyevents tab
 
-<img width="600" alt="previewTabKeyevents" src="https://github.com/user-attachments/assets/a394c64c-3e9c-4d26-a636-588b55b3565e" />
+<img width="600" alt="TabKeyeventsPreview" src="https://github.com/user-attachments/assets/997cf819-df6d-4ec7-bd63-9119dbe68609" />
 
 *Portugese translation by:* **[@FetoyuDev](https://github.com/FetoyuDev)**
