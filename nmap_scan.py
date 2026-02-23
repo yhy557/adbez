@@ -7,7 +7,7 @@ import signal
 from tkinter import Button
 
 class nmap_scan:
-    def __init__(self, tab1_input, log_text, tab1_label_failed, tab1_stop_nmap, root, update_ui, menu_frame_founded, founded_enter_choosed_ip, button_references):
+    def __init__(self, tab1_input, log_text, tab1_label_failed, tab1_stop_nmap, root, update_ui, menu_frame_found, found_enter_choosed_ip, button_references):
         self.tab1_input = tab1_input
         self.button_references = button_references
         self.update_ui = update_ui
@@ -17,9 +17,9 @@ class nmap_scan:
         self.root = root
         self.current_process = None
         self.stopla = False
-        self.menu_frame_founded = menu_frame_founded
-        self.founded_enter_choosed_ip = founded_enter_choosed_ip
-        self.founded_ips = []
+        self.menu_frame_found = menu_frame_found
+        self.found_enter_choosed_ip = found_enter_choosed_ip
+        self.found_ips = []
         self.current_ip_has_adb = False
         print(f"DEBUG: button_references tipi: {type(self.button_references)}")
         t = threading.Thread(target=self.try_find)
@@ -68,11 +68,11 @@ class nmap_scan:
             check_ips = re.search(r'(\d+\.\d+\.\d+\.\d+)', lines)
             if check_ips:
                 checked_ips = check_ips.group(1)
-                if checked_ips not in self.founded_ips:
-                    self.founded_ips.append(checked_ips)
+                if checked_ips not in self.found_ips:
+                    self.found_ips.append(checked_ips)
                     self.root.after(0, lambda ip=checked_ips: self.add_ips_in_menu(ip))
         print("Dosya buraya kaydedildi:", os.path.abspath("now_logs.txt"))
-        self.root.after(2000, lambda: self.write_founded_ips())
+        self.root.after(2000, lambda: self.write_found_ips())
         if not self.stopla:
             self.stopla = True
             self.root.after(0, lambda: self.update_ui("Scan completed"))
@@ -85,16 +85,16 @@ class nmap_scan:
         return
     def add_ips_in_menu(self, ip):
         print("Hello i am add_ips_menu")
-        new_button = Button(self.menu_frame_founded, text=f"{ip}")
+        new_button = Button(self.menu_frame_found, text=f"{ip}")
         new_button.pack(fill="x")
-        new_button.bind("<Button-1>", lambda event, ip=ip: self.founded_enter_choosed_ip(event, ip))
+        new_button.bind("<Button-1>", lambda event, ip=ip: self.found_enter_choosed_ip(event, ip))
         self.button_references.append(new_button)
-        print(f"Founded ipsss: {new_button}")
+        print(f"found ipsss: {new_button}")
 
-        #ips_length = len(founded_ips)
+        #ips_length = len(found_ips)
         #for i in range(ips_length):
-        #    texts = f"founded_menu_frame_in{i}"
-        #    texts = Button(menu_frame_founded, text=f"{founded_ips[{i}]}")
+        #    texts = f"found_menu_frame_in{i}"
+        #    texts = Button(menu_frame_found, text=f"{found_ips[{i}]}")
 
     def stop_nmap(self):
         if self.current_process:
@@ -138,5 +138,5 @@ class nmap_scan:
             self.log_text.insert("1.0", "Status: Scanning Completed")
             self.log_text.config(state="disabled")
             return
-    def write_founded_ips(self):
-        print(f"IPs ===  {self.founded_ips}")
+    def write_found_ips(self):
+        print(f"IPs ===  {self.found_ips}")
