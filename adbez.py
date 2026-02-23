@@ -11,6 +11,7 @@ from datetime import datetime
 import platform
 import re
 from pathlib import Path
+import shutil
 #MY FILES
 import adb_connect as adbc
 import nmap_scan as nmaps
@@ -54,18 +55,18 @@ def open_menu(event, frame, choosen_button, selected_tab):
         frame.place_forget()
         print(f"{frame} is deleted")
         return
-    buton_x,buton_y = choosen_button.winfo_rootx(),choosen_button.winfo_rooty()
-    buton_xp,buton_yp = selected_tab.winfo_rootx(),selected_tab.winfo_rooty()
+    button_x,button_y = choosen_button.winfo_rootx(),choosen_button.winfo_rooty()
+    button_xp,button_yp = selected_tab.winfo_rootx(),selected_tab.winfo_rooty()
 
-    print("Real screen:",buton_x, buton_y)
-    print("This window:",buton_xp, buton_yp)
+    print("Real screen:",button_x, button_y)
+    print("This window:",button_xp, button_yp)
     try:
-        frame.place(x=(buton_x - buton_xp) + choosen_button.winfo_width(), y=(buton_y - buton_yp), width=choosen_button.winfo_width(), anchor="nw")
+        frame.place(x=(button_x - button_xp) + choosen_button.winfo_width(), y=(button_y - button_yp), width=choosen_button.winfo_width(), anchor="nw")
         for child in frame.winfo_children():
             child.pack(fill=X)
         root.update_idletasks()
         now_x,now_y = frame.winfo_rootx(),frame.winfo_rooty()
-        print(f"Created founded menu at: {now_x, now_y}")
+        print(f"Created found menu at: {now_x, now_y}")
     except Exception as e:
         print(f"[E]Menu cant be created: {e}")
 
@@ -79,13 +80,13 @@ def enter_choosed_ip(event):
         tab1_input.delete(0, "end")
         tab1_input.insert(0, clicked_button_label)
 #ADB MENU EVENTS
-def founded_enter_choosed_ip(event, ip):
+def found_enter_choosed_ip(event, ip):
     print(f"Pressed {ip}")
-    if menu_frame_founded.winfo_exists() and menu_frame_founded.winfo_viewable():
+    if menu_frame_found.winfo_exists() and menu_frame_found.winfo_viewable():
         tab1_input2.delete(0, "end")
         tab1_input2.insert(0, ip)
         
-#FOR MESSAGE BALLON, GEMINI GIVED ME THIS CODE------------------
+#FOR MESSAGE BALLON, GEMINI GAVE ME THIS CODE------------------
 class Tooltip:
     def __init__(self, widget, text):
         self.widget = widget
@@ -195,7 +196,7 @@ def stop_adb_event(event):
 active_nmap = None
 def scan(event):
     global active_nmap
-    active_nmap = nmaps.nmap_scan(tab1_input, log_text, tab1_label_failed, tab1_stop_nmap, root, update_ui, menu_frame_founded, founded_enter_choosed_ip, button_references)
+    active_nmap = nmaps.nmap_scan(tab1_input, log_text, tab1_label_failed, tab1_stop_nmap, root, update_ui, menu_frame_found, found_enter_choosed_ip, button_references)
 def stop_nmap_event(event):
     if active_nmap:
         active_nmap.stop_nmap()
@@ -205,10 +206,20 @@ def checks():
     
 #-----------------------------------------
 
-tries = [
-    "C:/platform-tools/adb.exe",
-    os.path.expanduser("~") + "/AppData/Local/Android/Sdk/platform-tools/adb.exe"
-]
+if platform.system() == "Windows":
+    tries = [
+        "C:/platform-tools/adb.exe",
+        os.path.expanduser("~") + "/AppData/Local/Android/Sdk/platform-tools/adb.exe"
+    ]
+else:
+    tries = [
+        shutil.which("adb"),
+        "adb",
+        os.path.expanduser("~") + "/Android/Sdk/platform-tools/adb",
+        "/usr/bin/adb",
+        "/usr/local/bin/adb",
+    ]
+    tries = [t for t in tries if t is not None]
 
 found_path = None
 
@@ -242,9 +253,9 @@ def changed_paned(event):
             print("menu_frame is deleted")
     else:
         print("menu_frame is null")
-    if menu_frame_founded.winfo_viewable() and menu_frame_founded.winfo_exists():
-        menu_frame_founded.place_forget()
-        print("menu_frame_founded is deleted")
+    if menu_frame_found.winfo_viewable() and menu_frame_found.winfo_exists():
+        menu_frame_found.place_forget()
+        print("menu_frame_found is deleted")
 
 def minimize_window():
     root.state('withdrawn')
@@ -254,7 +265,8 @@ def minimize_window():
 def on_deiconify(event):
     if not root.overrideredirect():
         root.overrideredirect(True)
-        root.after(10, lambda: show_in_taskbar(root))
+        if platform.system() == "Windows":
+            root.after(10, lambda: show_in_taskbar(root))
 
 def maximize_window():
     if root.state() == 'zoomed':
@@ -481,8 +493,8 @@ nmap_btn_container.grid(row=3, column=1,sticky="n")
 nmap_btn_container.columnconfigure(0, weight=0)
 nmap_btn_container.columnconfigure(1, weight=0)
 #-LANGUAGE BUTTON ROW
-lang_btn_conatiner = ttk.Frame(upper_frame)
-lang_btn_conatiner.grid(row=0, column=0, sticky="nw")
+lang_btn_container = ttk.Frame(upper_frame)
+lang_btn_container.grid(row=0, column=0, sticky="nw")
 #TAB_KEYEVENTS--------------------------------------
 canvas2 = Canvas(upper_frame2, bg="red", highlightthickness=0)
 canvas2.pack(side="left", fill="both", expand=True)
@@ -531,13 +543,13 @@ custom_font = font.Font(size=8)
 #DEFINITION
 tab1_label = ttk.Label(upper_frame, text=data[current_lang]["l3"], name="l3")
 tab1_input = ttk.Entry(nmap_input_row)
-tab1_nmap_buton = Button(nmap_btn_container, text=data[current_lang]["l4"], name="l4")
+tab1_nmap_button = Button(nmap_btn_container, text=data[current_lang]["l4"], name="l4")
 tab1_label2 = ttk.Label(upper_frame, text=data[current_lang]["l5"], name="l5")
 tab1_input2 = ttk.Entry(adb_input_row)
-tab1_connect_buton = Button(adb_btn_container, text=data[current_lang]["l6"], name="l6")
+tab1_connect_button = Button(adb_btn_container, text=data[current_lang]["l6"], name="l6")
 tab1_label_failed = Label(upper_frame, text="", foreground="red",width=26)
 tab1_label_failed2 = Label(upper_frame, text="", foreground="red",width=26)
-tab1_lang_button = Button(lang_btn_conatiner, text="Languages", width=10, height="1", bg="lightblue")
+tab1_lang_button = Button(lang_btn_container, text="Languages", width=10, height="1", bg="lightblue")
 tab1_disconnect_button = Button(adb_btn_container, text=data[current_lang]["l19"], name="l19")
 tab1_disconnect_button.grid(row=1, column=0)
 tab1_disconnect_button.bind("<Button-1>", disconnect_ip)
@@ -596,7 +608,7 @@ print(tab1_choose_ip.winfo_width())
 menu_frame_in1 = Button(menu_frame,text="192.168.1.0/24", font=custom_font)
 menu_frame_in2 = Button(menu_frame,text="127.0.0.0/24")
 #ADB IP MENU
-menu_frame_founded = Frame(upper_frame, background="red")
+menu_frame_found = Frame(upper_frame, background="red")
 log_text = Text(lower_frame, height=1)
 #LANGUAGES MENU
 menu_frame_lang = Frame(upper_frame, background="red")
@@ -613,22 +625,22 @@ tab1_lang_button.grid(row=0, column=0, sticky="nsew")
 tab1_label.grid(row=1, column=1, sticky="n", pady=(0, 5), padx=(0, 285))
 tab1_input.grid(row=0, column=1, sticky="ew", pady=(0, 10))
 tab1_choose_ip.grid(row=0, column=2, sticky="we", padx=(15,0), pady=(0,10))
-tab1_nmap_buton.grid(row=0, column=0, sticky="ew")
+tab1_nmap_button.grid(row=0, column=0, sticky="ew")
 nmap_btn_container.columnconfigure(0, minsize=100)
 
 tab1_label2.grid(row=4, column=1, sticky="n", padx=(0, 295))
 tab1_input2.grid(row=0, column=1, sticky="ew")
 tab1_found_ip.grid(row=0, column=2, sticky="ew", padx=(15,0))
-tab1_connect_buton.grid(row=0, column=0, sticky="ew",padx=(5,0))
+tab1_connect_button.grid(row=0, column=0, sticky="ew",padx=(5,0))
 log_text.pack(fill=BOTH, expand=True)
 
 #BUTTON EVENTS-----------------------------------------------
 tab1_lang_button.bind("<Button-1>", lambda event: open_menu(event, menu_frame_lang, tab1_lang_button, tab_connect))
 tab1_choose_ip.bind("<Button-1>", lambda event: open_menu(event, menu_frame, tab1_choose_ip, tab_connect))
-#tab1_nmap_buton.bind("<Button-1>", find)
-tab1_nmap_buton.bind("<Button-1>", scan)
-tab1_connect_buton.bind("<Button-1>", connect)
-tab1_found_ip.bind("<Button-1>", lambda event: open_menu(event, menu_frame_founded, tab1_found_ip, tab_connect))
+#tab1_nmap_button.bind("<Button-1>", find)
+tab1_nmap_button.bind("<Button-1>", scan)
+tab1_connect_button.bind("<Button-1>", connect)
+tab1_found_ip.bind("<Button-1>", lambda event: open_menu(event, menu_frame_found, tab1_found_ip, tab_connect))
 
 main_sections.bind("<<NotebookTabChanged>>", on_tab_selected)
 
@@ -654,8 +666,9 @@ def delete_widgets():
         print("Widgets deleting")
 
 #CATCHING WINDOW SIZE FOR IP MENU
-all_menu = [menu_frame, menu_frame_founded, menu_frame_lang, menu_frame_category]
+all_menu = [menu_frame, menu_frame_found, menu_frame_lang, menu_frame_category]
 
 checks()
-show_in_taskbar(root)
+if platform.system() == "Windows":
+    show_in_taskbar(root)
 root.mainloop()
