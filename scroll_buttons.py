@@ -3,13 +3,14 @@ from tkinter import font
 from tkinter import ttk
 import tkinter as tk
 class buttons:
-    def __init__(self, tab2_seperate_scroll_BTN, root, tab2_load_more_btn, tab2_seperate_scroll_LOAD, keyevents_buttons, keyevents_labels, data, current_lang):
+    def __init__(self, tab2_seperate_scroll_BTN, root, tab2_load_more_btn, tab2_seperate_scroll_LOAD, keyevents_buttons, keyevents_labels, data, current_lang, background_color):
         self.tab2_seperate_scroll_BTN = tab2_seperate_scroll_BTN
         self.root = root
         self.tab2_load_more_btn = tab2_load_more_btn
         self.tab2_seperate_scroll_LOAD = tab2_seperate_scroll_LOAD
         self.data = data
         self.current_lang = current_lang
+        self.background_color = background_color 
 
         self.keyevents_buttons = []
         self.keyevents_labels = []
@@ -17,16 +18,24 @@ class buttons:
         self.keyevents_labels_3 = []
         self.keyevents_labels_4 = []
         self.load_first()
+
+
+    def change_bg(self,event):
+        event.widget.configure(background="lightgray")
+    def change_bg_leave(self, event):
+        event.widget.configure(background=self.background_color)
     def load_first(self):
         for i in range(60):
             row_frame = Frame(self.tab2_seperate_scroll_BTN)
             row_frame.pack(fill=X, pady=2)
-            test_label = Label(row_frame, text="Test", width=65)
-            test_label.pack(side="right", expand=True)
+            test_label = Label(row_frame, text="Test")
+            test_label.bind("<Enter>", self.change_bg)
+            test_label.bind("<Leave>", self.change_bg_leave)
+            test_label.pack(side="right", expand=True, fill=X)
             name = f"Input keyevent {i+1}"
-            buton = Button(row_frame, text=name, bg="lightblue")
-            buton.pack()
-            self.keyevents_buttons.append(buton)
+            button = Button(row_frame, text=name, bg="lightblue")
+            button.pack()
+            self.keyevents_buttons.append(button)
             self.keyevents_labels.append(test_label)
         print(self.keyevents_labels)
         self.keyevents_labels[0].configure(text=self.data[self.current_lang]["l21"])
@@ -123,9 +132,9 @@ class buttons:
             test_label = Label(row_frame, text="Test", width=65)
             test_label.pack(side="right", expand=True)
             name = f"Input keyevent {i+1}"
-            buton = Button(row_frame, text=name, bg="lightblue")
-            buton.pack()
-            self.keyevents_buttons.append(buton)
+            button = Button(row_frame, text=name, bg="lightblue")
+            button.pack()
+            self.keyevents_buttons.append(button)
             self.keyevents_labels.append(test_label)
         self.keyevents_labels[60].configure(text=self.data[self.current_lang]["l81"])
         self.keyevents_labels[61].configure(text=self.data[self.current_lang]["l82"])
@@ -201,9 +210,9 @@ class buttons:
             test_label = Label(row_frame, text="Test", width=65)
             test_label.pack(side="right", expand=True)
             name = f"Input keyevent {i+1}"
-            buton = Button(row_frame, text=name, bg="lightblue")
-            buton.pack()
-            self.keyevents_buttons.append(buton)
+            button = Button(row_frame, text=name, bg="lightblue")
+            button.pack()
+            self.keyevents_buttons.append(button)
             self.keyevents_labels.append(test_label)
         self.keyevents_labels[120].configure(text=self.data[self.current_lang]["l141"])
         self.keyevents_labels[121].configure(text=self.data[self.current_lang]["l142"])
@@ -279,9 +288,9 @@ class buttons:
             test_label = Label(row_frame, text="Test", width=65)
             test_label.pack(side="right", expand=True)
             name = f"Input keyevent {i+1}"
-            buton = Button(row_frame, text=name, bg="lightblue")
-            buton.pack()
-            self.keyevents_buttons.append(buton)
+            button = Button(row_frame, text=name, bg="lightblue")
+            button.pack()
+            self.keyevents_buttons.append(button)
             self.keyevents_labels.append(test_label)
         self.keyevents_labels[180].configure(text=self.data[self.current_lang]["l201"])
         self.keyevents_labels[181].configure(text=self.data[self.current_lang]["l202"])
