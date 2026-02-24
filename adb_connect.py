@@ -30,7 +30,7 @@ class adb_connect:
         self.tab1_label_failed2.config(text="Failed.Please write an IP address")
         self.root.after(5000, lambda: self.tab1_label_failed2.place_forget())
     def test_show_status(self):
-        self.root.after(0, self.tab1_stop_adb.grid(row=0, column=1, padx=(5,0)))
+        self.root.after(0, lambda: self.tab1_stop_adb.grid(row=0, column=1, padx=(5,0)))
         full_output = ""
         while True:
             line = self.current_process_adb.stdout.readline()
@@ -42,14 +42,14 @@ class adb_connect:
         self.current_process_adb.wait()
         connected_label_text = self.connected_devicesips.cget("text")
         connected_label_list = connected_label_text.split()
-        new_writing = f"{self.writing}"
+        new_writing = self.writing
         for word in full_output.lower().split():
             if word == "connected" and "failed" not in full_output.lower():
                 self.stopla2 = True
                 self.root.after(0, lambda: self.update_ui("Connected"))
                 with open("check.json", "r", encoding="utf-8") as f:
                     check_data = json.load(f)
-                check_data["connected_ips"][new_writing] = "connected"
+                check_data["connected_ips"][self.writing] = "connected"
                 with open("check.json", "w", encoding="utf-8") as fi:
                     json.dump(check_data, fi, indent=4)
                 self.test_counter += 1
@@ -60,24 +60,24 @@ class adb_connect:
                 if connected_label_text == "":
                     self.root.after(0, lambda: self.connected_devicesips.configure(background="lightblue"))
                     self.root.after(0, lambda: self.connected_devicesips.config(text=new_writing))
-                for i in connected_label_list:
-                    if i == new_writing:
-                        print(i)
-                        print(f"Already connected {new_writing}")
-                        pass
-                    else:
-                        new_writing = f"{connected_label_text}\n{self.writing}"
-                        self.root.after(0, lambda: self.connected_devicesips.configure(background="lightblue"))
-                        self.root.after(0, lambda: self.connected_devicesips.config(text=new_writing))
+                elif new_writing not in connected_label_list:
+                    new_writing = f"{connected_label_text}\n{self.writing}"
+                    self.root.after(0, lambda: self.connected_devicesips.configure(background="lightblue"))
+                    self.root.after(0, lambda: self.connected_devicesips.config(text=new_writing))
+                else:
+                    print(f"Already connected {new_writing}")
+                    pass
+                break
             if word == "failed":
                 print("Stop button is deleted")
                 self.root.after(0, lambda: self.tab1_stop_adb.grid_forget())
+                break
         try:
             self.root.after(0, lambda: self.tab1_stop_adb.grid_forget())
             print("stop button is being deleted")
         except Exception as e:
             print(f"Can't deleting stop button: {e}")
-        
+
     def try_connect(self):
         self.writing = self.tab1_input2.get().strip()
         print(self.writing)
