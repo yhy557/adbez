@@ -30,7 +30,7 @@ class adb_connect:
         self.tab1_label_failed2.config(text="Failed.Please write an IP address")
         self.root.after(5000, lambda: self.tab1_label_failed2.place_forget())
     def test_show_status(self):
-        self.tab1_stop_adb.grid(row=0, column=1, padx=(5,0))
+        self.root.after(0, self.tab1_stop_adb.grid(row=0, column=1, padx=(5,0)))
         full_output = ""
         while True:
             line = self.current_process_adb.stdout.readline()
@@ -53,24 +53,25 @@ class adb_connect:
                 with open("check.json", "w", encoding="utf-8") as fi:
                     json.dump(check_data, fi, indent=4)
                 self.test_counter += 1
-                self.connected_devicesips2.grid(row=1, column=0 , sticky="nsew")
+                self.root.after(0, lambda: self.connected_devicesips2.grid(row=1, column=0 , sticky="nsew"))
                 self.test_counter_check.append(self.connected_devicesips2)
-                self.test_counter_check[0].configure(text=new_writing)
+                self.root.after(0, lambda: self.test_counter_check[0].configure(text=new_writing))
                 print("List of check ips",self.test_counter_check)
                 if connected_label_text == "":
-                    self.connected_devicesips.configure(background="lightblue")
-                    self.connected_devicesips.config(text=new_writing)
+                    self.root.after(0, lambda: self.connected_devicesips.configure(background="lightblue"))
+                    self.root.after(0, lambda: self.connected_devicesips.config(text=new_writing))
                 for i in connected_label_list:
                     if i == new_writing:
+                        print(i)
                         print(f"Already connected {new_writing}")
                         pass
                     else:
                         new_writing = f"{connected_label_text}\n{self.writing}"
-                        self.connected_devicesips.configure(background="lightblue")
-                        self.connected_devicesips.config(text=new_writing)
+                        self.root.after(0, lambda: self.connected_devicesips.configure(background="lightblue"))
+                        self.root.after(0, lambda: self.connected_devicesips.config(text=new_writing))
             if word == "failed":
                 print("Stop button is deleted")
-                self.tab1_stop_adb.grid_forget()
+                self.root.after(0, lambda: self.tab1_stop_adb.grid_forget())
         try:
             self.root.after(0, lambda: self.tab1_stop_adb.grid_forget())
             print("stop button is being deleted")
@@ -93,7 +94,7 @@ class adb_connect:
                     text=True,
                     startupinfo=si
             )
-            self.test_show_status
+            self.test_show_status()
         except Exception as e:
             print(f"Can't start adb connect: {e}")
 
