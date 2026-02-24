@@ -16,7 +16,7 @@ import shutil
 import adb_connect as adbc
 import nmap_scan as nmaps
 from checks import *
-from scroll_buttons import *
+from scroll_buttons import buttons
 
 import tkinter as tk
 if platform.system() == "Windows":
@@ -61,7 +61,7 @@ def open_menu(event, frame, choosen_button, selected_tab):
     print("Real screen:",button_x, button_y)
     print("This window:",button_xp, button_yp)
     try:
-        frame.place(x=(button_x - button_xp) + choosen_button.winfo_width(), y=(button_y - button_yp), width=choosen_button.winfo_width(), anchor="nw")
+        frame.place(x=(button_x - button_xp) + choosen_button.winfo_width(), y=(button_y - button_yp) , anchor="nw")
         for child in frame.winfo_children():
             child.pack(fill=X)
         root.update_idletasks()
@@ -127,7 +127,7 @@ def on_tab_selected(event):
     tab_text = event.widget.tab(selected_tab, "text")
     btn_instance.load_again()
     for m in all_menu:
-        if m.winfo_viewable() and m.winfo_exists():
+        if m.winfo_exists():
             m.place_forget()
         else:
             print(f"{m} is null")
@@ -189,7 +189,7 @@ def update_ui(output):
 active_adb = None
 def connect(event):
     global active_adb
-    active_adb = adbc.adb_connect(tab1_input2,root, tab1_label_failed2,found_path, tab1_stop_adb, connected_devicesips, update_ui, connected_devicesips2, test_counter)
+    active_adb = adbc.adb_connect(tab1_input2,root, tab1_label_failed2,found_path, tab1_stop_adb, connected_devicesips, update_ui, connected_devicesips2, test_counter, processes_in)
 def stop_adb_event(event):
     if active_adb:
         active_adb.stop_adb()
@@ -288,12 +288,21 @@ def _on_scroll_up(event):
 def _on_scroll_down(event):
     canvas2.yview_scroll(1, "units")
 
+def close_menus(event):
+    print("HIIIIIIIIIIIIIII")
+    if isinstance(event.widget, Button):
+        return
+    for menus in all_menu:
+        if menus.winfo_viewable() and menus.winfo_exists():
+            menus.place_forget()
+
 #MAIN PANEL
 root = Tk()
 root.minsize(800,350)
 root.title("AdbEz")
 root.config(background="gray")
 root.bind("<Map>", on_deiconify)
+root.bind("<Button-1>", close_menus)
 root.geometry("1000x700")
 root.overrideredirect(True)
 root.config(bg='#1e1e1e')
@@ -360,6 +369,9 @@ def disconnect_ip(event):
         with open("check.json", "r", encoding="utf-8") as f:
             check_data = json.load(f)
         ip_to_remove = label_text.strip()
+        print(f"Deleting ip: {ip_to_remove}")
+        #now_data = list(check_data["connected_ips"].keys())
+        #print("Testinggggg: ", now_data.split("\n"))
         if ip_to_remove in check_data["connected_ips"]:
             del check_data["connected_ips"][ip_to_remove]
         with open("check.json", "w", encoding="utf-8") as fi:
@@ -521,7 +533,7 @@ canvas2.bind_all("<Button-5>", _on_scroll_down)
 #------------------------------
 search = Entry(up_bar, text="Hi")
 search.grid(row=0, column=1)
-tab2_category_button = Button(up_bar, text="Categories")
+tab2_category_button = Button(up_bar, text=data[current_lang]["l309"], name="l309")
 tab2_category_button.bind("<Button-1>", lambda event: open_menu(event, menu_frame_category, tab2_category_button, tab_keyevents))
 tab2_category_button.grid(row=0, column=2)
 #---------------------------------------------------
@@ -587,8 +599,12 @@ btn_instance = buttons(
 )
 
 connected_container = ttk.Frame(upper_frame)
+ongoing_processes = ttk.Frame(upper_frame)
 connected_container.grid(row=0, column=2, sticky="ne")
-
+ongoing_processes.grid(row=8, column=0, sticky="sw")
+processes_lists_text = Label(ongoing_processes, text="-Ongoing processes-")
+processes_in = Label(ongoing_processes)
+processes_lists_text.grid(row=0, column=0)
 connected_devices = Label(connected_container, text=data[current_lang]["l20"], name="l20")
 connected_devicesips = Label(connected_container)
 is_text_empty = connected_devicesips.cget("text")
@@ -598,14 +614,13 @@ connected_devicesips.grid(row=1, column=0 , sticky="nsew")
 #I WANT TO USE MENUBUTTON BUT IT CAN'T DO THE FEATURES I WANT,SO WE WILL CREATE OUR OWN MENU
 #tab1_choose_ip = ttk.Menubutton(nmap_input_row, text="Choose")
 tab1_choose_ip = Button(nmap_input_row, text=data[current_lang]["l13"], name="l13", takefocus=False, width=10)
-tab1_found_ip = ttk.Button(adb_input_row, text=data[current_lang]["l14"], name="l14", takefocus=False)
+tab1_found_ip = Button(adb_input_row, text=data[current_lang]["l14"], name="l14", takefocus=False)
 #STOP NMAP-ADB BUTTON
 tab1_stop_nmap = ttk.Button(nmap_btn_container,text=data[current_lang]["l15"], name="l15",takefocus=False, style="Redbg.TButton")
 tab1_stop_adb = ttk.Button(adb_btn_container, text=data[current_lang]["l15"], name="l15", takefocus=False, style="Redbg.TButton")
 # NMAP IP MENU
 menu_frame = Frame(upper_frame,background="red")
-print(tab1_choose_ip.winfo_width())
-menu_frame_in1 = Button(menu_frame,text="192.168.1.0/24", font=custom_font)
+menu_frame_in1 = Button(menu_frame,text="192.168.1.0/24")
 menu_frame_in2 = Button(menu_frame,text="127.0.0.0/24")
 #ADB IP MENU
 menu_frame_found = Frame(upper_frame, background="red")
@@ -617,7 +632,15 @@ menu_frame_lang2 = Button(menu_frame_lang, text="Turkce")
 menu_frame_lang3 = Button(menu_frame_lang, text="Português")
 #CATEGORY MENU
 menu_frame_category = Frame(upper_frame2, background="blue")
-menu_frame_category_in1 = Button(menu_frame_category,text="192.168.1.0/24", font=custom_font)
+menu_frame_category_in1 = Button(menu_frame_category,text=data[current_lang]["l310"], name="l310", font=custom_font)
+menu_frame_category_in2 = Button(menu_frame_category,text=data[current_lang]["l311"], name="l311", font=custom_font)
+menu_frame_category_in3 = Button(menu_frame_category,text=data[current_lang]["l312"], name="l312", font=custom_font)
+menu_frame_category_in4 = Button(menu_frame_category,text=data[current_lang]["l313"], name="l313", font=custom_font)
+menu_frame_category_in5 = Button(menu_frame_category,text=data[current_lang]["l314"], name="l314", font=custom_font)
+menu_frame_category_in6 = Button(menu_frame_category,text=data[current_lang]["l315"], name="l315", font=custom_font)
+menu_frame_category_in7 = Button(menu_frame_category,text=data[current_lang]["l316"], name="l316", font=custom_font)
+menu_frame_category_in8 = Button(menu_frame_category,text=data[current_lang]["l317"], name="l317", font=custom_font)
+menu_frame_category_in1.bind("<Button-1>", lambda self: buttons.categorize(self))
 
 #PLACEMENT
 tab1_lang_button.grid(row=0, column=0, sticky="nsew")
