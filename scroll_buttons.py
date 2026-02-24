@@ -1,9 +1,11 @@
 from tkinter import *
-from tkinter import font
-from tkinter import ttk
 import tkinter as tk
+
+
 class buttons:
-    def __init__(self, tab2_seperate_scroll_BTN, root, tab2_load_more_btn, tab2_seperate_scroll_LOAD, keyevents_buttons, keyevents_labels, data, current_lang, background_color):
+    def __init__(self, tab2_seperate_scroll_BTN, root, tab2_load_more_btn,
+                 tab2_seperate_scroll_LOAD, keyevents_buttons,
+                 keyevents_labels, data, current_lang, background_color):
         self.tab2_seperate_scroll_BTN = tab2_seperate_scroll_BTN
         self.root = root
         self.tab2_load_more_btn = tab2_load_more_btn
@@ -19,29 +21,37 @@ class buttons:
         self.keyevents_labels_4 = []
         self.load_first()
 
+    def categorize(self):
+        print("Clicked categorize")
 
     def change_bg(self,event, color):
         event.widget.configure(background=color)
+
     def change_bg_leave(self, event, color):
         event.widget.configure(background=color)
+
     def load_first(self):
         self.tab2_seperate_scroll_BTN.columnconfigure(0, weight=1)
         for i in range(60):
             row_frame = Frame(self.tab2_seperate_scroll_BTN)
             row_frame.grid(sticky="ew")
             row_frame.columnconfigure(1, weight=1)
-            test_label = Label(row_frame,
-                   text="> STATUS: ONLINE",
-                   fg="#aaaaaa",
-                   bg="#1a1a1a",
-                   justify="left",
-                   wraplength=350)
+            test_label = Label(
+                row_frame,
+                text="> STATUS: ONLINE",
+                fg="#aaaaaa", bg="#1a1a1a",
+                justify="left", wraplength=350
+            )
 
+            """
+            THIS FEATURE WAS PUTTING A 0.4% - 0.5% LOAD ON THE CPU, SO I DISABLED IT FOR THAT REASON
             test_label.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
             test_label.bind("<Leave>", lambda event: self.change_bg_leave(event, "#121212"))
+            """
             test_label.grid(row=0, column=1, sticky="ew")
             name = f"Input keyevent {i+1}"
-            button = Button(row_frame,
+            button = Button(
+                row_frame,
                 text=name,
                 font=("Consolas", 10),
                 fg="white",
@@ -52,13 +62,15 @@ class buttons:
                 relief="flat",
                 padx=15,
                 pady=4,
-                cursor="hand2")
+                cursor="hand2"
+            )
             button.grid(row=0, column=0, sticky="w")
             button.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
-            button.bind("<Leave>", lambda event: self.change_bg_leave(event, "#2d2d2d"))
+            button.bind(
+                "<Leave>", lambda event: self.change_bg_leave(event, "#2d2d2d")
+            )
             self.keyevents_buttons.append(button)
             self.keyevents_labels.append(test_label)
-        print(self.keyevents_labels)
         self.keyevents_labels[0].configure(text=self.data[self.current_lang]["l21"])
         self.keyevents_labels[1].configure(text=self.data[self.current_lang]["l22"])
         self.keyevents_labels[2].configure(text=self.data[self.current_lang]["l23"])
@@ -120,6 +132,7 @@ class buttons:
         self.keyevents_labels[58].configure(text=self.data[self.current_lang]["l79"])
         self.keyevents_labels[59].configure(text=self.data[self.current_lang]["l80"])
     load_clicked = 0
+
     def called_test_function(self):
         buttons.load_clicked += 1
         print(f"clicked test: {self.load_clicked}")
@@ -134,7 +147,7 @@ class buttons:
         else:
             print("All keyevents loaded")
 
-    #IF LANGUAGES CHANGED, LOAD AGAIN
+    # IF LANGUAGES CHANGED, LOAD AGAIN
     def load_again(self):
         for widgets in self.tab2_seperate_scroll_BTN.winfo_children()[:60]:
             widgets.destroy()
@@ -142,8 +155,8 @@ class buttons:
         self.keyevents_buttons.clear()
         self.keyevents_labels.clear()
         self.root.after(10, lambda: self.load_first())
-        
-    #SEPERATE
+     
+    # SEPERATE
     def load1(self):
         print("Tıklandı-----------------------------------------")
         self.root.update_idletasks()
@@ -154,19 +167,26 @@ class buttons:
             row_frame = Frame(self.tab2_seperate_scroll_BTN)
             row_frame.grid(sticky="ew")
             row_frame.columnconfigure(1, weight=1)
-            test_label = Label(row_frame,
-                   text="> STATUS: ONLINE",
-                   font=("Consolas", 10),
-                   fg="#aaaaaa",
-                   bg="#1a1a1a",
-                   justify="left",
-                   wraplength=500)
+            test_label = Label(
+                row_frame,
+                text="> STATUS: ONLINE",
+                font=("Consolas", 10),
+                fg="#aaaaaa",
+                bg="#1a1a1a",
+                justify="left",
+                wraplength=500
+            )
 
-            test_label.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
-            test_label.bind("<Leave>", lambda event: self.change_bg_leave(event, "#121212"))
+            test_label.bind(
+                "<Enter>", lambda event: self.change_bg(event, "gray")
+            )
+            test_label.bind(
+                "<Leave>", lambda event: self.change_bg_leave(event, "#121212")
+            )
             test_label.grid(row=0, column=1, sticky="ew")
             name = f"Input keyevent {i+1}"
-            button = Button(row_frame,
+            button = Button(
+                row_frame,
                 text=name,
                 font=("Consolas", 10),
                 fg="white",
@@ -181,7 +201,9 @@ class buttons:
                 wraplength=450)
             button.grid(row=0, column=0, sticky="w")
             button.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
-            button.bind("<Leave>", lambda event: self.change_bg_leave(event, "#2d2d2d"))
+            button.bind(
+                "<Leave>", lambda event: self.change_bg_leave(event, "#2d2d2d")
+            )
             self.keyevents_buttons.append(button)
             self.keyevents_labels.append(test_label)
         self.keyevents_labels[60].configure(text=self.data[self.current_lang]["l81"])
@@ -246,7 +268,8 @@ class buttons:
         self.keyevents_labels[119].configure(text=self.data[self.current_lang]["l140"])
         self.root.after(100, lambda: self.tab2_seperate_scroll_LOAD.pack())
         self.root.after(101, lambda: self.tab2_load_more_btn.pack())
-    #SEPERATE
+    # SEPERATE
+
     def load2(self):
         print("Tıklandı22222-----------------------------------------")
         self.root.update_idletasks()
@@ -257,19 +280,26 @@ class buttons:
             row_frame = Frame(self.tab2_seperate_scroll_BTN)
             row_frame.grid(sticky="ew")
             row_frame.columnconfigure(1, weight=1)
-            test_label = Label(row_frame,
-                   text="> STATUS: ONLINE",
-                   font=("Consolas", 10),
-                   fg="#aaaaaa",
-                   bg="#1a1a1a",
-                   justify="left",
-                   wraplength=450)
+            test_label = Label(
+                row_frame,
+                text="> STATUS: ONLINE",
+                font=("Consolas", 10),
+                fg="#aaaaaa",
+                bg="#1a1a1a",
+                justify="left",
+                wraplength=450
+            )
 
-            test_label.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
-            test_label.bind("<Leave>", lambda event: self.change_bg_leave(event, "#121212"))
+            test_label.bind(
+                "<Enter>", lambda event: self.change_bg(event, "gray")
+            )
+            test_label.bind(
+                "<Leave>", lambda event: self.change_bg_leave(event, "#121212")
+            )
             test_label.grid(row=0, column=1, sticky="ew")
             name = f"Input keyevent {i+1}"
-            button = Button(row_frame,
+            button = Button(
+                row_frame,
                 text=name,
                 font=("Consolas", 10),
                 fg="white",
@@ -283,7 +313,9 @@ class buttons:
                 cursor="hand2")
             button.grid(row=0, column=0, sticky="w")
             button.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
-            button.bind("<Leave>", lambda event: self.change_bg_leave(event, "#2d2d2d"))
+            button.bind(
+                "<Leave>", lambda event: self.change_bg_leave(event, "#2d2d2d")
+            )
             self.keyevents_buttons.append(button)
             self.keyevents_labels.append(test_label)
         self.keyevents_labels[120].configure(text=self.data[self.current_lang]["l141"])
@@ -348,7 +380,8 @@ class buttons:
         self.keyevents_labels[179].configure(text=self.data[self.current_lang]["l200"])
         self.root.after(100, lambda: self.tab2_seperate_scroll_LOAD.pack())
         self.root.after(101, lambda: self.tab2_load_more_btn.pack())
-    #SEPERATE
+
+    # SEPERATE
     def load3(self):
         print("Tıklandı33333-----------------------------------------")
         self.root.update_idletasks()
@@ -359,19 +392,25 @@ class buttons:
             row_frame = Frame(self.tab2_seperate_scroll_BTN)
             row_frame.grid(sticky="ew")
             row_frame.columnconfigure(1, weight=1)
-            test_label = Label(row_frame,
-                   text="> STATUS: ONLINE",
-                   font=("Consolas", 10),
-                   fg="#aaaaaa",
-                   bg="#1a1a1a",
-                   justify="left",
-                   wraplength=450)
+            test_label = Label(
+                row_frame,
+                text="> STATUS: ONLINE",
+                font=("Consolas", 10),
+                fg="#aaaaaa",
+                bg="#1a1a1a",
+                justify="left",
+                wraplength=450)
 
-            test_label.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
-            test_label.bind("<Leave>", lambda event: self.change_bg_leave(event, "#121212"))
+            test_label.bind(
+                "<Enter>", lambda event: self.change_bg(event, "gray")
+            )
+            test_label.bind(
+                "<Leave>", lambda event: self.change_bg_leave(event, "#121212")
+            )
             test_label.grid(row=0, column=1, sticky="ew")
             name = f"Input keyevent {i+1}"
-            button = Button(row_frame,
+            button = Button(
+                row_frame,
                 text=name,
                 font=("Consolas", 10),
                 fg="white",
@@ -385,7 +424,9 @@ class buttons:
                 cursor="hand2")
             button.grid(row=0, column=0, sticky="w")
             button.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
-            button.bind("<Leave>", lambda event: self.change_bg_leave(event, "#2d2d2d"))
+            button.bind(
+                "<Leave>", lambda event: self.change_bg_leave(event, "#2d2d2d")
+            )
             self.keyevents_buttons.append(button)
             self.keyevents_labels.append(test_label)
         self.keyevents_labels[180].configure(text=self.data[self.current_lang]["l201"])
@@ -450,7 +491,8 @@ class buttons:
         self.keyevents_labels[239].configure(text=self.data[self.current_lang]["l260"])
         self.root.after(100, lambda: self.tab2_seperate_scroll_LOAD.pack())
         self.root.after(101, lambda: self.tab2_load_more_btn.pack())
-    #SEPERATE
+
+    # SEPERATE
     def load4(self):
         print("Tıklandı44444-----------------------------------------")
         self.root.update_idletasks()
@@ -461,19 +503,26 @@ class buttons:
             row_frame = Frame(self.tab2_seperate_scroll_BTN)
             row_frame.grid(sticky="ew")
             row_frame.columnconfigure(1, weight=1)
-            test_label = Label(row_frame,
-                   text="> STATUS: ONLINE",
-                   font=("Consolas", 10),
-                   fg="#aaaaaa",
-                   bg="#1a1a1a",
-                   justify="left",
-                   wraplength=450)
+            test_label = Label(
+                row_frame,
+                text="> STATUS: ONLINE",
+                font=("Consolas", 10),
+                fg="#aaaaaa",
+                bg="#1a1a1a",
+                justify="left",
+                wraplength=450
+            )
 
-            test_label.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
-            test_label.bind("<Leave>", lambda event: self.change_bg_leave(event, "#121212"))
+            test_label.bind(
+                "<Enter>", lambda event: self.change_bg(event, "gray")
+            )
+            test_label.bind(
+                "<Leave>", lambda event: self.change_bg_leave(event, "#121212")
+                )
             test_label.grid(row=0, column=1, sticky="ew")
             name = f"Input keyevent {i+1}"
-            button = Button(row_frame,
+            button = Button(
+                row_frame,
                 text=name,
                 font=("Consolas", 10),
                 fg="white",
@@ -487,7 +536,9 @@ class buttons:
                 cursor="hand2")
             button.grid(row=0, column=0, sticky="w")
             button.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
-            button.bind("<Leave>", lambda event: self.change_bg_leave(event, "#2d2d2d"))
+            button.bind(
+                "<Leave>", lambda event: self.change_bg_leave(event, "#2d2d2d")
+            )
             self.keyevents_buttons.append(button)
             self.keyevents_labels.append(test_label)
         self.keyevents_labels[240].configure(text=self.data[self.current_lang]["l261"])
