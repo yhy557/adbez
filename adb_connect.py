@@ -21,20 +21,23 @@ class adb_connect:
         print("Clicked ADB")
         t = threading.Thread(target=self.try_connect)
         t.start()
+    def show_nmap_failed(self):
+        self.root.update_idletasks()
+        x = self.tab1_input2.winfo_rootx()
+        y = self.tab1_input2.winfo_rooty()
+        print(f"x value: {x}, y value:{y}")
+        self.tab1_label_failed2.place(x=x-250,y=y-70)
+        self.tab1_label_failed2.config(text="Failed.Please write an IP address")
+        self.root.after(5000, lambda: self.tab1_label_failed2.place_forget())
     def try_connect(self):
         writing = self.tab1_input2.get().strip()
         print(writing)
         si = subprocess.STARTUPINFO()
         si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         if not writing:
+            self.root.after(0, lambda: self.show_nmap_failed())
             #WE ARE GETTING ENTRY COORDINATES TO THE FAILED_LABELS
-            self.root.update_idletasks()
-            x = self.tab1_input2.winfo_rootx()
-            y = self.tab1_input2.winfo_rooty()
-            print(f"x value: {x}, y value:{y}")
-            self.tab1_label_failed2.place(x=x-250,y=y-70)
-            self.tab1_label_failed2.config(text="Failed.Please write an IP address")
-            self.root.after(5000, lambda: self.tab1_label_failed2.place_forget())
+            
             return
         self.stopla2 = False
         try:
@@ -58,7 +61,7 @@ class adb_connect:
             connected_label_list = connected_label_text.split()
             new_writing = f"{writing}"
             for i in full_output.lower().split():
-                if i == "connected":
+                if i == "connected" and not "failed":
                     self.stopla2 = True
                     self.root.after(0, lambda: self.update_ui("Connected"))
                     with open("check.json", "r", encoding="utf-8") as f:
@@ -92,6 +95,7 @@ class adb_connect:
                 print(f"Can't deleting stop button: {e}")
         except Exception as e:
             print(f"Can't start adb connect: {e}")
+
     def stop_adb(self):
         system_os = platform.system()
         if self.current_process_adb and self.current_process_adb.poll() is None:
