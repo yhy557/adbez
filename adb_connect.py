@@ -4,8 +4,11 @@ import platform
 import os
 import json
 
+
 class adb_connect:
-    def __init__(self, tab1_input2, root,tab1_label_failed2,found_path,tab1_stop_adb,connected_devicesips, update_ui, connected_devicesips2, test_counter, processes_in):
+    def __init__(self, tab1_input2, root, tab1_label_failed2, found_path,
+                 tab1_stop_adb, connected_devicesips, update_ui,
+                 connected_devicesips2, test_counter, processes_in):
         self.tab1_input2 = tab1_input2
         self.root = root
         self.tab1_label_failed2 = tab1_label_failed2
@@ -28,12 +31,14 @@ class adb_connect:
         x = self.tab1_input2.winfo_rootx()
         y = self.tab1_input2.winfo_rooty()
         print(f"x value: {x}, y value:{y}")
-        self.tab1_label_failed2.place(x=x-250,y=y-70)
+        self.tab1_label_failed2.place(x=x-250, y=y-70)
         self.tab1_label_failed2.config(text="Failed.Please write an IP address")
         self.root.after(5000, lambda: self.tab1_label_failed2.place_forget())
 
     def test_show_status(self):
-        self.root.after(0, lambda: self.tab1_stop_adb.grid(row=0, column=1, padx=(5,0)))
+        self.root.after(
+            0, lambda: self.tab1_stop_adb.grid(row=0, column=1, padx=(5, 0))
+        )
         full_output = ""
         while True:
             line = self.current_process_adb.stdout.readline()
@@ -56,23 +61,49 @@ class adb_connect:
                 with open("check.json", "w", encoding="utf-8") as fi:
                     json.dump(check_data, fi, indent=4)
                 self.test_counter += 1
-                self.root.after(0, lambda: self.connected_devicesips2.grid(row=1, column=0 , sticky="nsew"))
+                self.root.after(
+                    0, lambda: self.connected_devicesips2.grid(
+                        row=1, column=0, sticky="nsew"
+                    )
+                )
                 self.test_counter_check.append(self.connected_devicesips2)
-                self.root.after(0, lambda: self.test_counter_check[0].configure(text=new_writing))
-                print("List of check ips",self.test_counter_check)
+                self.root.after(
+                    0, lambda: self.test_counter_check[0].configure(
+                        text=new_writing
+                    )
+                )
+                print("List of check ips", self.test_counter_check)
                 if connected_label_text == "":
-                    self.root.after(0, lambda: self.connected_devicesips.configure(background="lightblue"))
-                    self.root.after(0, lambda: self.connected_devicesips.config(text=new_writing))
+                    self.root.after(
+                        0, lambda: self.connected_devicesips.configure(
+                            background="lightblue"
+                        )
+                    )
+                    self.root.after(
+                        0, lambda: self.connected_devicesips.config(
+                            text=new_writing
+                        )
+                    )
                 elif new_writing not in connected_label_list:
                     new_writing = f"{connected_label_text}\n{self.writing}"
-                    self.root.after(0, lambda: self.connected_devicesips.configure(background="lightblue"))
-                    self.root.after(0, lambda: self.connected_devicesips.config(text=new_writing))
+                    self.root.after(
+                        0, lambda: self.connected_devicesips.configure(
+                            background="lightblue"
+                        )
+                    )
+                    self.root.after(
+                        0, lambda: self.connected_devicesips.config(
+                            text=new_writing
+                        )
+                    )
                     now_text = self.processes_in.cget("text")
                     self.processes_in.grid(row=0, column=0)
                     if now_text == "":
                         self.processes_in.configure(text=f"{now_text}")
                     else:
-                        self.processes_in.configure(text=f"{now_text}" + "\n" + "Adb process")
+                        self.processes_in.configure(
+                            text=f"{now_text}" + "\n" + "Adb process"
+                        )
                 else:
                     print(f"Already connected {new_writing}")
                     pass
@@ -99,9 +130,9 @@ class adb_connect:
         try:
             self.current_process_adb = subprocess.Popen(
                 [self.found_path, "connect", self.writing],
-                    stdout=subprocess.PIPE,
-                    text=True,
-                    startupinfo=si
+                stdout=subprocess.PIPE,
+                text=True,
+                startupinfo=si
             )
             self.test_show_status()
         except Exception as e:
@@ -115,18 +146,28 @@ class adb_connect:
                     startupinfo = subprocess.STARTUPINFO()
                     startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
-                    subprocess.call(['taskkill', '/F', '/T', '/PID', str(self.current_process_adb.pid)], 
-                                    startupinfo=startupinfo)
+                    subprocess.call(
+                        [
+                            'taskkill', '/F', '/T', '/PID', str(
+                                self.current_process_adb.pid
+                            )
+                        ],
+                        startupinfo=startupinfo
+                    )
                 else:
                     import signal
                     try:
                         os.kill(self.current_process_adb.pid, signal.SIGTERM)
                         self.current_process_adb.wait(1)
                     except subprocess.TimeoutExpired:
-                        print(f"The process is resisting, so it will be killed directly...")
+                        print("The process is resisting, so it will be killed directly...")
                         os.kill(self.current_process_adb.pid, signal.SIGKILL)
                 print("Adb being stopped")
-                self.root.after(20, lambda: self.update_ui("\n[!] ADB connect is terminated"))
+                self.root.after(
+                    20, lambda: self.update_ui(
+                        "\n[!] ADB connect is terminated"
+                    )
+                )
                 self.root.after(0, lambda: self.tab1_stop_adb.grid_forget())
             except Exception as e:
                 print(f"Nmap scan is can't terminated: {e}")
