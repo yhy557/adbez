@@ -307,7 +307,16 @@
         "l305": "It simulates a press of the Refresh key",
         "l306": "It simulates a press of the Thumbs Up key",
         "l307": "It simulates a press of the Thumbs Down key",
-        "l308": "It simulates a press of the Profile Switch key"
+        "l308": "It simulates a press of the Profile Switch key",
+        "l309": "Categories",
+        "l310": "Navigation",
+        "l311": "Media & Audio",
+        "l312": "Keyboard",
+        "l313": "Editing",
+        "l314": "System & Power",
+        "l315": "TV & Remote Control",
+        "l316": "App Shortcuts",
+        "l317": "Other"
     },
     "tr": {
         "l1": "Bazı gerekli ayarlar kontrol ediliyor...",
@@ -617,7 +626,16 @@
         "l305": "Yenile (Refresh) tuşuna basılmasını simüle eder",
         "l306": "Beğendim (Thumbs Up) tuşuna basılmasını simüle eder",
         "l307": "Beğenmedim (Thumbs Down) tuşuna basılmasını simüle eder",
-        "l308": "Profil Değiştir tuşuna basılmasını simüle eder"
+        "l308": "Profil Değiştir tuşuna basılmasını simüle eder",
+        "l309": "Kategoriler",
+        "l310": "Navigasyon",
+        "l311": "Medya & Ses",
+        "l312": "Klavye",
+        "l313": "Düzenleme",
+        "l314": "Sistem & Güç",
+        "l315": "TV & Uzaktan kumanda",
+        "l316": "Uygulama kısayolları",
+        "l317": "Diğer"
     },
     "pt": {
         "l1": "Algumas verificações estão sendo processadas...",
@@ -927,6 +945,15 @@
         "l305": "It simulates a press of the Refresh key",
         "l306": "It simulates a press of the Thumbs Up key",
         "l307": "It simulates a press of the Thumbs Down key",
-        "l308": "It simulates a press of the Profile Switch key"
+        "l308": "It simulates a press of the Profile Switch key",
+        "l309": "Categories",
+        "l310": "Navigation",
+        "l311": "Media & Audio",
+        "l312": "Keyboard",
+        "l313": "Editing",
+        "l314": "System & Power",
+        "l315": "TV & Remote Control",
+        "l316": "App Shortcuts",
+        "l317": "Other"
     }
 }
