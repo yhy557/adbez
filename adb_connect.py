@@ -43,8 +43,8 @@ class adb_connect:
         connected_label_text = self.connected_devicesips.cget("text")
         connected_label_list = connected_label_text.split()
         new_writing = f"{self.writing}"
-        for i in full_output.lower().split():
-            if i == "connected" and "failed" not in full_output.lower():
+        for word in full_output.lower().split():
+            if word == "connected" and "failed" not in full_output.lower():
                 self.stopla2 = True
                 self.root.after(0, lambda: self.update_ui("Connected"))
                 with open("check.json", "r", encoding="utf-8") as f:
@@ -68,14 +68,14 @@ class adb_connect:
                         new_writing = f"{connected_label_text}\n{self.writing}"
                         self.connected_devicesips.configure(background="lightblue")
                         self.connected_devicesips.config(text=new_writing)
-            if i == "failed":
+            if word == "failed":
                 print("Stop button is deleted")
                 self.tab1_stop_adb.grid_forget()
-            try:
-                self.root.after(0, lambda: self.tab1_stop_adb.grid_forget())
-                print("stop button is being deleted")
-            except Exception as e:
-                print(f"Can't deleting stop button: {e}")
+        try:
+            self.root.after(0, lambda: self.tab1_stop_adb.grid_forget())
+            print("stop button is being deleted")
+        except Exception as e:
+            print(f"Can't deleting stop button: {e}")
         
     def try_connect(self):
         self.writing = self.tab1_input2.get().strip()
