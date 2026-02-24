@@ -5,7 +5,7 @@ import os
 import json
 
 class adb_connect:
-    def __init__(self, tab1_input2, root,tab1_label_failed2,found_path,tab1_stop_adb,connected_devicesips, update_ui, connected_devicesips2, test_counter):
+    def __init__(self, tab1_input2, root,tab1_label_failed2,found_path,tab1_stop_adb,connected_devicesips, update_ui, connected_devicesips2, test_counter, processes_in):
         self.tab1_input2 = tab1_input2
         self.root = root
         self.tab1_label_failed2 = tab1_label_failed2
@@ -15,12 +15,14 @@ class adb_connect:
         self.connected_devicesips2 = connected_devicesips2
         self.update_ui = update_ui
         self.test_counter = test_counter
+        self.processes_in = processes_in
         self.test_counter_check = []
         self.current_process_adb = None
         self.stopla2 = False
         print("Clicked ADB")
         t = threading.Thread(target=self.try_connect)
         t.start()
+
     def show_nmap_failed(self):
         self.root.update_idletasks()
         x = self.tab1_input2.winfo_rootx()
@@ -29,6 +31,7 @@ class adb_connect:
         self.tab1_label_failed2.place(x=x-250,y=y-70)
         self.tab1_label_failed2.config(text="Failed.Please write an IP address")
         self.root.after(5000, lambda: self.tab1_label_failed2.place_forget())
+
     def test_show_status(self):
         self.root.after(0, lambda: self.tab1_stop_adb.grid(row=0, column=1, padx=(5,0)))
         full_output = ""
@@ -64,6 +67,12 @@ class adb_connect:
                     new_writing = f"{connected_label_text}\n{self.writing}"
                     self.root.after(0, lambda: self.connected_devicesips.configure(background="lightblue"))
                     self.root.after(0, lambda: self.connected_devicesips.config(text=new_writing))
+                    now_text = self.processes_in.cget("text")
+                    self.processes_in.grid(row=0, column=0)
+                    if now_text == "":
+                        self.processes_in.configure(text=f"{now_text}")
+                    else:
+                        self.processes_in.configure(text=f"{now_text}" + "\n" + "Adb process")
                 else:
                     print(f"Already connected {new_writing}")
                     pass
