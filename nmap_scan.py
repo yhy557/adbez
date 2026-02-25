@@ -9,7 +9,7 @@ from tkinter import Button
 class nmap_scan:
     def __init__(self, tab1_input, log_text, tab1_label_failed, tab1_stop_nmap,
                  root, update_ui, menu_frame_found, found_enter_choosed_ip,
-                 button_references):
+                 button_references, processes_in):
         self.tab1_input = tab1_input
         self.button_references = button_references
         self.update_ui = update_ui
@@ -21,16 +21,24 @@ class nmap_scan:
         self.stopla = False
         self.menu_frame_found = menu_frame_found
         self.found_enter_choosed_ip = found_enter_choosed_ip
+        self.processes_in = processes_in
         self.found_ips = []
         self.current_ip_has_adb = False
-        print(f"DEBUG: button_references tipi: {type(self.button_references)}")
+        self.is_process_running = False
+        print(f"DEBUG: button_references type: {type(self.button_references)}")
         t = threading.Thread(target=self.try_find)
         t.start()
+
+    def show_processes(self):
+        self.processes_in.grid(row=1, column=0)
+        self.root.after(1, lambda: self.processes_in.configure(text="Nmap scanning"))
 
     def try_find(self):
         ip = self.tab1_input.get()
         default_path = os.path.dirname(os.path.abspath(__file__))
         main_path_py = os.path.join(default_path, "now_logs.txt")
+        self.is_process_running = True
+        self.show_processes()
 
         if not ip:
             # WE ARE GETTING ENTRY COORDINATES TO THE FAILED_LABELS
@@ -43,6 +51,9 @@ class nmap_scan:
             self.tab1_label_failed.config(
                 text="Failed.Please write an IP address"
             )
+            self.is_process_running = False
+            self.root.after(0, lambda: self.processes_in.configure(text=""))
+            self.root.after(0, lambda: self.processes_in.grid_forget())
             self.root.after(
                 5000, lambda: self.tab1_label_failed.place_forget()
             )
@@ -93,6 +104,9 @@ class nmap_scan:
             self.root.after(0, lambda: self.update_ui("Scan completed"))
         try:
             self.root.after(0, lambda: self.tab1_stop_nmap.grid_forget())
+            self.is_process_running = False
+            self.root.after(0, lambda: self.processes_in.configure(text=""))
+            self.root.after(0, lambda: self.processes_in.grid_forget())
             print("stop button is being deleted")
         except Exception as e:
             print(f"Can't deleting stop button: {e}")
