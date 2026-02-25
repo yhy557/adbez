@@ -203,8 +203,8 @@ def connect(event):
     global active_adb
     active_adb = adbc.adb_connect(
         tab1_input2, root, tab1_label_failed2, found_path, tab1_stop_adb,
-        connected_devicesips, update_ui, connected_devicesips2, test_counter,
-        processes_in
+        connected_devicesips, update_ui, test_counter,
+        processes_in, check_btn_ip
     )
 
 
@@ -414,7 +414,7 @@ def disconnect_ip(event):
             text=True
         )
         print(f"Disconnected to {label_text}")
-        connected_devicesips2.grid_forget()
+        check_btn_ip.grid_forget()
         with open("check.json", "r", encoding="utf-8") as f:
             check_data = json.load(f)
         ip_to_remove = label_text.strip()
@@ -659,8 +659,7 @@ test_counter = 0
 connected_devices2 = Label(
     connected_container2, text=data[current_lang]["l20"], name="l20"
 )
-connected_devicesips2 = Checkbutton(connected_container2)
-is_text_empty2 = connected_devicesips2.cget("text")
+check_btn_ip = Checkbutton(connected_container2)
 connected_devices2.grid(row=0, column=0, sticky="ne")
 
 keyevents_buttons = []
