@@ -218,7 +218,8 @@ def scan(event):
     global active_nmap
     active_nmap = nmaps.nmap_scan(
         tab1_input, log_text, tab1_label_failed, tab1_stop_nmap, root,
-        update_ui, menu_frame_found, found_enter_choosed_ip, button_references
+        update_ui, menu_frame_found, found_enter_choosed_ip, button_references,
+        processes_in
     )
 
 
