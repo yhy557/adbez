@@ -125,9 +125,8 @@ class Tooltip:
 
 def on_tab_selected(event):
     global load_clicked
-    load_clicked = 0
+    btn_instance.restart_number()
     canvas2.yview_moveto(0)
-    print(load_clicked)
     delete_widgets()
     selected_tab = event.widget.select()
     tab_text = event.widget.tab(selected_tab, "text")
@@ -337,6 +336,7 @@ def close_menus(event):
         if menus.winfo_viewable() and menus.winfo_exists():
             menus.place_forget()
 
+load_clicked = 0
 
 # MAIN PANEL
 root = Tk()
