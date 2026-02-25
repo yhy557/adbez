@@ -84,13 +84,13 @@ class buttons:
         self.load_clicked += 1
         print(f"clicked test: {self.load_clicked}")
         if self.load_clicked == 1:
-            self.load1()
+            self.load_all(60, 120)
         elif self.load_clicked == 2:
-            self.load2()
+            self.load_all(120, 180)
         elif self.load_clicked == 3:
-            self.load3()
+            self.load_all(180, 240)
         elif self.load_clicked == 4:
-            self.load4()
+            self.load_all(240, 288)
         else:
             print("All keyevents loaded")
 
@@ -98,19 +98,20 @@ class buttons:
     def load_again(self):
         for widgets in self.tab2_seperate_scroll_BTN.winfo_children()[:60]:
             widgets.destroy()
+            self.keyevents_labels.clear()
             print("Widgets deleting")
         self.keyevents_buttons.clear()
         self.keyevents_labels.clear()
         self.root.after(10, lambda: self.load_first())
      
     # SEPERATE
-    def load1(self):
+    def load_all(self, range_x, range_y):
         print("Tıklandı-----------------------------------------")
         self.root.update_idletasks()
         self.tab2_load_more_btn.pack_forget()
         self.tab2_seperate_scroll_LOAD.pack_forget()
         self.tab2_seperate_scroll_BTN.columnconfigure(0, weight=1)
-        for i in range(60, 120):
+        for i in range(range_x, range_y):
             row_frame = Frame(self.tab2_seperate_scroll_BTN)
             row_frame.grid(sticky="ew")
             row_frame.columnconfigure(1, weight=1)
@@ -158,165 +159,4 @@ class buttons:
 
         self.root.after(100, lambda: self.tab2_seperate_scroll_LOAD.pack())
         self.root.after(101, lambda: self.tab2_load_more_btn.pack())
-    # SEPERATE
 
-    def load2(self):
-        print("Tıklandı22222-----------------------------------------")
-        self.root.update_idletasks()
-        self.tab2_load_more_btn.pack_forget()
-        self.tab2_seperate_scroll_LOAD.pack_forget()
-        self.tab2_seperate_scroll_BTN.columnconfigure(0, weight=1)
-        for i in range(120, 180):
-            row_frame = Frame(self.tab2_seperate_scroll_BTN)
-            row_frame.grid(sticky="ew")
-            row_frame.columnconfigure(1, weight=1)
-            test_label = Label(
-                row_frame,
-                text="> STATUS: ONLINE",
-                font=("Consolas", 10),
-                fg="#aaaaaa",
-                bg="#1a1a1a",
-                justify="left",
-                wraplength=450
-            )
-
-            test_label.bind(
-                "<Enter>", lambda event: self.change_bg(event, "gray")
-            )
-            test_label.bind(
-                "<Leave>", lambda event: self.change_bg_leave(event, "#121212")
-            )
-            test_label.grid(row=0, column=1, sticky="ew")
-            name = f"Input keyevent {i+1}"
-            button = Button(
-                row_frame,
-                text=name,
-                font=("Consolas", 10),
-                fg="white",
-                bg="#2d2d2d",
-                activeforeground="white",
-                activebackground="#3d3d3d",
-                bd=0,
-                relief="flat",
-                padx=15,
-                pady=4,
-                cursor="hand2")
-            button.grid(row=0, column=0, sticky="w")
-            button.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
-            button.bind(
-                "<Leave>", lambda event: self.change_bg_leave(event, "#2d2d2d")
-            )
-            self.keyevents_buttons.append(button)
-            self.keyevents_labels.append(test_label)
-            key = f"l{i+21}"
-            self.keyevents_labels[i].configure(text=self.data[self.current_lang][key])
-
-        self.root.after(100, lambda: self.tab2_seperate_scroll_LOAD.pack())
-        self.root.after(101, lambda: self.tab2_load_more_btn.pack())
-
-    # SEPERATE
-    def load3(self):
-        print("Tıklandı33333-----------------------------------------")
-        self.root.update_idletasks()
-        self.tab2_load_more_btn.pack_forget()
-        self.tab2_seperate_scroll_LOAD.pack_forget()
-        self.tab2_seperate_scroll_BTN.columnconfigure(0, weight=1)
-        for i in range(180, 240):
-            row_frame = Frame(self.tab2_seperate_scroll_BTN)
-            row_frame.grid(sticky="ew")
-            row_frame.columnconfigure(1, weight=1)
-            test_label = Label(
-                row_frame,
-                text="> STATUS: ONLINE",
-                font=("Consolas", 10),
-                fg="#aaaaaa",
-                bg="#1a1a1a",
-                justify="left",
-                wraplength=450)
-
-            test_label.bind(
-                "<Enter>", lambda event: self.change_bg(event, "gray")
-            )
-            test_label.bind(
-                "<Leave>", lambda event: self.change_bg_leave(event, "#121212")
-            )
-            test_label.grid(row=0, column=1, sticky="ew")
-            name = f"Input keyevent {i+1}"
-            button = Button(
-                row_frame,
-                text=name,
-                font=("Consolas", 10),
-                fg="white",
-                bg="#2d2d2d",
-                activeforeground="white",
-                activebackground="#3d3d3d",
-                bd=0,
-                relief="flat",
-                padx=15,
-                pady=4,
-                cursor="hand2")
-            button.grid(row=0, column=0, sticky="w")
-            button.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
-            button.bind(
-                "<Leave>", lambda event: self.change_bg_leave(event, "#2d2d2d")
-            )
-            self.keyevents_buttons.append(button)
-            self.keyevents_labels.append(test_label)
-            key = f"l{i+21}"
-            self.keyevents_labels[i].configure(text=self.data[self.current_lang][key])
-        self.root.after(100, lambda: self.tab2_seperate_scroll_LOAD.pack())
-        self.root.after(101, lambda: self.tab2_load_more_btn.pack())
-
-    # SEPERATE
-    def load4(self):
-        print("Tıklandı44444-----------------------------------------")
-        self.root.update_idletasks()
-        self.tab2_load_more_btn.pack_forget()
-        self.tab2_seperate_scroll_LOAD.pack_forget()
-        self.tab2_seperate_scroll_BTN.columnconfigure(0, weight=1)
-        for i in range(240, 288):
-            row_frame = Frame(self.tab2_seperate_scroll_BTN)
-            row_frame.grid(sticky="ew")
-            row_frame.columnconfigure(1, weight=1)
-            test_label = Label(
-                row_frame,
-                text="> STATUS: ONLINE",
-                font=("Consolas", 10),
-                fg="#aaaaaa",
-                bg="#1a1a1a",
-                justify="left",
-                wraplength=450
-            )
-
-            test_label.bind(
-                "<Enter>", lambda event: self.change_bg(event, "gray")
-            )
-            test_label.bind(
-                "<Leave>", lambda event: self.change_bg_leave(event, "#121212")
-                )
-            test_label.grid(row=0, column=1, sticky="ew")
-            name = f"Input keyevent {i+1}"
-            button = Button(
-                row_frame,
-                text=name,
-                font=("Consolas", 10),
-                fg="white",
-                bg="#2d2d2d",
-                activeforeground="white",
-                activebackground="#3d3d3d",
-                bd=0,
-                relief="flat",
-                padx=15,
-                pady=4,
-                cursor="hand2")
-            button.grid(row=0, column=0, sticky="w")
-            button.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
-            button.bind(
-                "<Leave>", lambda event: self.change_bg_leave(event, "#2d2d2d")
-            )
-            self.keyevents_buttons.append(button)
-            self.keyevents_labels.append(test_label)
-            key = f"l{i+21}"
-            self.keyevents_labels[i].configure(text=self.data[self.current_lang][key])
-        self.root.after(100, lambda: self.tab2_seperate_scroll_LOAD.pack())
-        self.root.after(101, lambda: self.tab2_load_more_btn.pack())
