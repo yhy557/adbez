@@ -22,11 +22,13 @@ class adb_connect:
         self.test_counter_check = []
         self.current_process_adb = None
         self.stopla2 = False
+        self.is_process_running = False
+        self.process_counter = 0
         print("Clicked ADB")
         t = threading.Thread(target=self.try_connect)
         t.start()
 
-    def show_nmap_failed(self):
+    def show_adb_failed(self):
         self.root.update_idletasks()
         x = self.tab1_input2.winfo_rootx()
         y = self.tab1_input2.winfo_rooty()
@@ -34,11 +36,23 @@ class adb_connect:
         self.tab1_label_failed2.place(x=x-250, y=y-70)
         self.tab1_label_failed2.config(text="Failed.Please write an IP address")
         self.root.after(5000, lambda: self.tab1_label_failed2.place_forget())
+        self.processes_in.configure(text="")
+        self.processes_in.grid_forget()
 
     def test_show_status(self):
         self.root.after(
             0, lambda: self.tab1_stop_adb.grid(row=0, column=1, padx=(5, 0))
         )
+        now_text = self.processes_in.cget("text")
+        self.processes_in.grid(row=1, column=0)
+        if now_text == "":
+            print("Test1", now_text)
+            self.processes_in.configure(text="Adb process")
+        else:
+            print("Test2")
+            self.processes_in.configure(
+                text=f"{now_text}" + "\n" + "Adb process"
+            )
         full_output = ""
         while True:
             line = self.current_process_adb.stdout.readline()
@@ -54,6 +68,10 @@ class adb_connect:
         for word in full_output.lower().split():
             if word == "connected" and "failed" not in full_output.lower():
                 self.stopla2 = True
+                self.is_process_running = False
+                self.processes_in.configure(text="ADB Finished process")
+                self.root.after(100, lambda: self.processes_in.configure(text=""))
+                self.root.after(100, lambda: self.processes_in.grid_forget())
                 self.root.after(0, lambda: self.update_ui("Connected"))
                 with open("check.json", "r", encoding="utf-8") as f:
                     check_data = json.load(f)
@@ -96,24 +114,21 @@ class adb_connect:
                             text=new_writing
                         )
                     )
-                    now_text = self.processes_in.cget("text")
-                    self.processes_in.grid(row=0, column=0)
-                    if now_text == "":
-                        self.processes_in.configure(text=f"{now_text}")
-                    else:
-                        self.processes_in.configure(
-                            text=f"{now_text}" + "\n" + "Adb process"
-                        )
                 else:
                     print(f"Already connected {new_writing}")
                     pass
                 break
-            if word == "failed":
+            elif word == "failed":
                 print("Stop button is deleted")
+                self.is_process_running = False
                 self.root.after(0, lambda: self.tab1_stop_adb.grid_forget())
                 break
         try:
+            self.is_process_running = False
             self.root.after(0, lambda: self.tab1_stop_adb.grid_forget())
+            self.processes_in.configure(text="ADB Finished process")
+            self.root.after(100, lambda: self.processes_in.configure(text=""))
+            self.root.after(100, lambda: self.processes_in.grid_forget())
             print("stop button is being deleted")
         except Exception as e:
             print(f"Can't deleting stop button: {e}")
@@ -124,9 +139,10 @@ class adb_connect:
         si = subprocess.STARTUPINFO()
         si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         if not self.writing:
-            self.root.after(0, self.show_nmap_failed)
+            self.root.after(0, self.show_adb_failed)
             return
         self.stopla2 = False
+        self.is_process_running = False
         try:
             self.current_process_adb = subprocess.Popen(
                 [self.found_path, "connect", self.writing],
@@ -170,6 +186,6 @@ class adb_connect:
                 )
                 self.root.after(0, lambda: self.tab1_stop_adb.grid_forget())
             except Exception as e:
-                print(f"Nmap scan is can't terminated: {e}")
+                print(f"ADB connect didn't terminated: {e}")
         else:
             self.tab1_stop_adb.grid_forget()
