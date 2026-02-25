@@ -32,25 +32,20 @@ class nmap_scan:
     def show_processes(self):
         self.processes_in.grid(row=1, column=0)
         self.root.after(1, lambda: self.processes_in.configure(text="Nmap scanning"))
-
-    def try_find(self):
-        ip = self.tab1_input.get()
-        default_path = os.path.dirname(os.path.abspath(__file__))
-        main_path_py = os.path.join(default_path, "now_logs.txt")
-        self.is_process_running = True
-        self.show_processes()
-
-        if not ip:
-            # WE ARE GETTING ENTRY COORDINATES TO THE FAILED_LABELS
+    
+    def show_ui_things(self):
+        self.ip = self.tab1_input.get()
+        # WE ARE GETTING ENTRY COORDINATES TO THE FAILED_LABELS
+        if not self.ip:
             self.root.update_idletasks()
             x = self.tab1_input.winfo_rootx()
             y = self.tab1_input.winfo_rooty()
             print(f"x degeri: {x}, y degeri:{y}")
-            self.tab1_label_failed.place(x=x-250, y=y-70)
+            self.root.after(0, lambda: self.tab1_label_failed.place(x=x-250, y=y-70))
             print("Nothing has writed")
-            self.tab1_label_failed.config(
+            self.root.after(0, lambda: self.tab1_label_failed.config(
                 text="Failed.Please write an IP address"
-            )
+            ))
             self.is_process_running = False
             self.root.after(0, lambda: self.processes_in.configure(text=""))
             self.root.after(0, lambda: self.processes_in.grid_forget())
@@ -59,9 +54,8 @@ class nmap_scan:
             )
             return
         self.stopla = False
-
-        self.log_text.config(state="normal")
-        self.log_text.insert("1.0", f"[{ip}]Scanning all ports...")
+        self.root.after(0, lambda: self.log_text.config(state="normal"))
+        self.root.after(0, lambda: self.log_text.insert("1.0", f"[{self.ip}]Scanning all ports..."))
         self.root.after(0, self.scanning_animation)
         self.root.after(
             100, lambda: self.tab1_stop_nmap.grid(
@@ -69,8 +63,17 @@ class nmap_scan:
             )
         )
 
+    def try_find(self):
+        default_path = os.path.dirname(os.path.abspath(__file__))
+        main_path_py = os.path.join(default_path, "now_logs.txt")
+        self.is_process_running = True
+        self.show_processes()
+        self.show_ui_things()
+
+        if not hasattr(self, "ip") or not self.ip:
+            return
         self.current_process = subprocess.Popen(
-            ["nmap", ip], shell=False, stdout=subprocess.PIPE, text=True
+            ["nmap", self.ip], shell=False, stdout=subprocess.PIPE, text=True
         )
 
         full_output = ""
@@ -88,7 +91,7 @@ class nmap_scan:
             file.seek(0)
             file.write(full_output)
             file.truncate()
-        for lines in content.splitlines():
+        for lines in full_output.splitlines():
             check_ips = re.search(r'(\d+\.\d+\.\d+\.\d+)', lines)
             if check_ips:
                 checked_ips = check_ips.group(1)
@@ -97,7 +100,7 @@ class nmap_scan:
                     self.root.after(
                         0, lambda ip=checked_ips: self.add_ips_in_menu(ip)
                     )
-        print("Dosya buraya kaydedildi:", os.path.abspath("now_logs.txt"))
+        print("File has been saved at:", os.path.abspath("now_logs.txt"))
         self.root.after(2000, lambda: self.write_found_ips())
         if not self.stopla:
             self.stopla = True
@@ -110,7 +113,7 @@ class nmap_scan:
             print("stop button is being deleted")
         except Exception as e:
             print(f"Can't deleting stop button: {e}")
-        self.log_text.config(state="disabled")
+        self.root.after(0, lambda: self.log_text.config(state="disabled"))
         return
 
     def add_ips_in_menu(self, ip):
