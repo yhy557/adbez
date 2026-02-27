@@ -336,6 +336,7 @@ def close_menus(event):
         if menus.winfo_viewable() and menus.winfo_exists():
             menus.place_forget()
 
+
 load_clicked = 0
 
 # MAIN PANEL
@@ -652,6 +653,7 @@ tab2_load_more_btn.bind(
     lambda e: btn_instance.called_test_function()
 )
 
+
 connected_container2 = ttk.Frame(lower_frame2)
 connected_container2.grid(row=0, column=0, sticky="n")
 
@@ -674,7 +676,8 @@ btn_instance = buttons(
     keyevents_labels,
     data,
     current_lang,
-    background_color
+    background_color,
+    canvas2
 )
 
 connected_container = ttk.Frame(upper_frame)
@@ -724,42 +727,18 @@ menu_frame_lang1 = Button(menu_frame_lang, text="English")
 menu_frame_lang2 = Button(menu_frame_lang, text="Turkce")
 menu_frame_lang3 = Button(menu_frame_lang, text="Português")
 # CATEGORY MENU
+category_btn = []
 menu_frame_category = Frame(upper_frame2, background="blue")
-menu_frame_category_in1 = Button(
-    menu_frame_category, text=data[current_lang]["l310"],
-    name="l310", font=custom_font
-)
-menu_frame_category_in2 = Button(
-    menu_frame_category, text=data[current_lang]["l311"],
-    name="l311", font=custom_font
-)
-menu_frame_category_in3 = Button(
-    menu_frame_category, text=data[current_lang]["l312"],
-    name="l312", font=custom_font
-)
-menu_frame_category_in4 = Button(
-    menu_frame_category, text=data[current_lang]["l313"],
-    name="l313", font=custom_font
-)
-menu_frame_category_in5 = Button(
-    menu_frame_category, text=data[current_lang]["l314"],
-    name="l314", font=custom_font
-)
-menu_frame_category_in6 = Button(
-    menu_frame_category, text=data[current_lang]["l315"],
-    name="l315", font=custom_font
-)
-menu_frame_category_in7 = Button(
-    menu_frame_category, text=data[current_lang]["l316"],
-    name="l316", font=custom_font
-)
-menu_frame_category_in8 = Button(
-    menu_frame_category, text=data[current_lang]["l317"],
-    name="l317", font=custom_font
-)
-menu_frame_category_in1.bind(
-    "<Button-1>", lambda self: buttons.categorize(self)
-)
+for b in range(8):
+    btn_key = f"l{b+310}"
+    menu_frame_category_in1 = Button(
+        menu_frame_category, text=data[current_lang][btn_key],
+        name=btn_key, font=custom_font
+    )
+    menu_frame_category_in1.bind(
+        "<Button-1>", lambda event, k=btn_key: btn_instance.categorize(k)
+    )
+    category_btn.append(menu_frame_category_in1)
 
 # PLACEMENT
 tab1_lang_button.grid(row=0, column=0, sticky="nsew")
