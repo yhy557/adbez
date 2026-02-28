@@ -8,13 +8,20 @@ import json
 import subprocess
 import platform
 import shutil
+import logging
 # MY FILES
 import adb_connect as adbc
 import nmap_scan as nmaps
 from checks import startup_check
 from scroll_buttons import buttons
-
 import tkinter as tk
+# SOME CONFIGURE FOR LOGGING
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - [%(levelname)s] - %(message)s',
+    datefmt='%H:%M:%S'
+)
+
 if platform.system() == "Windows":
     import ctypes
     try:
@@ -46,19 +53,19 @@ current_lang = "en"
 
 
 def open_menu(event, frame, choosen_button, selected_tab):
-    print("Test")
+    logging.debug(f"{choosen_button} is opening")
     root.update_idletasks()
     if frame.winfo_viewable():
         frame.place_forget()
-        print(f"{frame} is deleted")
+        logging.debug(f"{frame} is deleted")
         return
     button_x = choosen_button.winfo_rootx()
     button_y = choosen_button.winfo_rooty()
     button_xp = selected_tab.winfo_rootx()
     button_yp = selected_tab.winfo_rooty()
 
-    print("Real screen:", button_x, button_y)
-    print("This window:", button_xp, button_yp)
+    logging.debug(f"Real screen: {button_x}, {button_y}")
+    logging.debug(f"This window: {button_xp}, {button_yp}")
     try:
         frame.place(x=(button_x - button_xp) + choosen_button.winfo_width(),
                     y=(button_y - button_yp), anchor="nw")
@@ -66,16 +73,16 @@ def open_menu(event, frame, choosen_button, selected_tab):
             child.pack(fill="x")
         root.update_idletasks()
         now_x, now_y = frame.winfo_rootx(), frame.winfo_rooty()
-        print(f"Created found menu at: {now_x, now_y}")
+        logging.debug(f"Created found menu at: {now_x, now_y}")
     except Exception as e:
-        print(f"[E]Menu cant be created: {e}")
+        logging.error("[E]Menu can't be created: %s", e)
 
 
 # IP MENU EVENTS
 def enter_choosed_ip(event):
     clicked_button = event.widget
     clicked_button_label = clicked_button.cget("text")
-    print(f"Pressed {clicked_button_label}")
+    logging.info(f"Pressed {clicked_button_label}")
     if menu_frame.winfo_exists() and menu_frame.winfo_viewable():
         menu_frame.place_forget()
         tab1_input.delete(0, "end")
@@ -84,7 +91,7 @@ def enter_choosed_ip(event):
 
 # ADB MENU EVENTS
 def found_enter_choosed_ip(event, ip):
-    print(f"Pressed {ip}")
+    logging.info(f"Pressed {ip}")
     if menu_frame_found.winfo_exists() and menu_frame_found.winfo_viewable():
         tab1_input2.delete(0, "end")
         tab1_input2.insert(0, ip)
@@ -135,8 +142,8 @@ def on_tab_selected(event):
         if m.winfo_exists():
             m.place_forget()
         else:
-            print(f"{m} is null")
-    print(tab_text)
+            logging.warning(f"{m} is null")
+    logging.debug(tab_text)
 
 
 def update_all_widgets(lang_code):
@@ -175,16 +182,16 @@ def update_all_widgets(lang_code):
                     try:
                         widget.config(text=selected_texts[w_name])
                     except Exception as e:
-                        print("An error occurred while updating and finding widgets:", e)
+                        logging.error("An error occurred while updating and finding widgets: %s", e)
                         pass
                 if widget.winfo_children():
                     recursive_update(widget)
 
         recursive_update(root)
         root.update_idletasks()
-        print(f"Language changed to: {lang_code}")
+        logging.info(f"Language changed to: {lang_code}")
     except Exception as e:
-        print(f"Language update error: {e}")
+        logging.error("Language update error: %s", e)
 
 
 def update_ui(output):
@@ -255,9 +262,9 @@ for path in tries:
         found_path = path
 
 if found_path:
-    print(f"Found: {found_path}")
+    logging.debug("Found: %s", found_path)
 else:
-    print("Not found")
+    logging.warning("Not found")
 
 
 def start_move(event):
@@ -281,12 +288,12 @@ def on_move(event):
 def changed_paned(event):
     if menu_frame.winfo_viewable() and menu_frame.winfo_exists():
         menu_frame.place_forget()
-        print("menu_frame is deleted")
+        logging.debug("menu_frame is deleted")
     else:
-        print("menu_frame is null")
+        logging.debug("menu_frame is null")
     if menu_frame_found.winfo_viewable() and menu_frame_found.winfo_exists():
         menu_frame_found.place_forget()
-        print("menu_frame_found is deleted")
+        logging.debug("menu_frame_found is deleted")
 
 
 def minimize_window():
@@ -329,7 +336,7 @@ def _on_scroll_down(event):
 
 
 def close_menus(event):
-    print("HIIIIIIIIIIIIIII")
+    logging.debug("All menus are closing")
     if isinstance(event.widget, Button):
         return
     for menus in all_menu:
@@ -402,10 +409,10 @@ def leave_enter(event):
 def disconnect_ip(event):
     root.update_idletasks()
     label_text = tab1_input2.get().strip()
-    print("current ip address: ", label_text)
-    print("Clicked disconnect")
+    logging.debug(f"current ip address:  {label_text}")
+    logging.info("Clicked disconnect")
     connected_ips_text = connected_devicesips.cget("text")
-    print(f"list is: \n {connected_ips_text}")
+    logging.info(f"list is: \n {connected_ips_text}")
     connected_ips_list = connected_ips_text.split()
     background_color = upper_frame.cget("background")
     try:
@@ -414,12 +421,12 @@ def disconnect_ip(event):
             stdout=subprocess.PIPE,
             text=True
         )
-        print(f"Disconnected to {label_text}")
+        logging.debug(f"Disconnected to {label_text}")
         check_btn_ip.grid_forget()
         with open("check.json", "r", encoding="utf-8") as f:
             check_data = json.load(f)
         ip_to_remove = label_text.strip()
-        print(f"Deleting ip: {ip_to_remove}")
+        logging.debug(f"Deleting ip: {ip_to_remove}")
         if ip_to_remove in check_data["connected_ips"]:
             del check_data["connected_ips"][ip_to_remove]
         with open("check.json", "w", encoding="utf-8") as fi:
@@ -430,11 +437,11 @@ def disconnect_ip(event):
                 new_text = "\n".join(connected_ips_list)
                 root.update_idletasks()
                 connected_devicesips.configure(text=new_text)
-                print("Deleted ip")
+                logging.debug("Deleted ip")
         if connected_devicesips.cget("text") == "":
             connected_devicesips.configure(background=background_color)
     except Exception as e:
-        print(f"Error: {e}")
+        logging.error("Error: %s", e)
 
 
 min_btn = Button(title_bar, text="—", bg="#2d2d2d", fg="white", bd=0,
@@ -451,13 +458,13 @@ def catch_size(event):
         for m in all_menu:
             if m.winfo_viewable() and m.winfo_exists():
                 m.place_forget()
-                print(f"{m} is deleted")
+                logging.debug(f"{m} is deleted")
             else:
-                print(f"{m} is null")
+                logging.debug(f"{m} is null")
         if event.height > 600:
-            print(event.height)
+            logging.info(event.height)
             paned_window.paneconfigure(upper_frame, minsize=350, height=550)
-            print("Minsize is set")
+            logging.info("Minsize updated")
 
 
 # FULL SCREEN(□)
@@ -768,7 +775,6 @@ tab1_choose_ip.bind(
         event, menu_frame, tab1_choose_ip, tab_connect
     )
 )
-# tab1_nmap_button.bind("<Button-1>", find)
 tab1_nmap_button.bind("<Button-1>", scan)
 tab1_connect_button.bind("<Button-1>", connect)
 tab1_found_ip.bind(
@@ -800,10 +806,9 @@ paned_window.bind("<B1-Motion>", changed_paned)
 def delete_widgets():
     for widgets in tab2_seperate_scroll_BTN.winfo_children()[60:]:
         widgets.destroy()
-        print("Widgets deleting")
+        logging.debug("Widgets are deleting")
 
 
-# CATCHING WINDOW SIZE FOR IP MENU
 all_menu = [menu_frame, menu_frame_found, menu_frame_lang, menu_frame_category]
 
 checks()
