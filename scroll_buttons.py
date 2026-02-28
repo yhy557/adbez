@@ -1,4 +1,10 @@
 from tkinter import Button, Frame, Label
+import logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - [%(levelname)s] - %(message)s',
+    datefmt='%H:%M:%S'
+)
 
 
 class buttons:
@@ -25,13 +31,13 @@ class buttons:
         self.load_first()
 
     def categorize(self, text):
-        print(f"Clicked {text}")
+        logging.debug(f"[categorize]-Clicked {text}")
         self.canvas2.yview_moveto(0)
         for widgets in self.tab2_seperate_scroll_BTN.winfo_children()[:60]:
             widgets.destroy()
             self.keyevents_labels.clear()
         self.tab2_load_more_btn.pack_forget()
-        print("Widgets deleting")
+        logging.debug("[categorize]-Widgets are deleting")
 
         category_sizes = {
             "l310": 25,  # Navigation
@@ -305,7 +311,7 @@ class buttons:
 
     def called_test_function(self):
         self.load_clicked += 1
-        print(f"clicked test: {self.load_clicked}")
+        logging.debug("[called_test_function]-clicked test: %s", self.load_clicked)
         if self.load_clicked == 1:
             self.load_all(60, 120)
         elif self.load_clicked == 2:
@@ -315,21 +321,21 @@ class buttons:
         elif self.load_clicked == 4:
             self.load_all(240, 288)
         else:
-            print("All keyevents loaded")
+            logging.debug("[called_test_function]-All keyevents loaded")
 
     # IF LANGUAGES CHANGED, LOAD AGAIN
     def load_again(self):
         for widgets in self.tab2_seperate_scroll_BTN.winfo_children()[:60]:
             widgets.destroy()
             self.keyevents_labels.clear()
-            print("Widgets deleting")
+            logging.debug("[load_again]-Widgets are deleting")
         self.keyevents_buttons.clear()
         self.keyevents_labels.clear()
         self.root.after(10, lambda: self.load_first())
 
     # SEPERATE
     def load_all(self, range_x, range_y):
-        print("Clicked-----------------------------------------")
+        logging.debug("[load_all]-Clicked-----------------------------------------")
         self.root.update_idletasks()
         self.tab2_load_more_btn.pack_forget()
         self.tab2_seperate_scroll_LOAD.pack_forget()
