@@ -4,7 +4,7 @@ import platform
 import os
 import json
 
-from tkinter import Checkbutton, Frame
+from tkinter import Checkbutton
 
 
 class adb_connect:
@@ -92,18 +92,21 @@ class adb_connect:
                 self.check_ips.append(self.check_btn_ip)
                 self.master_frame = self.check_btn_ip.master
                 self.new_btn = Checkbutton(self.master_frame)
+                btn = self.new_btn
+                row = len(self.master_frame.winfo_children())
                 self.root.after(
-                    0, lambda btn=self.new_btn: btn.grid(
-                        row=len(self.check_ips)+1, column=0
+                    0, lambda b=btn, r=row: btn.grid(
+                        row=r, column=0
                     )
                 )
                 self.root.after(
-                    0, lambda: self.new_btn(text=new_writing)
+                    0, lambda b=btn: b.configure(text=new_writing)
                 )
                 self.root.after(
-                    0, lambda: self.new_btn(self.test_ip_keyevent(new_writing))
+                    0, lambda b=btn: b.configure(
+                        command=lambda: self.test_ip_keyevent(new_writing)
+                    )
                 )
-
                 print("[test_show_status]-List of check ips", self.test_counter_check)
                 if connected_label_text == "":
                     self.root.after(
