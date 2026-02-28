@@ -4,6 +4,12 @@ import os
 import re
 import platform
 from tkinter import Button
+import logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - [%(levelname)s] - %(message)s',
+    datefmt='%H:%M:%S'
+)
 
 
 class nmap_scan:
@@ -25,7 +31,7 @@ class nmap_scan:
         self.found_ips = []
         self.current_ip_has_adb = False
         self.is_process_running = False
-        print(f"DEBUG: button_references type: {type(self.button_references)}")
+        logging.debug(f"button_references type: {type(self.button_references)}")
         t = threading.Thread(target=self.try_find)
         t.start()
 
@@ -40,9 +46,9 @@ class nmap_scan:
             self.root.update_idletasks()
             x = self.tab1_input.winfo_rootx()
             y = self.tab1_input.winfo_rooty()
-            print(f"x degeri: {x}, y degeri:{y}")
+            logging.debug(f"[show_ui_things]-x count: {x}, y count:{y}")
             self.root.after(0, lambda: self.tab1_label_failed.place(x=x-250, y=y-70))
-            print("Nothing has writed")
+            logging.debug("[show_ui_things]-Nothing has writed")
             self.root.after(0, lambda: self.tab1_label_failed.config(
                 text="Failed.Please write an IP address"
             ))
@@ -100,7 +106,7 @@ class nmap_scan:
                     self.root.after(
                         0, lambda ip=checked_ips: self.add_ips_in_menu(ip)
                     )
-        print("File has been saved at:", os.path.abspath("now_logs.txt"))
+        logging.debug("[try_find]-File has been saved at: %s", os.path.abspath("now_logs.txt"))
         self.root.after(2000, lambda: self.write_found_ips())
         if not self.stopla:
             self.stopla = True
@@ -110,14 +116,14 @@ class nmap_scan:
             self.is_process_running = False
             self.root.after(0, lambda: self.processes_in.configure(text=""))
             self.root.after(0, lambda: self.processes_in.grid_forget())
-            print("stop button is being deleted")
+            logging.debug("[try_find]-stop button is being deleted")
         except Exception as e:
-            print(f"Can't deleting stop button: {e}")
+            logging.debug(f"[try_find]-Can't deleting stop button: {e}")
         self.root.after(0, lambda: self.log_text.config(state="disabled"))
         return
 
     def add_ips_in_menu(self, ip):
-        print("Hello i am add_ips_menu")
+        logging.debug("[add_ips_in_menu]-Clicked")
         new_button = Button(self.menu_frame_found, text=f"{ip}")
         new_button.pack(fill="x")
         new_button.bind(
@@ -125,7 +131,7 @@ class nmap_scan:
             lambda event, ip=ip: self.found_enter_choosed_ip(event, ip)
         )
         self.button_references.append(new_button)
-        print(f"found ipsss: {new_button}")
+        logging.debug(f"[add_ips_in_menu]-found ips: {new_button}")
 
         # ips_length = len(found_ips)
         # for i in range(ips_length):
@@ -153,17 +159,17 @@ class nmap_scan:
                         os.kill(self.current_process.pid, signal.SIGTERM)
                         self.current_process.wait(1)
                     except subprocess.TimeoutExpired:
-                        print("The process is resisting, so it will be killed directly...")
+                        logging.debug("[stop_nmap]-The process is resisting, so it will be killed directly...")
                         os.kill(self.current_process.pid, signal.SIGKILL)
 
                 self.stopla = True
-                print("Nmap stopped")
+                logging.debug("[stop_nmap]-Nmap stopped")
                 self.root.after(
                     20, lambda: self.update_ui("\n[!] NMAP scan is terminated")
                 )
                 self.root.after(0, lambda: self.tab1_stop_nmap.grid_forget())
             except Exception as e:
-                print(f"Nmap scan is can't terminated: {e}")
+                logging.debug(f"[stop_nmap]-Nmap scan is can't terminated: {e}")
 
     def scanning_animation(self, count=0):
         ip = self.tab1_input.get()
@@ -185,4 +191,4 @@ class nmap_scan:
             return
 
     def write_found_ips(self):
-        print(f"IPs ===  {self.found_ips}")
+        logging.debug(f"[write_found_ips]-IPs ===  {self.found_ips}")
