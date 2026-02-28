@@ -4,7 +4,7 @@ import platform
 import os
 import json
 
-from tkinter import Checkbutton
+from tkinter import Checkbutton, Label
 
 
 class adb_connect:
@@ -44,13 +44,20 @@ class adb_connect:
             text="Failed.Please write an IP address"
         )
         self.root.after(5000, lambda: self.tab1_label_failed2.place_forget())
-        self.processes_in.configure(text="")
-        self.processes_in.grid_forget()
+        self.root.after(0, lambda: self.new_label.grid_forget())
 
     def test_show_status(self):
+        self.processes_list = []
+        self.new_frame = self.processes_in.master
+        self.new_label = Label(self.new_frame, text="test")
         self.root.after(
             0, lambda: self.tab1_stop_adb.grid(row=0, column=1, padx=(5, 0))
         )
+        self.root.after(0, lambda: self.new_label.grid())
+        self.root.after(0, lambda: self.processes_list.append(self.new_label))
+        self.root.after(0, lambda: self.new_label.configure(text="ADBprocess"))
+
+        """
         now_text = self.processes_in.cget("text")
         self.processes_in.grid(row=1, column=0)
         if now_text == "":
@@ -61,6 +68,7 @@ class adb_connect:
             self.processes_in.configure(
                 text=f"{now_text}" + "\n" + "Adb process"
             )
+        """
         full_output = ""
         while True:
             line = self.current_process_adb.stdout.readline()
@@ -77,11 +85,7 @@ class adb_connect:
             if word == "connected" and "failed" not in full_output.lower():
                 self.stopla2 = True
                 self.is_process_running = False
-                self.processes_in.configure(text="ADB Finished process")
-                self.root.after(
-                    100, lambda: self.processes_in.configure(text="")
-                )
-                self.root.after(100, lambda: self.processes_in.grid_forget())
+                self.root.after(100, lambda: self.new_label.grid_forget())
                 self.root.after(0, lambda: self.update_ui("Connected"))
                 with open("check.json", "r", encoding="utf-8") as f:
                     check_data = json.load(f)
@@ -143,11 +147,10 @@ class adb_connect:
         try:
             self.is_process_running = False
             self.root.after(0, lambda: self.tab1_stop_adb.grid_forget())
-            self.processes_in.configure(text="ADB Finished process")
-            self.root.after(100, lambda: self.processes_in.configure(text=""))
-            self.root.after(100, lambda: self.processes_in.grid_forget())
+            self.root.after(100, lambda: self.new_label.grid_forget())
             print("[test_show_status]-stop button is being deleted")
         except Exception as e:
+            self.root.after(100, lambda: self.new_label.grid_forget())
             print(f"[test_show_status]-Can't deleting stop button: {e}")
 
     def try_connect(self):
