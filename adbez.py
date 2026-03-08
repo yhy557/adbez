@@ -1,6 +1,6 @@
 from tkinter import (Toplevel, Label, Button, Tk, PanedWindow,
                      Frame, Canvas, Scrollbar, Y, Entry,
-                     Text, Checkbutton)
+                     Text, Checkbutton, IntVar)
 from tkinter import font
 from tkinter import ttk
 import os
@@ -9,6 +9,7 @@ import subprocess
 import platform
 import shutil
 import logging
+from datetime import datetime
 # MY FILES
 import adb_connect as adbc
 import nmap_scan as nmaps
@@ -21,6 +22,8 @@ logging.basicConfig(
     format='%(asctime)s - [%(levelname)s] - %(message)s',
     datefmt='%H:%M:%S'
 )
+default_path = os.path.dirname(os.path.abspath(__file__))
+file_path = os.path.join(default_path, "check.json")
 
 if platform.system() == "Windows":
     import ctypes
@@ -32,6 +35,24 @@ if platform.system() == "Windows":
 
 with open("lang.json", "r", encoding="utf-8") as e:
     data = json.load(e)
+
+now = datetime.now()
+json_default_data = {
+    "last_entered": f"{now}",
+    "last_commands": {},
+    "connected_ips": {},
+    "theme": {}
+}
+
+if not os.path.exists(file_path):
+    with open(file_path, "w") as f:
+        json.dump(json_default_data, f, indent=4, ensure_ascii=False)
+        pass
+    check_data = json_default_data
+else:
+    with open(file_path, "r", encoding="utf-8") as f:
+        check_data = json.load(f)
+
 
 if platform.system() == "Windows":
     def show_in_taskbar(root):
@@ -50,6 +71,7 @@ if platform.system() == "Windows":
 
 button_references = []
 current_lang = "en"
+current_theme = ""
 
 
 def open_menu(event, frame, choosen_button, selected_tab):
@@ -211,7 +233,7 @@ def connect(event):
     active_adb = adbc.adb_connect(
         tab1_input2, root, tab1_label_failed2, found_path, tab1_stop_adb,
         connected_devicesips, update_ui, test_counter,
-        processes_in, check_btn_ip
+        processes_in, check_btn_ip, ongoing_processes
     )
 
 
@@ -225,7 +247,7 @@ def scan(event):
     active_nmap = nmaps.nmap_scan(
         tab1_input, log_text, tab1_label_failed, tab1_stop_nmap, root,
         update_ui, menu_frame_found, found_enter_choosed_ip, button_references,
-        processes_in
+        processes_in, ongoing_processes, active_processes
     )
 
 
@@ -233,10 +255,25 @@ def stop_nmap_event(event):
     if active_nmap:
         active_nmap.stop_nmap()
 
+def choose_theme(color):
+    tab_connect.config(bg=color)
+    tab_settings.config(bg=color)
+    paned_window.config(bg="white")
+    upper_frame.config(bg=color)
+    nmap_input_row.config(bg=color)
+    adb_input_row.config(bg=color)
+    adb_btn_container.config(bg=color)
+    tab1_label.config(bg=color, fg="white")
+    tab1_label2.config(bg=color, fg="white")
+
+def choose_themeW(color):
+    paned_window.config(bg="black")
+    tab1_label.config(bg=color, fg="black")
+    tab1_label2.config(bg=color, fg="black")
 
 def checks():
     checker = startup_check()
-    checker.app_startup(connected_devicesips, current_lang, data)
+    checker.app_startup(connected_devicesips, current_lang, data, choose_theme, choose_themeW)
 
 
 # -----------------------------------------
@@ -343,7 +380,6 @@ def close_menus(event):
         if menus.winfo_viewable() and menus.winfo_exists():
             menus.place_forget()
 
-
 load_clicked = 0
 
 # MAIN PANEL
@@ -414,6 +450,7 @@ def disconnect_ip(event):
     connected_ips_text = connected_devicesips.cget("text")
     logging.info(f"list is: \n {connected_ips_text}")
     connected_ips_list = connected_ips_text.split()
+
     background_color = upper_frame.cget("background")
     try:
         subprocess.Popen(
@@ -492,14 +529,14 @@ main_sections.pack(fill="both", expand=True)
 main_sections.config()
 
 # DEFINITION
-tab_connect = ttk.Frame(main_sections)
+tab_connect = Frame(main_sections)
 tab_keyevents = ttk.Frame(main_sections)
 tab_usefull = ttk.Frame(main_sections)
 tab_danger = ttk.Frame(main_sections)
 tab_everything = ttk.Frame(main_sections)
 tab_learn = ttk.Frame(main_sections)
 tab_terminal = ttk.Frame(main_sections)
-tab_settings = ttk.Frame(main_sections)
+tab_settings = Frame(main_sections)
 tab_connected = ttk.Frame(main_sections)
 
 # PLACEMENT
@@ -588,6 +625,28 @@ tab2_seperate_scroll_BTN.pack(fill="x", expand=True)
 tab2_seperate_scroll_LOAD.pack(expand=True, fill="x")
 up_bar.columnconfigure(0, weight=1)
 up_bar.columnconfigure(3, weight=1)
+# TAB_SETTINGS-----------------------------------
+def check_dark_theme_btn(*args):
+    if var.get() == 1:
+        print("Choosen")
+
+        check_data["theme"] = "dark"
+        with open("check.json", "w", encoding="utf-8") as fi:
+            json.dump(check_data, fi, indent=4)
+        choose_theme("#292423")
+    else:
+        check_data["theme"] = "white"
+        with open("check.json", "w", encoding="utf-8") as fi:
+            json.dump(check_data, fi, indent=4)
+        choose_theme("SystemButtonFace")
+        choose_themeW("SystemButtonFace")
+        print("the election was canceled")
+
+var = IntVar()
+var.trace_add("write", check_dark_theme_btn)
+dark_theme_btn = Checkbutton(tab_settings, text="Dark", variable=var)
+dark_theme_btn.grid(row=0, column=0)
+dark_theme_btn.bind()
 # WINDOWS-----------------------
 canvas2.bind_all("<MouseWheel>", _on_mousewheel)
 # ------------------------------
@@ -626,12 +685,12 @@ upper_frame.columnconfigure(2, weight=1)
 # FONT STYLE DEFINITION
 custom_font = font.Font(size=8)
 # DEFINITION
-tab1_label = ttk.Label(upper_frame, text=data[current_lang]["l3"], name="l3")
+tab1_label = Label(upper_frame, text=data[current_lang]["l3"], name="l3")
 tab1_input = ttk.Entry(nmap_input_row)
 tab1_nmap_button = Button(
     nmap_btn_container, text=data[current_lang]["l4"], name="l4"
 )
-tab1_label2 = ttk.Label(upper_frame, text=data[current_lang]["l5"], name="l5")
+tab1_label2 = Label(upper_frame, text=data[current_lang]["l5"], name="l5")
 tab1_input2 = ttk.Entry(adb_input_row)
 tab1_connect_button = Button(
     adb_btn_container, text=data[current_lang]["l6"], name="l6"
@@ -669,8 +728,10 @@ connected_devices2 = Label(
     connected_container2, text=data[current_lang]["l20"], name="l20"
 )
 check_btn_ip = Checkbutton(connected_container2)
-connected_devices2.grid(row=0, column=0, sticky="ne")
+connected_devices2.grid(row=0, column=0, sticky="nsew")
+ongoing_processes = ttk.Frame(upper_frame)
 
+active_processes = []
 keyevents_buttons = []
 keyevents_labels = []
 background_color = upper_frame.cget("background")
@@ -684,22 +745,23 @@ btn_instance = buttons(
     data,
     current_lang,
     background_color,
-    canvas2
+    canvas2,
+    up_bar
 )
 
 connected_container = ttk.Frame(upper_frame)
-ongoing_processes = ttk.Frame(upper_frame)
 connected_container.grid(row=0, column=2, sticky="ne")
-ongoing_processes.grid(row=8, column=0, sticky="sw")
+# ongoing_processes.grid(row=8, column=0, sticky="sw")
 processes_lists_text = Label(ongoing_processes, text="-Ongoing processes-")
 processes_in = Label(ongoing_processes)
 processes_lists_text.grid(row=0, column=0)
 connected_devices = Label(
-    connected_container, text=data[current_lang]["l20"], name="l20"
+    connected_container, text=data[current_lang]["l20"], name="l20",
+    background="lightgray"
 )
 connected_devicesips = Label(connected_container)
 is_text_empty = connected_devicesips.cget("text")
-connected_devices.grid(row=0, column=0, sticky="ne")
+connected_devices.grid(row=0, column=0, sticky="nsew")
 connected_devicesips.grid(row=1, column=0, sticky="nsew")
 
 # I WANT TO USE MENUBUTTON BUT IT CAN'T DO THE FEATURES I WANT
