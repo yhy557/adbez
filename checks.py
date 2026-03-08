@@ -10,21 +10,21 @@ logging.basicConfig(
 
 
 class startup_check:
-    def app_startup(self, connected_devicesips, current_lang, data):
-        self.connected_devicesips = connected_devicesips
+    def app_startup(self, connected_devicesips, current_lang, data, choose_theme, choose_themeW):
         logging.debug("%s", data[current_lang]['l1'])
         default_path = os.path.dirname(os.path.abspath(__file__))
         file_path = os.path.join(default_path, "check.json")
 
+        with open("check.json", "r", encoding="utf-8") as f:
+            check_data = json.load(f)
+
         now = datetime.now()
-        # if not os.path.exists(file_path):
         json_default_data = {
             "last_entered": f"{now}",
             "last_commands": {},
-            "connected_ips": {}
+            "connected_ips": {},
+            "theme": {}
         }
-        # else:
-        #    pass
 
         if not os.path.exists(file_path):
             with open(file_path, "w") as f:
@@ -34,8 +34,13 @@ class startup_check:
         else:
             with open(file_path, "r", encoding="utf-8") as f:
                 check_data = json.load(f)
-                # json.dump(json_default_data, f, indent=4, ensure_ascii=False)
-                # pass
+
+        if check_data["theme"] == "dark":
+            choose_theme("#292423")
+        else:
+            choose_theme("SystemButtonFace")
+            choose_themeW("SystemButtonFace")
+
         json_ip = check_data["connected_ips"]
         connected_devicesips.configure(text="\n".join(json_ip.keys()))
         logging.debug("%s", data[current_lang]["l2"])
