@@ -753,8 +753,8 @@ connected_container = ttk.Frame(upper_frame)
 connected_container.grid(row=0, column=2, sticky="ne")
 # ongoing_processes.grid(row=8, column=0, sticky="sw")
 processes_lists_text = Label(ongoing_processes, text="-Ongoing processes-")
-processes_in = Label(ongoing_processes)
-processes_lists_text.grid(row=0, column=0)
+processes_in = Button(ongoing_processes)
+processes_lists_text.pack(fill="x")
 connected_devices = Label(
     connected_container, text=data[current_lang]["l20"], name="l20",
     background="lightgray"
