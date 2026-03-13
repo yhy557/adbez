@@ -57,20 +57,17 @@ class nmap_scan:
         # WE ARE GETTING ENTRY COORDINATES TO THE FAILED_LABELS
         if not self.ip:
             self.root.update_idletasks()
-            x = self.tab1_input.winfo_rootx()
-            y = self.tab1_input.winfo_rooty()
-            logging.debug(f"[show_ui_things]-x count: {x}, y count:{y}")
             self.root.after(
-                0, lambda: self.tab1_label_failed.place(x=x-250, y=y-70)
+                0, lambda: self.tab1_label_failed.place(
+                    in_=self.tab1_input, relx=-0.722, rely=0, anchor="nw"
+                )
             )
             logging.debug("[show_ui_things]-Nothing has writed")
             self.root.after(0, lambda: self.tab1_label_failed.config(
-                text="Failed.Please write an IP address"
+                text="Failed. Please write an IP address"
             ))
             self.is_process_running = False
-            self.root.after(
-                5000, lambda: self.tab1_label_failed.place_forget()
-            )
+            self.root.after(5000, lambda: self.tab1_label_failed.place_forget())
             if self.on_finish:
                 self.on_finish(self)
             return
