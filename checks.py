@@ -23,7 +23,8 @@ class startup_check:
             "last_entered": f"{now}",
             "last_commands": {},
             "connected_ips": {},
-            "theme": {}
+            "theme": {},
+            "choosen_ips": {}
         }
 
         if not os.path.exists(file_path):
