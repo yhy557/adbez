@@ -56,12 +56,12 @@ class settings_style:
             self.check_data["theme"] = "dark"
             with open("check.json", "w", encoding="utf-8") as fi:
                 json.dump(self.check_data, fi, indent=4)
-            self.choose_theme("#292423")
+            self.choose_theme("#292423", "white")
         else:
             self.check_data["theme"] = "white"
             with open("check.json", "w", encoding="utf-8") as fi:
                 json.dump(self.check_data, fi, indent=4)
-            self.choose_theme("SystemButtonFace")
+            self.choose_theme("SystemButtonFace", "black")
             self.choose_themeW("SystemButtonFace")
             print("the election was canceled")
 
