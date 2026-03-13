@@ -68,14 +68,14 @@ class nmap_scan:
                 text="Failed.Please write an IP address"
             ))
             self.is_process_running = False
-            self.shared_nmap_processes.remove(self.my_process_btn)
             self.root.after(
                 5000, lambda: self.tab1_label_failed.place_forget()
             )
+            if self.on_finish:
+                self.on_finish(self)
             return
         self.stopla = False
         self.root.after(0, lambda: self.log_text.config(state="normal"))
-        self.root.after(0, lambda: self.ongoing_processes.grid(row=8, column=0, sticky="sw"))
         self.root.after(
             0, lambda: self.log_text.insert("1.0", f"[{self.ip}]Scanning all ports...")
         )
@@ -90,11 +90,11 @@ class nmap_scan:
         default_path = os.path.dirname(os.path.abspath(__file__))
         main_path_py = os.path.join(default_path, "now_logs.txt")
         self.is_process_running = True
-        self.show_processes()
         self.show_ui_things()
 
         if not hasattr(self, "ip") or not self.ip:
             return
+        self.root.after(0, self.show_processes())
         self.current_process = subprocess.Popen(
             ["nmap", self.ip], shell=False, stdout=subprocess.PIPE, text=True
         )
