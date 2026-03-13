@@ -316,7 +316,8 @@
         "l314": "System & Power",
         "l315": "TV & Remote Control",
         "l316": "App Shortcuts",
-        "l317": "Other"
+        "l317": "Other",
+        "l318": "Ongoing proccesses"
     },
     "tr": {
         "l1": "Bazı gerekli ayarlar kontrol ediliyor...",
@@ -635,7 +636,8 @@
         "l314": "Sistem & Güç",
         "l315": "TV & Uzaktan kumanda",
         "l316": "Uygulama kısayolları",
-        "l317": "Diğer"
+        "l317": "Diğer",
+        "l318": "Devam eden işlemler"
     },
     "pt": {
         "l1": "Algumas verificações estão sendo processadas...",
@@ -954,6 +956,7 @@
         "l314": "System & Power",
         "l315": "TV & Remote Control",
         "l316": "App Shortcuts",
-        "l317": "Other"
+        "l317": "Other",
+        "l318": "Ongoing proccesses"
     }
 }
