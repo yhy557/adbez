@@ -2,6 +2,7 @@ from datetime import datetime
 import os
 import json
 import logging
+from settings import settings_style
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - [%(levelname)s] - %(message)s',
@@ -10,7 +11,9 @@ logging.basicConfig(
 
 
 class startup_check:
-    def app_startup(self, connected_devicesips, current_lang, data, choose_theme, choose_themeW):
+    def app_startup(self, connected_devicesips, current_lang, data, style: settings_style):
+        choose_theme = style.choose_theme
+        choose_themeW = style.choose_themeW
         logging.debug("%s", data[current_lang]['l1'])
         default_path = os.path.dirname(os.path.abspath(__file__))
         file_path = os.path.join(default_path, "check.json")
@@ -37,9 +40,9 @@ class startup_check:
                 check_data = json.load(f)
 
         if check_data["theme"] == "dark":
-            choose_theme("#292423")
+            choose_theme("#292423", "white")
         else:
-            choose_theme("SystemButtonFace")
+            choose_theme("SystemButtonFace", "black")
             choose_themeW("SystemButtonFace")
 
         json_ip = check_data["connected_ips"]
