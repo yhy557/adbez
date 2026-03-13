@@ -44,16 +44,23 @@ class adb_connect:
 
     def show_adb_failed(self):
         self.root.update_idletasks()
-        x = self.tab1_input2.winfo_rootx()
-        y = self.tab1_input2.winfo_rooty()
-        print(f"[show_adb_failed]-x value: {x}, y value:{y}")
-        self.tab1_label_failed2.place(x=x-250, y=y-70)
-        self.tab1_label_failed2.config(
-            text="Failed.Please write an IP address"
+        self.root.after(
+            0, lambda: self.tab1_label_failed2.place(
+                in_=self.tab1_input2, relx=-0.69, rely=0, anchor="nw"
+            )
         )
+        logging.debug("[show_ui_things]-Nothing has writed")
+        self.root.after(0, lambda: self.tab1_label_failed2.config(
+            text="Failed. Please write an IP address"
+        ))
+        self.is_process_running = False
         self.root.after(5000, lambda: self.tab1_label_failed2.place_forget())
-        self.root.after(0, lambda: self.new_label.pack_forget())
-        self.ongoing_processes_list.remove(self.new_label)
+        if self.on_finish:
+            self.on_finish(self)
+        logging.debug("[show_ui_things]-Nothing has writed")
+        self.root.after(0, lambda: self.tab1_label_failed2.config(
+            text="Failed.Please write an IP address"
+        ))
 
     def check_event(self, text):
         if self.check_var.get() == 1:
