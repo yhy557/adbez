@@ -15,7 +15,9 @@ logging.basicConfig(
 class nmap_scan:
     def __init__(self, tab1_input, log_text, tab1_label_failed, tab1_stop_nmap,
                  root, update_ui, menu_frame_found, found_enter_choosed_ip,
-                 button_references, processes_in, ongoing_processes, active_processes):
+                 button_references, processes_in, ongoing_processes, active_processes,
+                 shared_nmap_processes,
+                 on_finish=None):
         self.tab1_input = tab1_input
         self.button_references = button_references
         self.update_ui = update_ui
@@ -23,16 +25,18 @@ class nmap_scan:
         self.tab1_label_failed = tab1_label_failed
         self.tab1_stop_nmap = tab1_stop_nmap
         self.root = root
-        self.current_process = None
-        self.stopla = False
         self.menu_frame_found = menu_frame_found
         self.found_enter_choosed_ip = found_enter_choosed_ip
         self.processes_in = processes_in
         self.ongoing_processes = ongoing_processes
         self.active_processes = active_processes
-        self.found_ips = []
+        self.shared_nmap_processes = shared_nmap_processes
+        self.on_finish = on_finish
+        self.current_process = None
+        self.stopla = False
         self.current_ip_has_adb = False
         self.is_process_running = False
+        self.found_ips = []
         logging.debug(f"button_references type: {type(self.button_references)}")
         t = threading.Thread(target=self.try_find)
         t.start()
@@ -43,6 +47,7 @@ class nmap_scan:
     def show_processes(self):
         self.active_processes.append("nmap_process")
         self.my_process_btn = Button(self.ongoing_processes, text=f"Nmap: {self.tab1_input.get()}")
+        self.shared_nmap_processes.append(self.my_process_btn)
         self.root.after(0, lambda: self.my_process_btn.pack(fill="x"))
         self.root.after(0, lambda: self.ongoing_processes.grid(row=8, column=0, sticky="sw"))
         self.root.after(0, lambda: self.my_process_btn.bind("<Button-3>", self.show_close_proccess))
@@ -63,6 +68,7 @@ class nmap_scan:
                 text="Failed.Please write an IP address"
             ))
             self.is_process_running = False
+            self.shared_nmap_processes.remove(self.my_process_btn)
             self.root.after(
                 5000, lambda: self.tab1_label_failed.place_forget()
             )
@@ -70,7 +76,6 @@ class nmap_scan:
         self.stopla = False
         self.root.after(0, lambda: self.log_text.config(state="normal"))
         self.root.after(0, lambda: self.ongoing_processes.grid(row=8, column=0, sticky="sw"))
-        # self.active_processes.append("nmap_process")
         self.root.after(
             0, lambda: self.log_text.insert("1.0", f"[{self.ip}]Scanning all ports...")
         )
@@ -125,14 +130,13 @@ class nmap_scan:
             self.root.after(0, lambda: self.update_ui("Scan completed"))
             self.active_processes.remove("nmap_process")
             self.root.after(0, lambda: self.my_process_btn.destroy())
+            if self.my_process_btn in self.shared_nmap_processes:
+                self.shared_nmap_processes.remove(self.my_process_btn)
             if len(self.active_processes) == 0:
                 self.root.after(0, lambda: self.ongoing_processes.grid_forget())
-        try:
+        if len(self.shared_nmap_processes) == 0:
             self.root.after(0, lambda: self.tab1_stop_nmap.grid_forget())
-            self.is_process_running = False
             logging.debug("[try_find]-stop button is being deleted")
-        except Exception as e:
-            logging.debug(f"[try_find]-Can't deleting stop button: {e}")
         self.root.after(0, lambda: self.log_text.config(state="disabled"))
         return
 
@@ -177,19 +181,24 @@ class nmap_scan:
                         os.kill(self.current_process.pid, signal.SIGKILL)
 
                 self.stopla = True
-                if "nmap_process" in self.active_processes:
-                    self.active_processes.remove("nmap_process")
                 if len(self.active_processes) == 0:
                     self.root.after(0, lambda: self.ongoing_processes.grid_forget())
                 logging.debug("[stop_nmap]-Nmap stopped")
                 self.root.after(
                     20, lambda: self.update_ui("\n[!] NMAP scan is terminated")
                 )
-                if len(self.active_processes) == 0:
+                if "nmap_process" in self.active_processes:
+                    self.active_processes.remove("nmap_process")
+
+                if len(self.shared_nmap_processes) == 0:
                     self.root.after(0, lambda: self.tab1_stop_nmap.grid_forget())
+                self.shared_nmap_processes.remove(self.my_process_btn)
+    
                 self.root.after(0, lambda: self.my_process_btn.destroy())
             except Exception as e:
                 logging.debug(f"[stop_nmap]-Nmap scan is can't terminated: {e}")
+            if self.on_finish:
+                self.on_finish(self)
 
     def scanning_animation(self, count=0):
         ip = self.tab1_input.get()
