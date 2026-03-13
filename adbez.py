@@ -41,7 +41,8 @@ json_default_data = {
     "last_entered": f"{now}",
     "last_commands": {},
     "connected_ips": {},
-    "theme": {}
+    "theme": {},
+    "choosen_ips": {}
 }
 
 if not os.path.exists(file_path):
@@ -72,6 +73,8 @@ if platform.system() == "Windows":
 button_references = []
 current_lang = "en"
 current_theme = ""
+shared_adb_processes = []
+shared_nmap_processes = []
 
 
 def open_menu(event, frame, choosen_button, selected_tab):
@@ -230,16 +233,17 @@ active_nmap = None
 
 def connect(event):
     global active_adb
-    active_adb = adbc.adb_connect(
+    instance = adbc.adb_connect(
         tab1_input2, root, tab1_label_failed2, found_path, tab1_stop_adb,
         connected_devicesips, update_ui, test_counter,
-        processes_in, check_btn_ip, ongoing_processes
+        processes_in, check_btn_ip, ongoing_processes, shared_adb_processes,
+        on_finish= lambda inst: active_adb_list.remove(inst) if inst in active_adb_list else None
     )
-
+    active_adb_list.append(instance)
 
 def stop_adb_event(event):
-    if active_adb:
-        active_adb.stop_adb()
+    if active_adb_list:
+        active_adb_list[0].stop_adb()
 
 
 def scan(event):
@@ -247,13 +251,15 @@ def scan(event):
     active_nmap = nmaps.nmap_scan(
         tab1_input, log_text, tab1_label_failed, tab1_stop_nmap, root,
         update_ui, menu_frame_found, found_enter_choosed_ip, button_references,
-        processes_in, ongoing_processes, active_processes
+        processes_in, ongoing_processes, active_processes, shared_nmap_processes,
+        on_finish = lambda inst: active_nmap_list.remove(inst) if inst in active_nmap_list else None
     )
+    active_nmap_list.append(active_nmap)
 
 
 def stop_nmap_event(event):
-    if active_nmap:
-        active_nmap.stop_nmap()
+    if active_nmap_list:
+        active_nmap_list[0].stop_nmap()
 
 def choose_theme(color):
     tab_connect.config(bg=color)
@@ -732,6 +738,8 @@ connected_devices2.grid(row=0, column=0, sticky="nsew")
 ongoing_processes = ttk.Frame(upper_frame)
 
 active_processes = []
+active_adb_list = []
+active_nmap_list = []
 keyevents_buttons = []
 keyevents_labels = []
 background_color = upper_frame.cget("background")
@@ -752,7 +760,7 @@ btn_instance = buttons(
 connected_container = ttk.Frame(upper_frame)
 connected_container.grid(row=0, column=2, sticky="ne")
 # ongoing_processes.grid(row=8, column=0, sticky="sw")
-processes_lists_text = Label(ongoing_processes, text="-Ongoing processes-")
+processes_lists_text = Label(ongoing_processes, text=data[current_lang]["l318"], name="l318")
 processes_in = Button(ongoing_processes)
 processes_lists_text.pack(fill="x")
 connected_devices = Label(
