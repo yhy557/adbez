@@ -15,6 +15,7 @@ import adb_connect as adbc
 import nmap_scan as nmaps
 from checks import startup_check
 from scroll_buttons import buttons
+from settings import settings_style
 import tkinter as tk
 # SOME CONFIGURE FOR LOGGING
 logging.basicConfig(
@@ -75,6 +76,68 @@ current_lang = "en"
 current_theme = ""
 shared_adb_processes = []
 shared_nmap_processes = []
+
+TAB_W      = 110
+TAB_H      = 32
+TAB_R      = 8
+TAB_GAP    = 2
+TAB_BG     = "#2a2a3a"
+TAB_ACTIVE = "#5a95d8"
+TAB_HOVER  = "#3a3a4a"
+TAB_FG     = "#ffffff"
+TAB_FONT   = ("Segoe UI", 9)
+
+_tabs        = {}   # key -> {frame, text_id, bg_tag, lang_key}
+_active_tab  = None
+_tab_canvas  = None
+_content_frame = None
+
+
+def make_tab(canvas, x, key, text, frame, lang_key):
+    r, w, h = TAB_R, TAB_W, TAB_H
+    bg_tag  = f"bg_{key}"
+    txt_tag = f"txt_{key}"
+    color   = TAB_BG
+
+    canvas.create_arc(x,       0,     x+2*r,   2*r, start=90, extent=90, fill=color, outline="", tags=bg_tag)
+    canvas.create_arc(x+w-2*r, 0,     x+w,     2*r, start=0,  extent=90, fill=color, outline="", tags=bg_tag)
+    canvas.create_rectangle(x+r, 0,   x+w-r,   h,             fill=color, outline="", tags=bg_tag)
+    canvas.create_rectangle(x,   r,   x+w,     h,             fill=color, outline="", tags=bg_tag)
+
+    txt_id = canvas.create_text(x + w//2, h//2, text=text,
+                                fill=TAB_FG, font=TAB_FONT, tags=txt_tag)
+
+    _tabs[key] = {"frame": frame, "text_id": txt_id,
+                  "bg_tag": bg_tag, "lang_key": lang_key}
+
+    for tag in (bg_tag, txt_tag):
+        canvas.tag_bind(tag, "<Button-1>", lambda e, k=key: switch_tab(k))
+        canvas.tag_bind(tag, "<Enter>",
+                        lambda e, k=key: _tab_hover(k, True))
+        canvas.tag_bind(tag, "<Leave>",
+                        lambda e, k=key: _tab_hover(k, False))
+
+
+def _tab_hover(key, entering):
+    if key == _active_tab:
+        return
+    color = TAB_HOVER if entering else TAB_BG
+    _tab_canvas.itemconfig(_tabs[key]["bg_tag"], fill=color)
+
+
+def switch_tab(key):
+    global _active_tab
+    if key == _active_tab:
+        return
+    for k, v in _tabs.items():
+        v["frame"].place_forget()
+        if k != key:
+            _tab_canvas.itemconfig(v["bg_tag"], fill=TAB_BG)
+    _tabs[key]["frame"].place(in_=_content_frame, x=0, y=0,
+                              relwidth=1, relheight=1)
+    _tab_canvas.itemconfig(_tabs[key]["bg_tag"], fill=TAB_ACTIVE)
+    _active_tab = key
+    _on_tab_change(key)
 
 
 def open_menu(event, frame, choosen_button, selected_tab):
@@ -155,20 +218,19 @@ class Tooltip:
             self.tooltip_window = None
 
 
-def on_tab_selected(event):
-    global load_clicked
-    btn_instance.restart_number()
-    canvas2.yview_moveto(0)
-    delete_widgets()
-    selected_tab = event.widget.select()
-    tab_text = event.widget.tab(selected_tab, "text")
-    btn_instance.load_again()
+def _on_tab_change(key):
     for m in all_menu:
         if m.winfo_exists():
             m.place_forget()
         else:
             logging.warning(f"{m} is null")
-    logging.debug(tab_text)
+    if key == "keyevents":
+        global load_clicked
+        btn_instance.restart_number()
+        canvas2.yview_moveto(0)
+        delete_widgets()
+        btn_instance.load_again()
+    logging.debug(key)
 
 
 def update_all_widgets(lang_code):
@@ -178,21 +240,11 @@ def update_all_widgets(lang_code):
     btn_instance.current_lang = lang_code
     btn_instance.load_again()
 
-    tabs = [
-        (tab_connect, "l7"),
-        (tab_keyevents, "l8"),
-        (tab_usefull, "l9"),
-        (tab_danger, "l10"),
-        (tab_everything, "l11"),
-        (tab_learn, "l12"),
-        (tab_terminal, "l16"),
-        (tab_settings, "l17"),
-        (tab_connected, "l18")
-    ]
-
-    for tab_widget, json_key in tabs:
-        if json_key in new_texts:
-            main_sections.tab(tab_widget, text=new_texts[json_key])
+    # Canvas tab yazılarını güncelle
+    for info in _tabs.values():
+        lk = info["lang_key"]
+        if lk in new_texts:
+            _tab_canvas.itemconfig(info["text_id"], text=new_texts[lk])
 
     try:
         with open("lang.json", "r", encoding="utf-8") as f:
@@ -261,25 +313,13 @@ def stop_nmap_event(event):
     if active_nmap_list:
         active_nmap_list[0].stop_nmap()
 
-def choose_theme(color):
-    tab_connect.config(bg=color)
-    tab_settings.config(bg=color)
-    paned_window.config(bg="white")
-    upper_frame.config(bg=color)
-    nmap_input_row.config(bg=color)
-    adb_input_row.config(bg=color)
-    adb_btn_container.config(bg=color)
-    tab1_label.config(bg=color, fg="white")
-    tab1_label2.config(bg=color, fg="white")
-
-def choose_themeW(color):
-    paned_window.config(bg="black")
-    tab1_label.config(bg=color, fg="black")
-    tab1_label2.config(bg=color, fg="black")
 
 def checks():
     checker = startup_check()
-    checker.app_startup(connected_devicesips, current_lang, data, choose_theme, choose_themeW)
+    style = settings_style(check_data, tab_connect, tab_settings,
+         paned_window, upper_frame, nmap_input_row, adb_input_row,
+         adb_btn_container, tab1_label, tab1_label2, log_text)
+    checker.app_startup(connected_devicesips, current_lang, data, style)
 
 
 # -----------------------------------------
@@ -401,13 +441,8 @@ root.config(bg='#1e1e1e')
 root.rowconfigure(0, weight=1)
 root.columnconfigure(0, weight=1)
 style = ttk.Style()
-style.configure("TNotebook.Tab", padding=[20, 5])
 style.configure("Siyah.TFrame", background="black")
-style2 = ttk.Style()
-style2.theme_use('default')
-style2.map("TNotebook.Tab",
-           background=[("selected", "#5a95d8"), ("active", "#737171")],
-           foreground=[("selected", "white")])
+style.configure("Redbg.TButton", background="red")
 
 border_color = "#3d3d3d"
 bg_color = "#1e1e1e"
@@ -521,7 +556,6 @@ max_btn.bind("<Leave>", leave_enter)
 close_btn = Button(title_bar, text="✕", bg="#2d2d2d", fg="white", bd=0,
                    activebackground="red", command=root.destroy, width=4)
 close_btn.pack(side="right", fill="y")
-style.configure("Redbg.TButton", background="red")
 close_btn.bind("<Enter>", on_enter)
 close_btn.bind("<Leave>", leave_enter)
 
@@ -530,31 +564,55 @@ root.bind("<Configure>", catch_size)
 frm = ttk.Frame(main_area, style="Siyah.TFrame", padding=10)
 frm.pack(fill="both", expand=True)
 
-main_sections = ttk.Notebook(frm)
-main_sections.pack(fill="both", expand=True)
-main_sections.config()
+_tab_bar = Frame(frm, bg="#1e1e1e")
+_tab_bar.pack(fill="x", pady=(0, 4))
+
+_scroll_left = Button(_tab_bar, text="◀", bg="#1e1e1e", fg="white", bd=0,
+                      activebackground="#2a2a3a", width=2,
+                      command=lambda: _tab_canvas.xview_scroll(-2, "units"))
+_scroll_left.pack(side="left")
+
+_tab_canvas = Canvas(_tab_bar, bg="#1e1e1e", height=TAB_H, highlightthickness=0)
+_tab_canvas.pack(side="left", fill="x", expand=True)
+
+_scroll_right = Button(_tab_bar, text="▶", bg="#1e1e1e", fg="white", bd=0,
+                       activebackground="#2a2a3a", width=2,
+                       command=lambda: _tab_canvas.xview_scroll(2, "units"))
+_scroll_right.pack(side="left")
+
+_tab_canvas.bind("<MouseWheel>",
+    lambda e: _tab_canvas.xview_scroll(int(-1*(e.delta/120)), "units"))
+
+_content_frame = Frame(frm, bg="#1e1e1e")
+_content_frame.pack(fill="both", expand=True)
 
 # DEFINITION
-tab_connect = Frame(main_sections)
-tab_keyevents = ttk.Frame(main_sections)
-tab_usefull = ttk.Frame(main_sections)
-tab_danger = ttk.Frame(main_sections)
-tab_everything = ttk.Frame(main_sections)
-tab_learn = ttk.Frame(main_sections)
-tab_terminal = ttk.Frame(main_sections)
-tab_settings = Frame(main_sections)
-tab_connected = ttk.Frame(main_sections)
+tab_connect    = Frame(_content_frame)
+tab_keyevents  = ttk.Frame(_content_frame)
+tab_usefull    = ttk.Frame(_content_frame)
+tab_danger     = ttk.Frame(_content_frame)
+tab_everything = ttk.Frame(_content_frame)
+tab_learn      = ttk.Frame(_content_frame)
+tab_terminal   = ttk.Frame(_content_frame)
+tab_settings   = Frame(_content_frame)
+tab_connected  = ttk.Frame(_content_frame)
 
-# PLACEMENT
-main_sections.add(tab_connect, text=data[current_lang]["l7"])
-main_sections.add(tab_keyevents, text=data[current_lang]["l8"])
-main_sections.add(tab_usefull, text=data[current_lang]["l9"])
-main_sections.add(tab_danger, text=data[current_lang]["l10"])
-main_sections.add(tab_everything, text=data[current_lang]["l11"])
-main_sections.add(tab_learn, text=data[current_lang]["l12"])
-main_sections.add(tab_terminal, text=data[current_lang]["l16"])
-main_sections.add(tab_settings, text=data[current_lang]["l17"])
-main_sections.add(tab_connected, text=data[current_lang]["l18"])
+_tab_defs = [
+    ("connect",    data[current_lang]["l7"],  tab_connect,    "l7"),
+    ("keyevents",  data[current_lang]["l8"],  tab_keyevents,  "l8"),
+    ("usefull",    data[current_lang]["l9"],  tab_usefull,    "l9"),
+    ("danger",     data[current_lang]["l10"], tab_danger,     "l10"),
+    ("everything", data[current_lang]["l11"], tab_everything, "l11"),
+    ("learn",      data[current_lang]["l12"], tab_learn,      "l12"),
+    ("terminal",   data[current_lang]["l16"], tab_terminal,   "l16"),
+    ("settings",   data[current_lang]["l17"], tab_settings,   "l17"),
+    ("connected",  data[current_lang]["l18"], tab_connected,  "l18"),
+]
+_x = 0
+for _key, _text, _frame, _lk in _tab_defs:
+    make_tab(_tab_canvas, _x, _key, _text, _frame, _lk)
+    _x += TAB_W + TAB_GAP
+_tab_canvas.config(scrollregion=(0, 0, _x, TAB_H))
 
 # BLOCKS-----------------------------------------------
 # -TAB_CONNECT LAYOUTS
@@ -631,28 +689,7 @@ tab2_seperate_scroll_BTN.pack(fill="x", expand=True)
 tab2_seperate_scroll_LOAD.pack(expand=True, fill="x")
 up_bar.columnconfigure(0, weight=1)
 up_bar.columnconfigure(3, weight=1)
-# TAB_SETTINGS-----------------------------------
-def check_dark_theme_btn(*args):
-    if var.get() == 1:
-        print("Choosen")
 
-        check_data["theme"] = "dark"
-        with open("check.json", "w", encoding="utf-8") as fi:
-            json.dump(check_data, fi, indent=4)
-        choose_theme("#292423")
-    else:
-        check_data["theme"] = "white"
-        with open("check.json", "w", encoding="utf-8") as fi:
-            json.dump(check_data, fi, indent=4)
-        choose_theme("SystemButtonFace")
-        choose_themeW("SystemButtonFace")
-        print("the election was canceled")
-
-var = IntVar()
-var.trace_add("write", check_dark_theme_btn)
-dark_theme_btn = Checkbutton(tab_settings, text="Dark", variable=var)
-dark_theme_btn.grid(row=0, column=0)
-dark_theme_btn.bind()
 # WINDOWS-----------------------
 canvas2.bind_all("<MouseWheel>", _on_mousewheel)
 # ------------------------------
@@ -757,9 +794,9 @@ btn_instance = buttons(
     up_bar
 )
 
+
 connected_container = ttk.Frame(upper_frame)
 connected_container.grid(row=0, column=2, sticky="ne")
-# ongoing_processes.grid(row=8, column=0, sticky="sw")
 processes_lists_text = Label(ongoing_processes, text=data[current_lang]["l318"], name="l318")
 processes_in = Button(ongoing_processes)
 processes_lists_text.pack(fill="x")
@@ -854,8 +891,6 @@ tab1_found_ip.bind(
     )
 )
 
-main_sections.bind("<<NotebookTabChanged>>", on_tab_selected)
-
 # nmap ip menu events
 menu_frame_in1.bind("<Button-1>", enter_choosed_ip)
 menu_frame_in2.bind("<Button-1>", enter_choosed_ip)
@@ -880,6 +915,8 @@ def delete_widgets():
 
 
 all_menu = [menu_frame, menu_frame_found, menu_frame_lang, menu_frame_category]
+
+switch_tab("connect")
 
 checks()
 if platform.system() == "Windows":
