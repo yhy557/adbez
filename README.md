@@ -21,4 +21,8 @@
 
 <img width="600" alt="Image" src="https://github.com/user-attachments/assets/e67598f5-0730-45e0-a9b6-ff868ff89776" />
 
+### Settings tab
+
+<img width="1001" height="701" alt="Image" src="https://github.com/user-attachments/assets/4829b342-94a9-4815-80e6-02590b98aae4" />
+
 *Portugese translation by:* **[@FetoyuDev](https://github.com/FetoyuDev)**
