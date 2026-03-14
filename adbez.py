@@ -322,7 +322,7 @@ def checks():
     my_settings = settings_style(check_data, tab_connect, tab_settings,
          paned_window, upper_frame, nmap_input_row, adb_input_row,
          adb_btn_container, tab1_label, tab1_label2, log_text, tab1_input, tab1_input2,
-         tab1_nmap_button, tab1_connect_button, root)
+         tab1_nmap_button, tab1_connect_button, root, nmap_btn_container)
     checker.app_startup(connected_devicesips, current_lang, data, my_settings)
 
 
@@ -446,7 +446,7 @@ root.rowconfigure(0, weight=1)
 root.columnconfigure(0, weight=1)
 style = ttk.Style()
 style.configure("Siyah.TFrame", background="black")
-style.configure("Redbg.TButton", background="red")
+style.configure("Redbg.TButton", background="red", borderwidth=0, relief="flat")
 
 border_color = "#3d3d3d"
 bg_color = "#1e1e1e"
@@ -592,7 +592,7 @@ _content_frame.pack(fill="both", expand=True)
 
 # DEFINITION
 tab_connect    = Frame(_content_frame)
-tab_keyevents  = ttk.Frame(_content_frame)
+tab_keyevents  = Frame(_content_frame)
 tab_usefull    = ttk.Frame(_content_frame)
 tab_danger     = ttk.Frame(_content_frame)
 tab_everything = ttk.Frame(_content_frame)
@@ -667,7 +667,7 @@ adb_input_row.columnconfigure(0, weight=0)
 adb_input_row.columnconfigure(1, weight=1)
 adb_input_row.columnconfigure(2, weight=0)
 # -NMAP BUTTON ROW
-nmap_btn_container = ttk.Frame(upper_frame)
+nmap_btn_container = Frame(upper_frame)
 nmap_btn_container.grid(row=3, column=1, sticky="n")
 nmap_btn_container.columnconfigure(0, weight=0)
 nmap_btn_container.columnconfigure(1, weight=0)
@@ -678,7 +678,7 @@ lang_btn_container.grid(row=0, column=0, sticky="nw")
 canvas2 = Canvas(upper_frame2, bg="red", highlightthickness=0)
 canvas2.pack(side="left", fill="both", expand=True)
 scrollable_bar = Scrollbar(upper_frame2, orient="vertical",
-                           command=canvas2.yview, background="white")
+                           command=canvas2.yview, background="yellow")
 scrollable_bar.pack(fill=Y, side="right", anchor="e")
 canvas2.configure(yscrollcommand=scrollable_bar.set)
 scrollable_content = Frame(canvas2)
@@ -865,7 +865,7 @@ tab1_label.grid(row=1, column=1, sticky="n", pady=(0, 5), padx=(0, 285))
 tab1_input.grid(row=0, column=1, sticky="ew", pady=(0, 10))
 tab1_choose_ip.grid(row=0, column=2, sticky="we", padx=(15, 0), pady=(0, 10))
 tab1_nmap_button.grid(row=0, column=0, sticky="ew")
-nmap_btn_container.columnconfigure(0, minsize=100)
+# nmap_btn_container.columnconfigure(0, minsize=100)
 
 tab1_label2.grid(row=4, column=1, sticky="n", padx=(0, 295))
 tab1_input2.grid(row=0, column=1, sticky="ew")
