@@ -80,8 +80,8 @@ class nmap_scan:
         )
         self.root.after(0, self.scanning_animation)
         self.root.after(
-            100, lambda: self.tab1_stop_nmap.grid(
-                row=0, column=1, sticky="w", padx=(5, 0)
+            0, lambda: self.tab1_stop_nmap.grid(
+                row=0, column=1, padx=(5, 0)
             )
         )
         if self.settings_instance:
