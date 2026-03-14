@@ -76,6 +76,7 @@ current_lang = "en"
 current_theme = ""
 shared_adb_processes = []
 shared_nmap_processes = []
+my_settings = None
 
 TAB_W      = 110
 TAB_H      = 32
@@ -304,6 +305,7 @@ def scan(event):
         tab1_input, log_text, tab1_label_failed, tab1_stop_nmap, root,
         update_ui, menu_frame_found, found_enter_choosed_ip, button_references,
         processes_in, ongoing_processes, active_processes, shared_nmap_processes,
+        settings_instance=my_settings,
         on_finish = lambda inst: active_nmap_list.remove(inst) if inst in active_nmap_list else None
     )
     active_nmap_list.append(active_nmap)
@@ -315,11 +317,13 @@ def stop_nmap_event(event):
 
 
 def checks():
+    global my_settings
     checker = startup_check()
-    style = settings_style(check_data, tab_connect, tab_settings,
+    my_settings = settings_style(check_data, tab_connect, tab_settings,
          paned_window, upper_frame, nmap_input_row, adb_input_row,
-         adb_btn_container, tab1_label, tab1_label2, log_text)
-    checker.app_startup(connected_devicesips, current_lang, data, style)
+         adb_btn_container, tab1_label, tab1_label2, log_text, tab1_input, tab1_input2,
+         tab1_nmap_button, tab1_connect_button, root)
+    checker.app_startup(connected_devicesips, current_lang, data, my_settings)
 
 
 # -----------------------------------------
@@ -729,12 +733,12 @@ upper_frame.columnconfigure(2, weight=1)
 custom_font = font.Font(size=8)
 # DEFINITION
 tab1_label = Label(upper_frame, text=data[current_lang]["l3"], name="l3")
-tab1_input = ttk.Entry(nmap_input_row)
+tab1_input = Entry(nmap_input_row, font="bold")
 tab1_nmap_button = Button(
     nmap_btn_container, text=data[current_lang]["l4"], name="l4"
 )
 tab1_label2 = Label(upper_frame, text=data[current_lang]["l5"], name="l5")
-tab1_input2 = ttk.Entry(adb_input_row)
+tab1_input2 = Entry(adb_input_row, font="bold")
 tab1_connect_button = Button(
     adb_btn_container, text=data[current_lang]["l6"], name="l6"
 )
