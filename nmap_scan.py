@@ -5,6 +5,7 @@ import re
 import platform
 from tkinter import Button
 import logging
+from settings import settings_style
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - [%(levelname)s] - %(message)s',
@@ -16,7 +17,7 @@ class nmap_scan:
     def __init__(self, tab1_input, log_text, tab1_label_failed, tab1_stop_nmap,
                  root, update_ui, menu_frame_found, found_enter_choosed_ip,
                  button_references, processes_in, ongoing_processes, active_processes,
-                 shared_nmap_processes,
+                 shared_nmap_processes, settings_instance=None,
                  on_finish=None):
         self.tab1_input = tab1_input
         self.button_references = button_references
@@ -32,6 +33,7 @@ class nmap_scan:
         self.active_processes = active_processes
         self.shared_nmap_processes = shared_nmap_processes
         self.on_finish = on_finish
+        self.settings_instance = settings_instance
         self.current_process = None
         self.stopla = False
         self.current_ip_has_adb = False
@@ -82,6 +84,8 @@ class nmap_scan:
                 row=0, column=1, sticky="w", padx=(5, 0)
             )
         )
+        if self.settings_instance:
+            self.root.after(0, lambda: self.settings_instance.apply_button_style(self.root))
 
     def try_find(self):
         default_path = os.path.dirname(os.path.abspath(__file__))
@@ -135,6 +139,8 @@ class nmap_scan:
             self.root.after(0, lambda: self.tab1_stop_nmap.grid_forget())
             logging.debug("[try_find]-stop button is being deleted")
         self.root.after(0, lambda: self.log_text.config(state="disabled"))
+        if self.settings_instance:
+            self.root.after(0, lambda: self.settings_instance.apply_button_style(self.root))
         return
 
     def add_ips_in_menu(self, ip):
