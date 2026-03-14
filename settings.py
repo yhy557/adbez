@@ -15,7 +15,7 @@ class settings_style:
     def __init__(self, check_data, tab_connect, tab_settings,
                  paned_window, upper_frame, nmap_input_row, adb_input_row,
                  adb_btn_container, tab1_label, tab1_label2, log_text, tab1_input, tab1_input2,
-                 tab1_nmap_button, tab1_connect_button, root):
+                 tab1_nmap_button, tab1_connect_button, root, nmap_btn_container):
         self.tab_connect = tab_connect
         self.tab_settings = tab_settings
         self.paned_window = paned_window
@@ -32,6 +32,7 @@ class settings_style:
         self.tab1_nmap_button = tab1_nmap_button
         self.tab1_connect_button = tab1_connect_button
         self.root = root
+        self.nmap_btn_container = nmap_btn_container
 
         self.var = IntVar()
         if check_data["theme"] == "dark":
@@ -100,6 +101,7 @@ class settings_style:
         self.nmap_input_row.config(bg=color)
         self.adb_input_row.config(bg=color)
         self.adb_btn_container.config(bg=color)
+        self.nmap_btn_container.configure(bg=color)
         self.tab1_label.config(bg=color, fg=fg_color)
         self.tab1_label2.config(bg=color, fg=fg_color)
         self.log_text.configure(bg=color, fg=fg_color)
