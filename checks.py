@@ -14,6 +14,7 @@ class startup_check:
     def app_startup(self, connected_devicesips, current_lang, data, style: settings_style):
         choose_theme = style.choose_theme
         choose_themeW = style.choose_themeW
+        choose_theme_special =style.choose_theme_special
         logging.debug("%s", data[current_lang]['l1'])
         default_path = os.path.dirname(os.path.abspath(__file__))
         file_path = os.path.join(default_path, "check.json")
@@ -41,6 +42,7 @@ class startup_check:
 
         if check_data["theme"] == "dark":
             choose_theme("#292423", "white")
+            choose_theme_special()
         else:
             choose_theme("SystemButtonFace", "black")
             choose_themeW("SystemButtonFace")
