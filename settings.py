@@ -14,7 +14,8 @@ FONT = ("Segoe UI", 10)
 class settings_style:
     def __init__(self, check_data, tab_connect, tab_settings,
                  paned_window, upper_frame, nmap_input_row, adb_input_row,
-                 adb_btn_container, tab1_label, tab1_label2, log_text):
+                 adb_btn_container, tab1_label, tab1_label2, log_text, tab1_input, tab1_input2,
+                 tab1_nmap_button, tab1_connect_button, root):
         self.tab_connect = tab_connect
         self.tab_settings = tab_settings
         self.paned_window = paned_window
@@ -26,6 +27,11 @@ class settings_style:
         self.tab1_label2 = tab1_label2
         self.check_data = check_data
         self.log_text = log_text
+        self.tab1_input = tab1_input
+        self.tab1_input2 = tab1_input2
+        self.tab1_nmap_button = tab1_nmap_button
+        self.tab1_connect_button = tab1_connect_button
+        self.root = root
 
         self.var = IntVar()
         if check_data["theme"] == "dark":
@@ -57,6 +63,7 @@ class settings_style:
             with open("check.json", "w", encoding="utf-8") as fi:
                 json.dump(self.check_data, fi, indent=4)
             self.choose_theme("#292423", "white")
+            self.choose_theme_special()
         else:
             self.check_data["theme"] = "white"
             with open("check.json", "w", encoding="utf-8") as fi:
@@ -64,6 +71,24 @@ class settings_style:
             self.choose_theme("SystemButtonFace", "black")
             self.choose_themeW("SystemButtonFace")
             print("the election was canceled")
+
+    def apply_button_style(self, container):
+        for widget in container.winfo_children():
+            if isinstance(widget, Button) and self.check_data["theme"] == "dark":
+                widget.configure(bg="#2D2D2D", fg="#E0E0E0", activebackground="#3D3D3D")
+            elif isinstance(widget, Button) and self.check_data["theme"] == "white":
+                widget.configure(bg="SystemButtonFace", fg="black", activebackground="#3D3D3D")
+            if widget.winfo_children():
+                self.apply_button_style(widget)
+            elif isinstance(widget, ttk.Button):
+                style_name = str(widget) + ".TButton"
+                s = ttk.Style()
+                if self.check_data["theme"] == "dark":
+                    s.configure(style_name, background="#2D2D2D", foreground="black")
+                else:
+                    s.configure(style_name, background="SystemButtonFace", foreground="black")
+                widget.configure(style=style_name)
+            
 
 
     def choose_theme(self, color, fg_color):
@@ -78,9 +103,17 @@ class settings_style:
         self.tab1_label.config(bg=color, fg=fg_color)
         self.tab1_label2.config(bg=color, fg=fg_color)
         self.log_text.configure(bg=color, fg=fg_color)
+        self.apply_button_style(self.root)
+            
 
 
     def choose_themeW(self, color):
         self.paned_window.config(bg="black")
         self.tab1_label.config(bg=color, fg="black")
         self.tab1_label2.config(bg=color, fg="black")
+        self.tab1_input.config(bg=color)
+        self.tab1_input2.config(bg=color)
+
+    def choose_theme_special(self):
+        self.tab1_input.config(bg="gray")
+        self.tab1_input2.config(bg="gray")
