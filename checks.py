@@ -28,7 +28,7 @@ class startup_check:
             "last_commands": {},
             "connected_ips": {},
             "theme": {},
-            "choosen_ips": {}
+            "choosen_ips": []
         }
 
         if not os.path.exists(file_path):
