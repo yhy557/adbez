@@ -241,7 +241,7 @@ def update_all_widgets(lang_code):
     btn_instance.current_lang = lang_code
     btn_instance.load_again()
 
-    # Canvas tab yazılarını güncelle
+    # Update canvas tab texts
     for info in _tabs.values():
         lk = info["lang_key"]
         if lk in new_texts:
@@ -322,7 +322,7 @@ def checks():
     my_settings = settings_style(check_data, tab_connect, tab_settings,
          paned_window, upper_frame, nmap_input_row, adb_input_row,
          adb_btn_container, tab1_label, tab1_label2, log_text, tab1_input, tab1_input2,
-         tab1_nmap_button, tab1_connect_button, root, nmap_btn_container)
+         tab1_nmap_button, tab1_connect_button, root, nmap_btn_container, data, current_lang)
     checker.app_startup(connected_devicesips, current_lang, data, my_settings)
 
 
