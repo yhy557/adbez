@@ -5,14 +5,14 @@ import os
 import json
 import logging
 
-from tkinter import Checkbutton, Label, IntVar
+from tkinter import Checkbutton, Label, IntVar, BooleanVar
 
 
 class adb_connect:
     def __init__(self, tab1_input2, root, tab1_label_failed2, found_path,
                  tab1_stop_adb, connected_devicesips, update_ui,
                  test_counter, processes_in, check_btn_ip, ongoing_processes,
-                 shared_adb_processes, on_finish=None):
+                 shared_adb_processes, check_data ,on_finish=None):
         self.tab1_input2 = tab1_input2
         self.root = root
         self.tab1_label_failed2 = tab1_label_failed2
@@ -26,18 +26,26 @@ class adb_connect:
         self.ongoing_processes = ongoing_processes
         self.shared_adb_processes = shared_adb_processes
         self.on_finish = on_finish
+        self.check_data = check_data
+
         self.test_counter_check = []
         self.check_ips = []
         self.ongoing_processes_list = []
         self.ongoing_processes_adb_list = []
+        self.checkbutton_ips = []
+        self.check_vars = {}
         self.current_process_adb = None
         self.stopla2 = False
         self.is_process_running = False
         self.process_counter = 0
-        self.check_var = IntVar()
         print("Clicked ADB")
         t = threading.Thread(target=self.try_connect)
         t.start()
+
+    def _get_var_for_ip(self, ip):
+        if ip not in self.check_vars:
+            self.check_vars[ip] = IntVar()
+        return self.check_vars[ip]
 
     def test_ip_keyevent(self, ip):
         print(f"[test_ip_keyevent]-Clicked {ip}")
@@ -63,9 +71,19 @@ class adb_connect:
         ))
 
     def check_event(self, text):
-        if self.check_var.get() == 1:
+        var = self._get_var_for_ip(text)
+        if var.get() == 1:
             print(f"Choosen {text}")
+            if text not in self.check_data["choosen_ips"]:
+                self.check_data["choosen_ips"].append(text)
+            with open("check.json", "w", encoding="utf-8") as f:
+                json.dump(self.check_data, f, indent=4, ensure_ascii=False)
         else:
+            for ip in self.check_data["choosen_ips"]:
+                if text == ip:
+                    self.check_data["choosen_ips"].remove(ip)
+            with open("check.json", "w", encoding="utf-8") as f:
+                json.dump(self.check_data, f, indent=4, ensure_ascii=False)
             print("Not choosen")
 
     def test_show_status(self):
@@ -82,7 +100,6 @@ class adb_connect:
         self.new_label.bind("<Button-3>", self.stop_adb)
         self.processes_list.append(self.new_label)
         self.root.after(0, lambda: self.new_label.configure(text="ADBprocess"))
-
         """
         now_text = self.processes_in.cget("text")
         self.processes_in.grid(row=1, column=0)
@@ -120,9 +137,11 @@ class adb_connect:
                 with open("check.json", "w", encoding="utf-8") as fi:
                     json.dump(check_data, fi, indent=4)
                 self.test_counter += 1
+                self.current_text = self.writing
+                self.var = self._get_var_for_ip(self.writing)
                 self.check_ips.append(self.check_btn_ip)
                 self.master_frame = self.check_btn_ip.master
-                self.new_btn = Checkbutton(self.master_frame, variable=self.check_var, command=lambda: self.check_event(self.new_btn.cget("text")))
+                self.new_btn = Checkbutton(self.master_frame, text=self.current_text, variable=self.var, command=lambda e=self.current_text: self.check_event(e))
                 btn = self.new_btn
                 row = len(self.master_frame.winfo_children())
                 self.root.after(
