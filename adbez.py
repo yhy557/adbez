@@ -43,7 +43,7 @@ json_default_data = {
     "last_commands": {},
     "connected_ips": {},
     "theme": {},
-    "choosen_ips": {}
+    "choosen_ips": []
 }
 
 if not os.path.exists(file_path):
@@ -289,7 +289,7 @@ def connect(event):
     instance = adbc.adb_connect(
         tab1_input2, root, tab1_label_failed2, found_path, tab1_stop_adb,
         connected_devicesips, update_ui, test_counter,
-        processes_in, check_btn_ip, ongoing_processes, shared_adb_processes,
+        processes_in, check_btn_ip, ongoing_processes, shared_adb_processes, check_data,
         on_finish= lambda inst: active_adb_list.remove(inst) if inst in active_adb_list else None
     )
     active_adb_list.append(instance)
