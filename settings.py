@@ -9,27 +9,29 @@ import platform
 import logging
 
 
-FONT       = ("Segoe UI", 10)
-FONT_BOLD  = ("Segoe UI", 10, "bold")
+FONT = ("Segoe UI", 10)
+FONT_BOLD = ("Segoe UI", 10, "bold")
 FONT_SMALL = ("Segoe UI", 9)
 
-S_BG      = "#F0F2F5"
-CARD      = "#FFFFFF"
-BORDER    = "#D1D5DB"
+S_BG = "#F0F2F5"
+CARD = "#FFFFFF"
+BORDER = "#D1D5DB"
 HEADER_BG = "#E8EAED"
-FG        = "#111827"
-FG_MUTED  = "#6B7280"
-ACCENT    = "#2563EB"
-BTN_BG    = "#2563EB"
-BTN_FG    = "#FFFFFF"
-BTN_ACT   = "#1D4ED8"
+FG = "#111827"
+FG_MUTED = "#6B7280"
+ACCENT = "#2563EB"
+BTN_BG = "#2563EB"
+BTN_FG = "#FFFFFF"
+BTN_ACT = "#1D4ED8"
 
 
 class settings_style:
     def __init__(self, check_data, tab_connect, tab_settings,
                  paned_window, upper_frame, nmap_input_row, adb_input_row,
-                 adb_btn_container, tab1_label, tab1_label2, log_text, tab1_input, tab1_input2,
-                 tab1_nmap_button, tab1_connect_button, root, nmap_btn_container, data, current_lang):
+                 adb_btn_container, tab1_label, tab1_label2, log_text,
+                 tab1_input, tab1_input2, tab1_nmap_button,
+                 tab1_connect_button, root, nmap_btn_container, data,
+                 current_lang, min_btn, max_btn, close_btn):
         self.tab_connect = tab_connect
         self.tab_settings = tab_settings
         self.paned_window = paned_window
@@ -49,6 +51,9 @@ class settings_style:
         self.nmap_btn_container = nmap_btn_container
         self.data = data
         self.current_lang = current_lang
+        self.min_btn, self.max_btn, self.close_btn = min_btn, max_btn, close_btn
+        self.is_dark = self.check_data["theme"] == "dark"
+        self.is_white = self.check_data["theme"] == "white"
 
         self.var = IntVar()
         if check_data["theme"] == "dark":
@@ -59,21 +64,23 @@ class settings_style:
 
         self.tab_settings.config(bg=S_BG)
         self.settings_style_frame = Frame(self.tab_settings, bg=S_BG)
-        self.settings_main_frame  = Frame(self.tab_settings, bg=S_BG)
+        self.settings_main_frame = Frame(self.tab_settings, bg=S_BG)
         self.settings_style_frame.pack(fill="both")
         self.settings_main_frame.pack(fill="both", pady=(0, 0))
 
-
-        # ── Card: body ─────────────────────────────────────────────
-        self.style_body = self.make_card(self.settings_style_frame,
-                               self.data[self.current_lang]["l319"], "l319")
+        # ── Card: body ───────────────────────────────────────────
+        self.style_body = self.make_card(
+            self.settings_style_frame,
+            self.data[self.current_lang]["l319"], "l319"
+        )
 
         row1 = Frame(self.style_body, bg=CARD)
         row1.pack(fill="x", pady=4)
         Label(row1, text="Dark Mode", font=FONT_BOLD,
               bg=CARD, fg=FG, width=20, anchor="w").pack(side="left")
-        Label(row1, text="Koyu arayüz teması",
-              font=FONT_SMALL, bg=CARD, fg=FG_MUTED).pack(side="left", padx=(0, 20))
+        Label(
+            row1, text="Dark interface theme",
+            font=FONT_SMALL, bg=CARD, fg=FG_MUTED).pack(side="left", padx=(0, 20))
         dark_theme_btn = Button(
             row1,
             text="Opened" if self.var.get() == 1 else "Closed",
@@ -97,15 +104,23 @@ class settings_style:
         dark_theme_btn.bind()
 
         # ── Card: ADB ─────────────────────────────────────────────────
-        self.body = self.make_card(self.settings_main_frame,
-                              self.data[self.current_lang]["l320"], "l320")
+        self.body = self.make_card(
+            self.settings_main_frame,
+            self.data[self.current_lang]["l320"], "l320"
+        )
 
         self.row2 = Frame(self.body, bg=CARD)
         self.row2.pack(fill="x", pady=4)
-        Label(self.row2, text="ADB path", font=FONT_BOLD,
-              bg=CARD, fg=FG, width=20, anchor="w").pack(side="left")
-        Label(self.row2, text="Executable file path",
-              font=FONT_SMALL, bg=CARD, fg=FG_MUTED).pack(side="left", padx=(0, 20))
+        self.row_label1 = Label(
+            self.row2, text="ADB path", font=FONT_BOLD,
+            bg=CARD, fg=FG, width=20, anchor="w"
+        )
+        self.row_label2 = Label(
+            self.row2, text="Executable file path",
+            font=FONT_SMALL, bg=CARD, fg=FG_MUTED
+        )
+        self.row_label1.pack(side="left")
+        self.row_label2.pack(side="left", padx=(0, 20))
         choose_path_btn = Button(
             self.row2,
             text="Choose path",
@@ -129,13 +144,15 @@ class settings_style:
 
         header = Frame(outer, bg="#1E1E2E", padx=14, pady=8)
         header.pack(fill="x")
-        title_label = Label(header, text=title, font=FONT_BOLD, bg="#1E1E2E", fg=ACCENT, name=name)
+        title_label = Label(
+            header, text=title, font=FONT_BOLD,
+            bg="#1E1E2E", fg=ACCENT, name=name
+        )
         title_label.pack(side="left")
 
         body = Frame(outer, bg=CARD, padx=14, pady=12)
         body.pack(fill="x")
         return body
-
 
     def choose_path(self, event):
         logging.info("[choose_path]-clicked")
@@ -157,7 +174,6 @@ class settings_style:
             self.choose_themeW("SystemButtonFace")
             print("the election was canceled")
 
-
     def _toggle(self, btn, var):
         if var.get() == 1:
             btn.config(text="Opened", bg=ACCENT, fg="white", relief="flat")
@@ -166,28 +182,46 @@ class settings_style:
 
     def apply_button_style(self, container):
         for widget in container.winfo_children():
-            if isinstance(widget, Button) and self.check_data["theme"] == "dark":
-                widget.configure(bg="#2D2D2D", fg="#E0E0E0", activebackground="#3D3D3D")
-            elif isinstance(widget, Button) and self.check_data["theme"] == "white":
-                widget.configure(bg="SystemButtonFace", fg="black", activebackground="#3D3D3D")
+            if isinstance(widget, Button) and self.is_dark:
+                if widget in [self.max_btn, self.close_btn, self.min_btn]:
+                    pass
+                else:
+                    widget.configure(
+                        bg="#2D2D2D", fg="#E0E0E0", activebackground="#3D3D3D"
+                    )
+            elif isinstance(widget, Button) and self.is_white:
+                if widget in [self.max_btn, self.close_btn, self.min_btn]:
+                    pass
+                else:
+                    widget.configure(
+                        bg="SystemButtonFace", fg="black",
+                        activebackground="#3D3D3D"
+                    )
             if widget.winfo_children():
                 self.apply_button_style(widget)
             elif isinstance(widget, ttk.Button):
                 style_name = str(widget) + ".TButton"
                 s = ttk.Style()
                 if self.check_data["theme"] == "dark":
-                    s.configure(style_name, background="#2D2D2D", foreground="black")
+                    s.configure(
+                        style_name, background="#2D2D2D", foreground="black"
+                    )
                 else:
-                    s.configure(style_name, background="SystemButtonFace", foreground="black")
+                    s.configure(
+                        style_name,
+                        background="SystemButtonFace", foreground="black"
+                    )
                 widget.configure(style=style_name)
+
     def apply_frame_style(self, container):
+        frames = [self.settings_main_frame, self.settings_style_frame]
         for widget in container.winfo_children():
-            if isinstance(widget, Frame) and self.check_data["theme"] == "dark":
-                if widget in [self.settings_main_frame, self.settings_style_frame]:
+            if isinstance(widget, Frame) and self.is_dark:
+                if widget in frames:
                     widget.configure(bg="#292423")
                 else:
                     widget.configure(bg="gray")
-            elif isinstance(widget, Frame) and self.check_data["theme"] == "white":
+            elif isinstance(widget, Frame) and self.is_white:
                 widget.configure(bg="SystemButtonFace")
         if self.check_data["theme"] == "dark":
             self.style_body.configure(bg="gray")
@@ -195,7 +229,6 @@ class settings_style:
         else:
             self.style_body.configure(bg=CARD)
             self.body.configure(bg=CARD)
-
 
     def choose_theme(self, color, fg_color):
         self.tab_connect.config(bg=color)
