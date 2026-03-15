@@ -1,6 +1,7 @@
 from tkinter import (Toplevel, Label, Button, Tk, PanedWindow,
                      Frame, Canvas, Scrollbar, Y, Entry,
-                     Text, Checkbutton, IntVar, Variable)
+                     Text, Checkbutton, IntVar, Variable,
+                     filedialog, )
 from tkinter import font
 from tkinter import ttk
 import json
@@ -8,14 +9,27 @@ import platform
 import logging
 
 
-FONT = ("Segoe UI", 10)
+FONT       = ("Segoe UI", 10)
+FONT_BOLD  = ("Segoe UI", 10, "bold")
+FONT_SMALL = ("Segoe UI", 9)
+
+S_BG      = "#F0F2F5"
+CARD      = "#FFFFFF"
+BORDER    = "#D1D5DB"
+HEADER_BG = "#E8EAED"
+FG        = "#111827"
+FG_MUTED  = "#6B7280"
+ACCENT    = "#2563EB"
+BTN_BG    = "#2563EB"
+BTN_FG    = "#FFFFFF"
+BTN_ACT   = "#1D4ED8"
 
 
 class settings_style:
     def __init__(self, check_data, tab_connect, tab_settings,
                  paned_window, upper_frame, nmap_input_row, adb_input_row,
                  adb_btn_container, tab1_label, tab1_label2, log_text, tab1_input, tab1_input2,
-                 tab1_nmap_button, tab1_connect_button, root, nmap_btn_container):
+                 tab1_nmap_button, tab1_connect_button, root, nmap_btn_container, data, current_lang):
         self.tab_connect = tab_connect
         self.tab_settings = tab_settings
         self.paned_window = paned_window
@@ -33,6 +47,8 @@ class settings_style:
         self.tab1_connect_button = tab1_connect_button
         self.root = root
         self.nmap_btn_container = nmap_btn_container
+        self.data = data
+        self.current_lang = current_lang
 
         self.var = IntVar()
         if check_data["theme"] == "dark":
@@ -40,22 +56,90 @@ class settings_style:
         else:
             self.var.set(0)
         self.var.trace_add("write", self.check_dark_theme_btn)
-        self.tab_settings.columnconfigure(0, weight=1)
 
-        self.settings_frame = Frame(self.tab_settings, padx=10, pady=10)
-        self.settings_frame.pack(fill="both")
+        self.tab_settings.config(bg=S_BG)
+        self.settings_style_frame = Frame(self.tab_settings, bg=S_BG)
+        self.settings_main_frame  = Frame(self.tab_settings, bg=S_BG)
+        self.settings_style_frame.pack(fill="both")
+        self.settings_main_frame.pack(fill="both", pady=(0, 0))
 
-        dark_theme_btn = Checkbutton(
-            self.settings_frame,
-            text="Dark Mode",
-            variable=self.var,
-            font=FONT,
+
+        # ── Card: body ─────────────────────────────────────────────
+        self.style_body = self.make_card(self.settings_style_frame,
+                               self.data[self.current_lang]["l319"], "l319")
+
+        row1 = Frame(self.style_body, bg=CARD)
+        row1.pack(fill="x", pady=4)
+        Label(row1, text="Dark Mode", font=FONT_BOLD,
+              bg=CARD, fg=FG, width=20, anchor="w").pack(side="left")
+        Label(row1, text="Koyu arayüz teması",
+              font=FONT_SMALL, bg=CARD, fg=FG_MUTED).pack(side="left", padx=(0, 20))
+        dark_theme_btn = Button(
+            row1,
+            text="Opened" if self.var.get() == 1 else "Closed",
+            font=FONT_BOLD,
+            bg=ACCENT if self.var.get() == 1 else "#D1D5DB",
+            fg="white" if self.var.get() == 1 else FG,
+            activebackground=BTN_ACT,
+            activeforeground="white",
             relief="flat",
             cursor="hand2",
+            padx=16,
+            pady=5,
+            bd=0,
+            width=10,
+            command=lambda: [
+                self.var.set(0 if self.var.get() == 1 else 1),
+                self._toggle(dark_theme_btn, self.var)
+            ]
         )
-        dark_theme_btn.grid(row=0, column=2, sticky="nsew")
+        dark_theme_btn.pack(side="right")
         dark_theme_btn.bind()
 
+        # ── Card: ADB ─────────────────────────────────────────────────
+        self.body = self.make_card(self.settings_main_frame,
+                              self.data[self.current_lang]["l320"], "l320")
+
+        self.row2 = Frame(self.body, bg=CARD)
+        self.row2.pack(fill="x", pady=4)
+        Label(self.row2, text="ADB path", font=FONT_BOLD,
+              bg=CARD, fg=FG, width=20, anchor="w").pack(side="left")
+        Label(self.row2, text="Executable file path",
+              font=FONT_SMALL, bg=CARD, fg=FG_MUTED).pack(side="left", padx=(0, 20))
+        choose_path_btn = Button(
+            self.row2,
+            text="Choose path",
+            font=FONT,
+            bg=BTN_BG,
+            fg=BTN_FG,
+            activebackground=BTN_ACT,
+            activeforeground=BTN_FG,
+            relief="flat",
+            cursor="hand2",
+            padx=12,
+            pady=4,
+            bd=0
+        )
+        choose_path_btn.pack(side="right")
+        choose_path_btn.bind("<Button-1>", self.choose_path)
+
+    def make_card(self, parent, title, name):
+        outer = Frame(parent, bg=BORDER, padx=1, pady=1)
+        outer.pack(fill="x", padx=16, pady=(0, 8))
+
+        header = Frame(outer, bg="#1E1E2E", padx=14, pady=8)
+        header.pack(fill="x")
+        title_label = Label(header, text=title, font=FONT_BOLD, bg="#1E1E2E", fg=ACCENT, name=name)
+        title_label.pack(side="left")
+
+        body = Frame(outer, bg=CARD, padx=14, pady=12)
+        body.pack(fill="x")
+        return body
+
+
+    def choose_path(self, event):
+        logging.info("[choose_path]-clicked")
+        choosen_path = filedialog.askopenfile()
 
     def check_dark_theme_btn(self, *args):
         if self.var.get() == 1:
@@ -73,6 +157,13 @@ class settings_style:
             self.choose_themeW("SystemButtonFace")
             print("the election was canceled")
 
+
+    def _toggle(self, btn, var):
+        if var.get() == 1:
+            btn.config(text="Opened", bg=ACCENT, fg="white", relief="flat")
+        else:
+            btn.config(text="Closed", bg="#D1D5DB", fg=FG, relief="flat")
+
     def apply_button_style(self, container):
         for widget in container.winfo_children():
             if isinstance(widget, Button) and self.check_data["theme"] == "dark":
@@ -89,13 +180,28 @@ class settings_style:
                 else:
                     s.configure(style_name, background="SystemButtonFace", foreground="black")
                 widget.configure(style=style_name)
-            
+    def apply_frame_style(self, container):
+        for widget in container.winfo_children():
+            if isinstance(widget, Frame) and self.check_data["theme"] == "dark":
+                if widget in [self.settings_main_frame, self.settings_style_frame]:
+                    widget.configure(bg="#292423")
+                else:
+                    widget.configure(bg="gray")
+            elif isinstance(widget, Frame) and self.check_data["theme"] == "white":
+                widget.configure(bg="SystemButtonFace")
+        if self.check_data["theme"] == "dark":
+            self.style_body.configure(bg="gray")
+            self.body.configure(bg="gray")
+        else:
+            self.style_body.configure(bg=CARD)
+            self.body.configure(bg=CARD)
 
 
     def choose_theme(self, color, fg_color):
         self.tab_connect.config(bg=color)
         self.tab_settings.config(bg=color)
-        self.settings_frame.config(bg=color)
+        self.settings_style_frame.config(bg=color)
+        self.settings_main_frame.config(bg=color)
         self.paned_window.config(bg="white")
         self.upper_frame.config(bg=color)
         self.nmap_input_row.config(bg=color)
@@ -105,9 +211,10 @@ class settings_style:
         self.tab1_label.config(bg=color, fg=fg_color)
         self.tab1_label2.config(bg=color, fg=fg_color)
         self.log_text.configure(bg=color, fg=fg_color)
+        self.settings_main_frame.config(bg=color)
+        self.settings_style_frame.config(bg=color)
         self.apply_button_style(self.root)
-            
-
+        self.apply_frame_style(self.tab_settings)
 
     def choose_themeW(self, color):
         self.paned_window.config(bg="black")
