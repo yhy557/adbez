@@ -43,7 +43,9 @@ json_default_data = {
     "last_commands": {},
     "connected_ips": {},
     "theme": {},
-    "choosen_ips": []
+    "choosen_ips": [],
+    "choosen_path_for_adb": {},
+    "did_adb_work": False
 }
 
 if not os.path.exists(file_path):
@@ -286,7 +288,8 @@ def update_ui(output):
 active_adb = None
 active_nmap = None
 
-found_path = None
+found_path = check_data["choosen_path_for_adb"]
+
 
 def connect(event):
     global active_adb
@@ -331,7 +334,8 @@ def checks():
         adb_btn_container, tab1_label, tab1_label2, log_text, tab1_input,
         tab1_input2, tab1_nmap_button, tab1_connect_button, root,
         nmap_btn_container, data, current_lang,
-        min_btn, max_btn, close_btn, found_path, update_func=update_path
+        min_btn, max_btn, close_btn, found_path, update_func=update_path,
+        auto_finder_func=try_find_adb
     )
     checker.app_startup(connected_devicesips, current_lang, data, my_settings)
 
@@ -339,6 +343,9 @@ def checks():
 def update_path(new_path):
     global found_path
     found_path = new_path
+    check_data["choosen_path_for_adb"] = found_path
+    with open("check.json", "w", encoding="utf-8") as f:
+        json.dump(check_data, f, indent=4, ensure_ascii=False)
 
 
 # -----------------------------------------
@@ -368,6 +375,10 @@ def try_find_adb():
 
     if found_path:
         logging.debug("Found: %s", found_path)
+        check_data["did_adb_work"] = True
+        check_data["choosen_path_for_adb"] = found_path
+        with open("check.json", "w", encoding="utf-8") as f:
+            json.dump(check_data, f, indent=4, ensure_ascii=False)
     else:
         logging.warning("Not found")
 
@@ -948,7 +959,8 @@ all_menu = [menu_frame, menu_frame_found, menu_frame_lang, menu_frame_category]
 
 switch_tab("connect")
 
-try_find_adb()
+if check_data["did_adb_work"] is not True:
+    try_find_adb()
 checks()
 if platform.system() == "Windows":
     show_in_taskbar(root)
