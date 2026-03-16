@@ -105,7 +105,7 @@ class nmap_scan:
 
         if not hasattr(self, "ip") or not self.ip:
             return
-        self.root.after(0, self.show_processes())
+        self.root.after(0, self.show_processes)
         self.current_process = subprocess.Popen(
             ["nmap", self.ip], shell=False, stdout=subprocess.PIPE, text=True
         )
