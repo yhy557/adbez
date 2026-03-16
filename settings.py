@@ -8,7 +8,6 @@ import json
 import platform
 import logging
 
-
 FONT = ("Segoe UI", 10)
 FONT_BOLD = ("Segoe UI", 10, "bold")
 FONT_SMALL = ("Segoe UI", 9)
@@ -31,7 +30,7 @@ class settings_style:
                  adb_btn_container, tab1_label, tab1_label2, log_text,
                  tab1_input, tab1_input2, tab1_nmap_button,
                  tab1_connect_button, root, nmap_btn_container, data,
-                 current_lang, min_btn, max_btn, close_btn):
+                 current_lang, min_btn, max_btn, close_btn, update_func):
         self.tab_connect = tab_connect
         self.tab_settings = tab_settings
         self.paned_window = paned_window
@@ -52,6 +51,8 @@ class settings_style:
         self.data = data
         self.current_lang = current_lang
         self.min_btn, self.max_btn, self.close_btn = min_btn, max_btn, close_btn
+        self.update_func = update_func
+
         self.is_dark = self.check_data["theme"] == "dark"
         self.is_white = self.check_data["theme"] == "white"
 
@@ -156,7 +157,9 @@ class settings_style:
 
     def choose_path(self, event):
         logging.info("[choose_path]-clicked")
-        choosen_path = filedialog.askopenfile()
+        choosen_path = filedialog.askopenfilename()
+        if choosen_path:
+            self.update_func(choosen_path)
 
     def check_dark_theme_btn(self, *args):
         if self.var.get() == 1:
