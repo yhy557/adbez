@@ -36,13 +36,18 @@ class buttons:
         print(f"Clicked back button")
         for widgets in self.tab2_seperate_scroll_BTN.winfo_children()[:60]:
             widgets.destroy()
-            self.keyevents_labels.clear()
-        if self.new_back_btn.winfo_exists():
+        self.keyevents_labels.clear()
+        if hasattr(self, "new_back_btn") and self.new_back_btn.winfo_exists():
             for b in self.back_btn_list:
                 self.root.after(0, lambda b=b: b.grid_forget())
+        self.restart_number()
+        self.root.after(101, lambda: self.tab2_load_more_btn.pack())
         self.load_again()
 
     def categorize(self, text):
+        if hasattr(self, "new_back_btn") and self.new_back_btn.winfo_exists():
+            self.new_back_btn.destroy()
+        self.back_btn_list.clear()
         self.new_back_btn = Button(self.up_bar, text="Back", command=self.back_all)
         self.back_btn_list.append(self.new_back_btn)
         if self.new_back_btn.winfo_exists():
@@ -52,9 +57,9 @@ class buttons:
         self.root.after(0, lambda: self.new_back_btn.grid(row=0, column=3, sticky="ne"))
         logging.debug(f"[categorize]-Clicked {text}")
         self.canvas2.yview_moveto(0)
-        for widgets in self.tab2_seperate_scroll_BTN.winfo_children()[:60]:
+        for widgets in self.tab2_seperate_scroll_BTN.winfo_children()[:200]:
             widgets.destroy()
-            self.keyevents_labels.clear()
+        self.keyevents_labels.clear()
         self.tab2_load_more_btn.pack_forget()
         logging.debug("[categorize]-Widgets are deleting")
 
@@ -76,7 +81,7 @@ class buttons:
         count = category_sizes[text]
 
         for z in range(0, count):
-            row_frame = Frame(self.tab2_seperate_scroll_BTN)
+            row_frame = Frame(self.tab2_seperate_scroll_BTN, bg="black")
             row_frame.grid(sticky="ew")
             row_frame.columnconfigure(1, weight=1)
             test_label = Label(
@@ -105,6 +110,7 @@ class buttons:
             button.grid(row=0, column=0, sticky="w")
             button.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
             button.bind("<Leave>", lambda event: self.change_bg_leave(event, "#2d2d2d"))
+            button.bind("<Button-1>", lambda event, b=button: self.test_buton_event(event, b.cget("text")))
             self.keyevents_buttons.append(button)
             self.keyevents_labels.append(test_label)
 
@@ -395,7 +401,7 @@ class buttons:
     def load_first(self):
         self.tab2_seperate_scroll_BTN.columnconfigure(0, weight=1)
         for i in range(60):
-            row_frame = Frame(self.tab2_seperate_scroll_BTN)
+            row_frame = Frame(self.tab2_seperate_scroll_BTN, bg="black")
             row_frame.grid(sticky="ew")
             row_frame.columnconfigure(1, weight=1)
             test_label = Label(
@@ -431,6 +437,7 @@ class buttons:
             button.bind(
                 "<Leave>", lambda event: self.change_bg_leave(event, "#2d2d2d")
             )
+            button.bind("<Button-1>", lambda event, b=button: self.test_buton_event(event, b.cget("text")))
             self.keyevents_buttons.append(button)
             self.keyevents_labels.append(test_label)
 
@@ -451,7 +458,7 @@ class buttons:
         elif self.load_clicked == 3:
             self.load_all(180, 240)
         elif self.load_clicked == 4:
-            self.load_all(240, 288)
+            self.load_all(240, 288, is_last=True)
         else:
             logging.debug("[called_test_function]-All keyevents loaded")
 
@@ -465,15 +472,18 @@ class buttons:
         self.keyevents_labels.clear()
         self.root.after(10, lambda: self.load_first())
 
+    def test_buton_event(self, event, info):
+        print(f"Clicked buttttonnn {info}")
+
     # SEPERATE
-    def load_all(self, range_x, range_y):
+    def load_all(self, range_x, range_y, is_last=False):
         logging.debug("[load_all]-Clicked------------------------------------")
         self.root.update_idletasks()
         self.tab2_load_more_btn.pack_forget()
         self.tab2_seperate_scroll_LOAD.pack_forget()
         self.tab2_seperate_scroll_BTN.columnconfigure(0, weight=1)
         for i in range(range_x, range_y):
-            row_frame = Frame(self.tab2_seperate_scroll_BTN)
+            row_frame = Frame(self.tab2_seperate_scroll_BTN, bg="black")
             row_frame.grid(sticky="ew")
             row_frame.columnconfigure(1, weight=1)
             test_label = Label(
@@ -510,6 +520,7 @@ class buttons:
                 wraplength=450)
             button.grid(row=0, column=0, sticky="w")
             button.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
+            button.bind("<Button-1>", lambda event, b=button: self.test_buton_event(event, b.cget("text")))
             button.bind(
                 "<Leave>", lambda event: self.change_bg_leave(event, "#2d2d2d")
             )
@@ -520,4 +531,5 @@ class buttons:
                 text=self.data[self.current_lang][key])
 
         self.root.after(100, lambda: self.tab2_seperate_scroll_LOAD.pack())
-        self.root.after(101, lambda: self.tab2_load_more_btn.pack())
+        if not is_last:
+            self.root.after(101, lambda: self.tab2_load_more_btn.pack())
