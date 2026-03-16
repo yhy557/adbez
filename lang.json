@@ -317,7 +317,17 @@
         "l315": "TV & Remote Control",
         "l316": "App Shortcuts",
         "l317": "Other",
-        "l318": "Ongoing proccesses"
+        "l318": "Ongoing proccesses",
+        "l319": "Style",
+        "l320": "Main",
+        "l321": "Dark Mode",
+        "l322": "Dark interface theme",
+        "l323": "Closed",
+        "l324": "Opened",
+        "l325": "ADB path",
+        "l326": "ADB path is: ",
+        "l327": "Auto-finder",
+        "l328": "Choose path"
     },
     "tr": {
         "l1": "Bazı gerekli ayarlar kontrol ediliyor...",
@@ -637,7 +647,17 @@
         "l315": "TV & Uzaktan kumanda",
         "l316": "Uygulama kısayolları",
         "l317": "Diğer",
-        "l318": "Devam eden işlemler"
+        "l318": "Devam eden işlemler",
+        "l319": "Stil",
+        "l320": "Ana",
+        "l321": "Karanlık mod",
+        "l322": "Koyu renkli arayüz teması",
+        "l323": "Kapalı",
+        "l324": "Açık",
+        "l325": "ADB yolu",
+        "l326": "ADB yolu: ",
+        "l327": "Otomatik-bulucu",
+        "l328": "Yol seç"
     },
     "pt": {
         "l1": "Algumas verificações estão sendo processadas...",
@@ -957,6 +977,16 @@
         "l315": "TV & Remote Control",
         "l316": "App Shortcuts",
         "l317": "Other",
-        "l318": "Ongoing proccesses"
+        "l318": "Ongoing proccesses",
+        "l319": "Style",
+        "l320": "Main",
+        "l321": "Dark Mode",
+        "l322": "Dark interface theme",
+        "l323": "Closed",
+        "l324": "Opened",
+        "l325": "ADB path",
+        "l326": "ADB path is: ",
+        "l327": "Auto-finder",
+        "l328": "Choose path"
     }
 }
