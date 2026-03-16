@@ -39,7 +39,8 @@ class nmap_scan:
         self.current_ip_has_adb = False
         self.is_process_running = False
         self.found_ips = []
-        logging.debug(f"button_references type: {type(self.button_references)}")
+        logging.debug(
+            f"button_references type: {type(self.button_references)}")
         t = threading.Thread(target=self.try_find)
         t.start()
 
@@ -48,11 +49,16 @@ class nmap_scan:
 
     def show_processes(self):
         self.active_processes.append("nmap_process")
-        self.my_process_btn = Button(self.ongoing_processes, text=f"Nmap: {self.tab1_input.get()}")
+        self.my_process_btn = Button(self.ongoing_processes,
+                                     text=f"Nmap: {self.tab1_input.get()}")
         self.shared_nmap_processes.append(self.my_process_btn)
         self.root.after(0, lambda: self.my_process_btn.pack(fill="x"))
-        self.root.after(0, lambda: self.ongoing_processes.grid(row=8, column=0, sticky="sw"))
-        self.root.after(0, lambda: self.my_process_btn.bind("<Button-3>", self.show_close_proccess))
+        self.root.after(0, lambda: self.ongoing_processes.grid(
+            row=8, column=0, sticky="sw")
+        )
+        self.root.after(0, lambda: self.my_process_btn.bind(
+            "<Button-3>", self.show_close_proccess)
+        )
 
     def show_ui_things(self):
         self.ip = self.tab1_input.get()
@@ -69,14 +75,16 @@ class nmap_scan:
                 text="Failed. Please write an IP address"
             ))
             self.is_process_running = False
-            self.root.after(5000, lambda: self.tab1_label_failed.place_forget())
+            self.root.after(5000,
+                            lambda: self.tab1_label_failed.place_forget())
             if self.on_finish:
                 self.on_finish(self)
             return
         self.stopla = False
         self.root.after(0, lambda: self.log_text.config(state="normal"))
         self.root.after(
-            0, lambda: self.log_text.insert("1.0", f"[{self.ip}]Scanning all ports...")
+            0, lambda: self.log_text.insert(
+                "1.0", f"[{self.ip}]Scanning all ports...")
         )
         self.root.after(0, self.scanning_animation)
         self.root.after(
@@ -85,7 +93,9 @@ class nmap_scan:
             )
         )
         if self.settings_instance:
-            self.root.after(0, lambda: self.settings_instance.apply_button_style(self.root))
+            self.root.after(0,
+                            lambda: self.settings_instance.apply_button_style(
+                                self.root))
 
     def try_find(self):
         default_path = os.path.dirname(os.path.abspath(__file__))
@@ -115,16 +125,15 @@ class nmap_scan:
             file.seek(0)
             file.write(full_output)
             file.truncate()
-        for lines in full_output.splitlines():
-            check_ips = re.search(r'(\d+\.\d+\.\d+\.\d+)', lines)
-            if check_ips:
-                checked_ips = check_ips.group(1)
-                if checked_ips not in self.found_ips:
-                    self.found_ips.append(checked_ips)
-                    self.root.after(
-                        0, lambda ip=checked_ips: self.add_ips_in_menu(ip)
-                    )
-        logging.debug("[try_find]-File has been saved at: %s", os.path.abspath("now_logs.txt"))
+        for match in re.finditer(r'(\d+\.\d+\.\d+\.\d+)', full_output):
+            ip = match.group(1)
+            if ip not in self.found_ips:
+                self.found_ips.append(ip)
+                self.root.after(
+                    0, lambda ip=ip: self.add_ips_in_menu(ip)
+                )
+        logging.debug("[try_find]-File has been saved at: %s",
+                      os.path.abspath("now_logs.txt"))
         self.root.after(2000, lambda: self.write_found_ips())
         if not self.stopla:
             self.stopla = True
@@ -134,13 +143,16 @@ class nmap_scan:
             if self.my_process_btn in self.shared_nmap_processes:
                 self.shared_nmap_processes.remove(self.my_process_btn)
             if len(self.active_processes) == 0:
-                self.root.after(0, lambda: self.ongoing_processes.grid_forget())
+                self.root.after(0,
+                                lambda: self.ongoing_processes.grid_forget())
         if len(self.shared_nmap_processes) == 0:
             self.root.after(0, lambda: self.tab1_stop_nmap.grid_forget())
             logging.debug("[try_find]-stop button is being deleted")
         self.root.after(0, lambda: self.log_text.config(state="disabled"))
         if self.settings_instance:
-            self.root.after(0, lambda: self.settings_instance.apply_button_style(self.root))
+            self.root.after(
+                0,
+                lambda: self.settings_instance.apply_button_style(self.root))
         return
 
     def add_ips_in_menu(self, ip):
@@ -194,12 +206,14 @@ class nmap_scan:
                     self.active_processes.remove("nmap_process")
 
                 if len(self.shared_nmap_processes) == 0:
-                    self.root.after(0, lambda: self.tab1_stop_nmap.grid_forget())
+                    self.root.after(0,
+                                    lambda: self.tab1_stop_nmap.grid_forget())
                 self.shared_nmap_processes.remove(self.my_process_btn)
-    
+
                 self.root.after(0, lambda: self.my_process_btn.destroy())
             except Exception as e:
-                logging.debug(f"[stop_nmap]-Nmap scan is can't terminated: {e}")
+                logging.debug(
+                    f"[stop_nmap]-Nmap scan is can't terminated: {e}")
             if self.on_finish:
                 self.on_finish(self)
 
