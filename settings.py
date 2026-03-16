@@ -30,7 +30,8 @@ class settings_style:
                  adb_btn_container, tab1_label, tab1_label2, log_text,
                  tab1_input, tab1_input2, tab1_nmap_button,
                  tab1_connect_button, root, nmap_btn_container, data,
-                 current_lang, min_btn, max_btn, close_btn, found_path, update_func):
+                 current_lang, min_btn, max_btn, close_btn, found_path,
+                 update_func, auto_finder_func):
         self.tab_connect = tab_connect
         self.tab_settings = tab_settings
         self.paned_window = paned_window
@@ -51,8 +52,9 @@ class settings_style:
         self.data = data
         self.current_lang = current_lang
         self.min_btn, self.max_btn, self.close_btn = min_btn, max_btn, close_btn
-        self.update_func = update_func
         self.found_path = found_path
+        self.update_func = update_func
+        self.auto_finder_func = auto_finder_func
 
         self.is_dark = self.check_data["theme"] == "dark"
         self.is_white = self.check_data["theme"] == "white"
@@ -119,7 +121,7 @@ class settings_style:
         )
         self.row_label2 = Label(
             self.row2, text=f"ADB path is: {self.found_path}",
-            font=FONT_SMALL, bg=CARD, fg=FG_MUTED
+            font=FONT_SMALL, bg=CARD, fg=FG_MUTED, wraplength=300
         )
         self.row_label1.pack(side="left")
         self.row_label2.pack(side="left", padx=(0, 20))
@@ -137,8 +139,24 @@ class settings_style:
             pady=4,
             bd=0
         )
+        choose_path_auto_finder = Button(
+            self.row2,
+            text="Auto-finder",
+            font=FONT,
+            bg=BTN_BG,
+            fg=BTN_FG,
+            activebackground=BTN_ACT,
+            activeforeground=BTN_FG,
+            relief="flat",
+            cursor="hand2",
+            padx=12,
+            pady=4,
+            bd=0
+        )
         choose_path_btn.pack(side="right")
+        choose_path_auto_finder.pack(side="right")
         choose_path_btn.bind("<Button-1>", self.choose_path)
+        choose_path_auto_finder.bind("<Button-1>", self.auto_finder_adb)
 
     def make_card(self, parent, title, name):
         outer = Frame(parent, bg=BORDER, padx=1, pady=1)
@@ -163,6 +181,13 @@ class settings_style:
         if choosen_path:
             self.update_func(choosen_path)
             self.row_label2.configure(text=f"ADB path is: {choosen_path}")
+
+    def auto_finder_adb(self, event):
+        self.auto_finder_func()
+        adb_path = self.check_data["choosen_path_for_adb"]
+        self.root.after(
+            2000, self.row_label2.configure(text=f"ADB path is: {adb_path}")
+        )
 
     def check_dark_theme_btn(self, *args):
         if self.var.get() == 1:
