@@ -23,6 +23,6 @@
 
 ### Settings tab
 
-<img width="600" alt="Image" src="https://github.com/user-attachments/assets/606498a1-edeb-4129-afc5-a903620f55b1" />
+<img width="600" alt="Image" src="https://github.com/user-attachments/assets/2e786871-e9b9-4866-b971-f991cd76e1b6" />
 
 *Portugese translation by:* **[@FetoyuDev](https://github.com/FetoyuDev)**
