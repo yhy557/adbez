@@ -28,7 +28,9 @@ class startup_check:
             "last_commands": {},
             "connected_ips": {},
             "theme": {},
-            "choosen_ips": []
+            "choosen_ips": [],
+            "choosen_path_for_adb": {},
+            "did_adb_work": False
         }
 
         if not os.path.exists(file_path):
