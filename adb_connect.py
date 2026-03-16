@@ -5,14 +5,14 @@ import os
 import json
 import logging
 
-from tkinter import Checkbutton, Label, IntVar, BooleanVar
+from tkinter import Checkbutton, Label, IntVar
 
 
 class adb_connect:
     def __init__(self, tab1_input2, root, tab1_label_failed2, found_path,
                  tab1_stop_adb, connected_devicesips, update_ui,
                  test_counter, processes_in, check_btn_ip, ongoing_processes,
-                 shared_adb_processes, check_data ,on_finish=None):
+                 shared_adb_processes, check_data, on_finish=None):
         self.tab1_input2 = tab1_input2
         self.root = root
         self.tab1_label_failed2 = tab1_label_failed2
@@ -91,7 +91,9 @@ class adb_connect:
         self.new_frame = self.processes_in.master
         self.new_label = Label(self.ongoing_processes, text="test")
         self.shared_adb_processes.append(self.new_label)
-        self.root.after(0, lambda: self.ongoing_processes.grid(row=8, column=0, sticky="sw"))
+        self.root.after(0, lambda: self.ongoing_processes.grid(
+            row=8, column=0, sticky="sw")
+        )
         self.root.after(
             0, lambda: self.tab1_stop_adb.grid(row=0, column=1, padx=(5, 0))
         )
@@ -129,7 +131,7 @@ class adb_connect:
                 self.stopla2 = True
                 self.is_process_running = False
                 self._finish_process()
-                
+
                 self.root.after(0, lambda: self.update_ui("Connected"))
                 with open("check.json", "r", encoding="utf-8") as f:
                     check_data = json.load(f)
@@ -141,7 +143,11 @@ class adb_connect:
                 self.var = self._get_var_for_ip(self.writing)
                 self.check_ips.append(self.check_btn_ip)
                 self.master_frame = self.check_btn_ip.master
-                self.new_btn = Checkbutton(self.master_frame, text=self.current_text, variable=self.var, command=lambda e=self.current_text: self.check_event(e))
+                self.new_btn = Checkbutton(self.master_frame,
+                                           text=self.current_text,
+                                           variable=self.var,
+                                           command=lambda e=self.current_text: self.check_event(e)
+                                           )
                 btn = self.new_btn
                 row = len(self.master_frame.winfo_children())
                 self.root.after(
@@ -159,7 +165,10 @@ class adb_connect:
                     )
                 )
                 """
-                print("[test_show_status]-List of check ips", self.test_counter_check)
+                print(
+                    "[test_show_status]-List of check ips",
+                    self.test_counter_check
+                )
                 if connected_label_text == "":
                     self.root.after(
                         0, lambda: self.connected_devicesips.configure(
@@ -184,7 +193,9 @@ class adb_connect:
                         )
                     )
                 else:
-                    print(f"[test_show_status]-Already connected {new_writing}")
+                    print(
+                        f"[test_show_status]-Already connected {new_writing}"
+                    )
                     pass
                 break
             elif word == "failed":
