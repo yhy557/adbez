@@ -242,6 +242,8 @@ def _on_tab_change(key):
 def update_all_widgets(lang_code):
     global current_lang
     current_lang = lang_code
+    if my_settings is not None:
+        my_settings.current_lang = lang_code
     new_texts = data[lang_code]
     btn_instance.current_lang = lang_code
     btn_instance.load_again()
@@ -260,7 +262,6 @@ def update_all_widgets(lang_code):
         def recursive_update(container):
             for widget in container.winfo_children():
                 w_name = str(widget).split('.')[-1]
-
                 if w_name in selected_texts:
                     try:
                         widget.config(text=selected_texts[w_name])
@@ -269,6 +270,9 @@ def update_all_widgets(lang_code):
                         pass
                 if widget.winfo_children():
                     recursive_update(widget)
+                if widget == my_settings.row_label2:
+                    widget.config(text=f"{data[current_lang]['l326']} {found_path}")
+
 
         recursive_update(root)
         root.update_idletasks()
@@ -292,7 +296,7 @@ found_path = check_data["choosen_path_for_adb"]
 
 
 def connect(event):
-    global active_adb
+    global active_adb, found_path
     instance = adbc.adb_connect(
         tab1_input2, root, tab1_label_failed2, found_path, tab1_stop_adb,
         connected_devicesips, update_ui, test_counter,
@@ -530,30 +534,31 @@ def disconnect_ip(event):
 
     background_color = upper_frame.cget("background")
     try:
-        subprocess.Popen(
-            [found_path, "disconnect", label_text],
-            stdout=subprocess.PIPE,
-            text=True
-        )
-        logging.debug(f"Disconnected to {label_text}")
-        check_btn_ip.grid_forget()
-        with open("check.json", "r", encoding="utf-8") as f:
-            check_data = json.load(f)
-        ip_to_remove = label_text.strip()
-        logging.debug(f"Deleting ip: {ip_to_remove}")
-        if ip_to_remove in check_data["connected_ips"]:
-            del check_data["connected_ips"][ip_to_remove]
-        with open("check.json", "w", encoding="utf-8") as fi:
-            json.dump(check_data, fi, indent=4)
-        for i in connected_ips_list:
-            if i == label_text:
-                connected_ips_list.remove(i)
-                new_text = "\n".join(connected_ips_list)
-                root.update_idletasks()
-                connected_devicesips.configure(text=new_text)
-                logging.debug("Deleted ip")
-        if connected_devicesips.cget("text") == "":
-            connected_devicesips.configure(background=background_color)
+        if found_path and isinstance(found_path, str):
+            subprocess.Popen(
+                [found_path, "disconnect", label_text],
+                stdout=subprocess.PIPE,
+                text=True
+            )
+            logging.debug(f"Disconnected to {label_text}")
+            check_btn_ip.grid_forget()
+            with open("check.json", "r", encoding="utf-8") as f:
+                check_data = json.load(f)
+            ip_to_remove = label_text.strip()
+            logging.debug(f"Deleting ip: {ip_to_remove}")
+            if ip_to_remove in check_data["connected_ips"]:
+                del check_data["connected_ips"][ip_to_remove]
+            with open("check.json", "w", encoding="utf-8") as fi:
+                json.dump(check_data, fi, indent=4)
+            for i in connected_ips_list:
+                if i == label_text:
+                    connected_ips_list.remove(i)
+                    new_text = "\n".join(connected_ips_list)
+                    root.update_idletasks()
+                    connected_devicesips.configure(text=new_text)
+                    logging.debug("Deleted ip")
+            if connected_devicesips.cget("text") == "":
+                connected_devicesips.configure(background=background_color)
     except Exception as e:
         logging.error("Error: %s", e)
 
