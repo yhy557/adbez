@@ -1,6 +1,6 @@
 from tkinter import (Toplevel, Label, Button, Tk, PanedWindow,
                      Frame, Canvas, Scrollbar, Y, Entry,
-                     Text, Checkbutton, IntVar)
+                     Text, Checkbutton)
 from tkinter import font
 from tkinter import ttk
 import os
@@ -78,32 +78,35 @@ shared_adb_processes = []
 shared_nmap_processes = []
 my_settings = None
 
-TAB_W      = 110
-TAB_H      = 32
-TAB_R      = 8
-TAB_GAP    = 2
-TAB_BG     = "#2a2a3a"
+TAB_W = 110
+TAB_H = 32
+TAB_R = 8
+TAB_GAP = 2
+TAB_BG = "#2a2a3a"
 TAB_ACTIVE = "#5a95d8"
-TAB_HOVER  = "#3a3a4a"
-TAB_FG     = "#ffffff"
-TAB_FONT   = ("Segoe UI", 9)
+TAB_HOVER = "#3a3a4a"
+TAB_FG = "#ffffff"
+TAB_FONT = ("Segoe UI", 9)
 
-_tabs        = {}   # key -> {frame, text_id, bg_tag, lang_key}
-_active_tab  = None
-_tab_canvas  = None
+_tabs = {}   # key -> {frame, text_id, bg_tag, lang_key}
+_active_tab = None
+_tab_canvas = None
 _content_frame = None
 
 
 def make_tab(canvas, x, key, text, frame, lang_key):
     r, w, h = TAB_R, TAB_W, TAB_H
-    bg_tag  = f"bg_{key}"
+    bg_tag = f"bg_{key}"
     txt_tag = f"txt_{key}"
-    color   = TAB_BG
+    color = TAB_BG
 
-    canvas.create_arc(x,       0,     x+2*r,   2*r, start=90, extent=90, fill=color, outline="", tags=bg_tag)
-    canvas.create_arc(x+w-2*r, 0,     x+w,     2*r, start=0,  extent=90, fill=color, outline="", tags=bg_tag)
-    canvas.create_rectangle(x+r, 0,   x+w-r,   h,             fill=color, outline="", tags=bg_tag)
-    canvas.create_rectangle(x,   r,   x+w,     h,             fill=color, outline="", tags=bg_tag)
+    canvas.create_arc(x, 0, x+2*r, 2*r, start=90, extent=90, fill=color,
+                      outline="", tags=bg_tag)
+    canvas.create_arc(x+w-2*r, 0, x+w, 2*r, start=0, extent=90, fill=color,
+                      outline="", tags=bg_tag)
+    canvas.create_rectangle(x+r, 0, x+w-r, h, fill=color,
+                            outline="", tags=bg_tag)
+    canvas.create_rectangle(x, r, x+w, h, fill=color, outline="", tags=bg_tag)
 
     txt_id = canvas.create_text(x + w//2, h//2, text=text,
                                 fill=TAB_FG, font=TAB_FONT, tags=txt_tag)
@@ -283,16 +286,19 @@ def update_ui(output):
 active_adb = None
 active_nmap = None
 
+found_path = None
 
 def connect(event):
     global active_adb
     instance = adbc.adb_connect(
         tab1_input2, root, tab1_label_failed2, found_path, tab1_stop_adb,
         connected_devicesips, update_ui, test_counter,
-        processes_in, check_btn_ip, ongoing_processes, shared_adb_processes, check_data,
-        on_finish= lambda inst: active_adb_list.remove(inst) if inst in active_adb_list else None
+        processes_in, check_btn_ip, ongoing_processes, shared_adb_processes,
+        check_data,
+        on_finish=lambda inst: active_adb_list.remove(inst) if inst in active_adb_list else None
     )
     active_adb_list.append(instance)
+
 
 def stop_adb_event(event):
     if active_adb_list:
@@ -304,9 +310,9 @@ def scan(event):
     active_nmap = nmaps.nmap_scan(
         tab1_input, log_text, tab1_label_failed, tab1_stop_nmap, root,
         update_ui, menu_frame_found, found_enter_choosed_ip, button_references,
-        processes_in, ongoing_processes, active_processes, shared_nmap_processes,
-        settings_instance=my_settings,
-        on_finish = lambda inst: active_nmap_list.remove(inst) if inst in active_nmap_list else None
+        processes_in, ongoing_processes, active_processes,
+        shared_nmap_processes, settings_instance=my_settings,
+        on_finish=lambda inst: active_nmap_list.remove(inst) if inst in active_nmap_list else None
     )
     active_nmap_list.append(active_nmap)
 
@@ -319,39 +325,54 @@ def stop_nmap_event(event):
 def checks():
     global my_settings
     checker = startup_check()
-    my_settings = settings_style(check_data, tab_connect, tab_settings,
-         paned_window, upper_frame, nmap_input_row, adb_input_row,
-         adb_btn_container, tab1_label, tab1_label2, log_text, tab1_input, tab1_input2,
-         tab1_nmap_button, tab1_connect_button, root, nmap_btn_container, data, current_lang)
+    my_settings = settings_style(
+        check_data, tab_connect, tab_settings,
+        paned_window, upper_frame, nmap_input_row, adb_input_row,
+        adb_btn_container, tab1_label, tab1_label2, log_text, tab1_input,
+        tab1_input2, tab1_nmap_button, tab1_connect_button, root,
+        nmap_btn_container, data, current_lang,
+        min_btn, max_btn, close_btn, update_func=update_path
+    )
     checker.app_startup(connected_devicesips, current_lang, data, my_settings)
 
 
+def update_path(new_path):
+    global path_for_now
+    path_for_now = new_path
+    try_find_adb()
+
+
 # -----------------------------------------
-if platform.system() == "Windows":
-    tries = [
-        "C:/platform-tools/adb.exe",
-        os.path.expanduser("~") + "/AppData/Local/Android/Sdk/platform-tools/adb.exe"
-    ]
-else:
-    tries = [
-        shutil.which("adb"),
-        "adb",
-        os.path.expanduser("~") + "/Android/Sdk/platform-tools/adb",
-        "/usr/bin/adb",
-        "/usr/local/bin/adb",
-    ]
-    tries = [t for t in tries if t is not None]
+def try_find_adb():
+    global found_path
+    if platform.system() == "Windows":
+        path_for_now = "/AppData/Local/Android/Sdk/platform-tools/adb.exe"
+        tries = [
+            "C:/platform-tools/adb.exe",
+            os.path.expanduser("~") + path_for_now
+        ]
+    else:
+        tries = [
+            shutil.which("adb"),
+            "adb",
+            os.path.expanduser("~") + "/Android/Sdk/platform-tools/adb",
+            "/usr/bin/adb",
+            "/usr/local/bin/adb",
+        ]
+        tries = [t for t in tries if t is not None]
 
-found_path = None
+    found_path = None
 
-for path in tries:
-    if os.path.exists(path):
-        found_path = path
+    for path in tries:
+        if os.path.exists(path):
+            found_path = path
 
-if found_path:
-    logging.debug("Found: %s", found_path)
-else:
-    logging.warning("Not found")
+    if found_path:
+        logging.debug("Found: %s", found_path)
+    else:
+        logging.warning("Not found")
+
+    print("Found path = ", found_path)
 
 
 def start_move(event):
@@ -429,6 +450,7 @@ def close_menus(event):
     for menus in all_menu:
         if menus.winfo_viewable() and menus.winfo_exists():
             menus.place_forget()
+
 
 load_clicked = 0
 
@@ -576,7 +598,8 @@ _scroll_left = Button(_tab_bar, text="◀", bg="#1e1e1e", fg="white", bd=0,
                       command=lambda: _tab_canvas.xview_scroll(-2, "units"))
 _scroll_left.pack(side="left")
 
-_tab_canvas = Canvas(_tab_bar, bg="#1e1e1e", height=TAB_H, highlightthickness=0)
+_tab_canvas = Canvas(
+    _tab_bar, bg="#1e1e1e", height=TAB_H, highlightthickness=0)
 _tab_canvas.pack(side="left", fill="x", expand=True)
 
 _scroll_right = Button(_tab_bar, text="▶", bg="#1e1e1e", fg="white", bd=0,
@@ -584,22 +607,24 @@ _scroll_right = Button(_tab_bar, text="▶", bg="#1e1e1e", fg="white", bd=0,
                        command=lambda: _tab_canvas.xview_scroll(2, "units"))
 _scroll_right.pack(side="left")
 
-_tab_canvas.bind("<MouseWheel>",
-    lambda e: _tab_canvas.xview_scroll(int(-1*(e.delta/120)), "units"))
+_tab_canvas.bind(
+    "<MouseWheel>",
+    lambda e: _tab_canvas.xview_scroll(int(-1*(e.delta/120)), "units")
+)
 
 _content_frame = Frame(frm, bg="#1e1e1e")
 _content_frame.pack(fill="both", expand=True)
 
 # DEFINITION
-tab_connect    = Frame(_content_frame)
-tab_keyevents  = Frame(_content_frame)
-tab_usefull    = ttk.Frame(_content_frame)
-tab_danger     = ttk.Frame(_content_frame)
+tab_connect = Frame(_content_frame)
+tab_keyevents = Frame(_content_frame)
+tab_usefull = ttk.Frame(_content_frame)
+tab_danger = ttk.Frame(_content_frame)
 tab_everything = ttk.Frame(_content_frame)
-tab_learn      = ttk.Frame(_content_frame)
-tab_terminal   = ttk.Frame(_content_frame)
-tab_settings   = Frame(_content_frame)
-tab_connected  = ttk.Frame(_content_frame)
+tab_learn = ttk.Frame(_content_frame)
+tab_terminal = ttk.Frame(_content_frame)
+tab_settings = Frame(_content_frame)
+tab_connected = ttk.Frame(_content_frame)
 
 _tab_defs = [
     ("connect",    data[current_lang]["l7"],  tab_connect,    "l7"),
@@ -801,7 +826,8 @@ btn_instance = buttons(
 
 connected_container = ttk.Frame(upper_frame)
 connected_container.grid(row=0, column=2, sticky="ne")
-processes_lists_text = Label(ongoing_processes, text=data[current_lang]["l318"], name="l318")
+processes_lists_text = Label(ongoing_processes,
+                             text=data[current_lang]["l318"], name="l318")
 processes_in = Button(ongoing_processes)
 processes_lists_text.pack(fill="x")
 connected_devices = Label(
@@ -818,10 +844,11 @@ connected_devicesips.grid(row=1, column=0, sticky="nsew")
 # tab1_choose_ip = ttk.Menubutton(nmap_input_row, text="Choose")
 tab1_choose_ip = Button(
     nmap_input_row, text=data[current_lang]["l13"],
-    name="l13", takefocus=False, width=10
+    name="l13", takefocus=False, width=10, cursor="hand2"
 )
 tab1_found_ip = Button(
-    adb_input_row, text=data[current_lang]["l14"], name="l14", takefocus=False
+    adb_input_row, text=data[current_lang]["l14"], name="l14", takefocus=False,
+    cursor="hand2"
 )
 # STOP NMAP-ADB BUTTON
 tab1_stop_nmap = ttk.Button(
@@ -923,6 +950,7 @@ all_menu = [menu_frame, menu_frame_found, menu_frame_lang, menu_frame_category]
 switch_tab("connect")
 
 checks()
+try_find_adb()
 if platform.system() == "Windows":
     show_in_taskbar(root)
 root.mainloop()
