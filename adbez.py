@@ -331,15 +331,14 @@ def checks():
         adb_btn_container, tab1_label, tab1_label2, log_text, tab1_input,
         tab1_input2, tab1_nmap_button, tab1_connect_button, root,
         nmap_btn_container, data, current_lang,
-        min_btn, max_btn, close_btn, update_func=update_path
+        min_btn, max_btn, close_btn, found_path, update_func=update_path
     )
     checker.app_startup(connected_devicesips, current_lang, data, my_settings)
 
 
 def update_path(new_path):
-    global path_for_now
-    path_for_now = new_path
-    try_find_adb()
+    global found_path
+    found_path = new_path
 
 
 # -----------------------------------------
@@ -949,8 +948,8 @@ all_menu = [menu_frame, menu_frame_found, menu_frame_lang, menu_frame_category]
 
 switch_tab("connect")
 
-checks()
 try_find_adb()
+checks()
 if platform.system() == "Windows":
     show_in_taskbar(root)
 root.mainloop()
