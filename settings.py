@@ -56,9 +56,6 @@ class settings_style:
         self.update_func = update_func
         self.auto_finder_func = auto_finder_func
 
-        self.is_dark = self.check_data["theme"] == "dark"
-        self.is_white = self.check_data["theme"] == "white"
-
         self.var = IntVar()
         if check_data["theme"] == "dark":
             self.var.set(1)
@@ -83,11 +80,12 @@ class settings_style:
         Label(row1, text="Dark Mode", font=FONT_BOLD,
               bg=CARD, fg=FG, width=20, anchor="w").pack(side="left")
         Label(
-            row1, text="Dark interface theme",
-            font=FONT_SMALL, bg=CARD, fg=FG_MUTED).pack(side="left", padx=(0, 20))
+            row1, text=self.data[self.current_lang]["l322"],
+            font=FONT_SMALL, bg=CARD, fg=FG_MUTED, name="l322").pack(side="left", padx=(0, 20))
         dark_theme_btn = Button(
             row1,
-            text="Opened" if self.var.get() == 1 else "Closed",
+            text=self.data[self.current_lang]["l324"] if self.var.get() == 1 else self.data[self.current_lang]["l323"],
+            name="l324" if self.var.get() == 1 else "l323",
             font=FONT_BOLD,
             bg=ACCENT if self.var.get() == 1 else "#D1D5DB",
             fg="white" if self.var.get() == 1 else FG,
@@ -116,18 +114,20 @@ class settings_style:
         self.row2 = Frame(self.body, bg=CARD)
         self.row2.pack(fill="x", pady=4)
         self.row_label1 = Label(
-            self.row2, text="ADB path", font=FONT_BOLD,
-            bg=CARD, fg=FG, width=20, anchor="w"
+            self.row2, text=self.data[self.current_lang]["l325"], font=FONT_BOLD,
+            bg=CARD, fg=FG, width=20, anchor="w", name="l325"
         )
         self.row_label2 = Label(
-            self.row2, text=f"ADB path is: {self.found_path}",
-            font=FONT_SMALL, bg=CARD, fg=FG_MUTED, wraplength=300
+            self.row2, text=f"{self.data[self.current_lang]['l326']} {self.found_path}",
+            font=FONT_SMALL, bg=CARD, fg=FG_MUTED, wraplength=300,
+            name="l326"
         )
         self.row_label1.pack(side="left")
         self.row_label2.pack(side="left", padx=(0, 20))
         choose_path_btn = Button(
             self.row2,
-            text="Choose path",
+            text=self.data[self.current_lang]["l328"],
+            name="l328",
             font=FONT,
             bg=BTN_BG,
             fg=BTN_FG,
@@ -141,7 +141,8 @@ class settings_style:
         )
         choose_path_auto_finder = Button(
             self.row2,
-            text="Auto-finder",
+            text=self.data[self.current_lang]["l327"],
+            name="l327",
             font=FONT,
             bg=BTN_BG,
             fg=BTN_FG,
@@ -157,6 +158,14 @@ class settings_style:
         choose_path_auto_finder.pack(side="right")
         choose_path_btn.bind("<Button-1>", self.choose_path)
         choose_path_auto_finder.bind("<Button-1>", self.auto_finder_adb)
+
+    @property
+    def is_dark(self):
+        return self.check_data["theme"] == "dark"
+
+    @property
+    def is_white(self):
+        return self.check_data["theme"] == "white"
 
     def make_card(self, parent, title, name):
         outer = Frame(parent, bg=BORDER, padx=1, pady=1)
@@ -180,13 +189,13 @@ class settings_style:
         choosen_path = filedialog.askopenfilename()
         if choosen_path:
             self.update_func(choosen_path)
-            self.row_label2.configure(text=f"ADB path is: {choosen_path}")
+            self.row_label2.configure(text=f"{self.data[self.current_lang]["l326"]} {choosen_path}")
 
     def auto_finder_adb(self, event):
         self.auto_finder_func()
         adb_path = self.check_data["choosen_path_for_adb"]
         self.root.after(
-            2000, self.row_label2.configure(text=f"ADB path is: {adb_path}")
+            1000, lambda: self.row_label2.configure(text=f"{self.data[self.current_lang]["l326"]} {adb_path}")
         )
 
     def check_dark_theme_btn(self, *args):
@@ -207,9 +216,9 @@ class settings_style:
 
     def _toggle(self, btn, var):
         if var.get() == 1:
-            btn.config(text="Opened", bg=ACCENT, fg="white", relief="flat")
+            btn.config(text=self.data[self.current_lang]["l324"], bg=ACCENT, fg="white", relief="flat")
         else:
-            btn.config(text="Closed", bg="#D1D5DB", fg=FG, relief="flat")
+            btn.config(text=self.data[self.current_lang]["l323"], bg="#D1D5DB", fg=FG, relief="flat")
 
     def apply_button_style(self, container):
         for widget in container.winfo_children():
