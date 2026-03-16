@@ -30,7 +30,7 @@ class settings_style:
                  adb_btn_container, tab1_label, tab1_label2, log_text,
                  tab1_input, tab1_input2, tab1_nmap_button,
                  tab1_connect_button, root, nmap_btn_container, data,
-                 current_lang, min_btn, max_btn, close_btn, update_func):
+                 current_lang, min_btn, max_btn, close_btn, found_path, update_func):
         self.tab_connect = tab_connect
         self.tab_settings = tab_settings
         self.paned_window = paned_window
@@ -52,6 +52,7 @@ class settings_style:
         self.current_lang = current_lang
         self.min_btn, self.max_btn, self.close_btn = min_btn, max_btn, close_btn
         self.update_func = update_func
+        self.found_path = found_path
 
         self.is_dark = self.check_data["theme"] == "dark"
         self.is_white = self.check_data["theme"] == "white"
@@ -117,7 +118,7 @@ class settings_style:
             bg=CARD, fg=FG, width=20, anchor="w"
         )
         self.row_label2 = Label(
-            self.row2, text="Executable file path",
+            self.row2, text=f"ADB path is: {self.found_path}",
             font=FONT_SMALL, bg=CARD, fg=FG_MUTED
         )
         self.row_label1.pack(side="left")
@@ -156,10 +157,12 @@ class settings_style:
         return body
 
     def choose_path(self, event):
+        self.root.update_idletasks()
         logging.info("[choose_path]-clicked")
         choosen_path = filedialog.askopenfilename()
         if choosen_path:
             self.update_func(choosen_path)
+            self.row_label2.configure(text=f"ADB path is: {choosen_path}")
 
     def check_dark_theme_btn(self, *args):
         if self.var.get() == 1:
