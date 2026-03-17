@@ -11,10 +11,16 @@ logging.basicConfig(
 
 
 class startup_check:
-    def app_startup(self, connected_devicesips, current_lang, data, style: settings_style):
+    def app_startup(
+        self, connected_devicesips, current_lang, data, check_data,
+        style: settings_style, update_lang_func
+    ):
         choose_theme = style.choose_theme
         choose_themeW = style.choose_themeW
-        choose_theme_special =style.choose_theme_special
+        self.update_lang_func = update_lang_func
+        self.check_data = check_data
+        self.update_lang_func(self.check_data["choosen_language"])
+        choose_theme_special = style.choose_theme_special
         logging.debug("%s", data[current_lang]['l1'])
         default_path = os.path.dirname(os.path.abspath(__file__))
         file_path = os.path.join(default_path, "check.json")
@@ -30,7 +36,8 @@ class startup_check:
             "theme": {},
             "choosen_ips": [],
             "choosen_path_for_adb": {},
-            "did_adb_work": False
+            "did_adb_work": False,
+            "choosen_language": "en"
         }
 
         if not os.path.exists(file_path):
@@ -52,3 +59,5 @@ class startup_check:
         json_ip = check_data["connected_ips"]
         connected_devicesips.configure(text="\n".join(json_ip.keys()))
         logging.debug("%s", data[current_lang]["l2"])
+
+        
