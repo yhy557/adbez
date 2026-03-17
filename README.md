@@ -15,7 +15,7 @@
 * You can connect to ip adresses with adb
 * The ip adresses from the results when you search with nmap are automatically added into the "Founded ips" option located next to the adb connection box, so you can easily connect to ip adresses.
 
-<img width="600" alt="Image" src="https://github.com/user-attachments/assets/949b0403-4565-4f64-9779-0dd16985e3ff" />
+<img width="600" alt="Image" src="https://github.com/user-attachments/assets/343a287d-d985-4c0d-b2c9-d97736e48a41" />
 
 ### Input keyevents tab
 
