@@ -31,6 +31,7 @@ class settings_style:
                  tab1_input, tab1_input2, tab1_nmap_button,
                  tab1_connect_button, root, nmap_btn_container, data,
                  current_lang, min_btn, max_btn, close_btn, found_path,
+                 scrollable_content,
                  update_func, auto_finder_func):
         self.tab_connect = tab_connect
         self.tab_settings = tab_settings
@@ -53,6 +54,7 @@ class settings_style:
         self.current_lang = current_lang
         self.min_btn, self.max_btn, self.close_btn = min_btn, max_btn, close_btn
         self.found_path = found_path
+        self.scrollable_content = scrollable_content
         self.update_func = update_func
         self.auto_finder_func = auto_finder_func
 
@@ -286,6 +288,7 @@ class settings_style:
         self.log_text.configure(bg=color, fg=fg_color)
         self.settings_main_frame.config(bg=color)
         self.settings_style_frame.config(bg=color)
+        self.scrollable_content.config(bg=color)
         self.apply_button_style(self.root)
         self.apply_frame_style(self.tab_settings)
 
