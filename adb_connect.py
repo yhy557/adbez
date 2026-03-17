@@ -12,7 +12,7 @@ class adb_connect:
     def __init__(self, tab1_input2, root, tab1_label_failed2, found_path,
                  tab1_stop_adb, connected_devicesips, update_ui,
                  test_counter, processes_in, check_btn_ip, ongoing_processes,
-                 shared_adb_processes, check_data, on_finish=None):
+                 shared_adb_processes, check_data, tab_keyevents, on_finish=None):
         self.tab1_input2 = tab1_input2
         self.root = root
         self.tab1_label_failed2 = tab1_label_failed2
@@ -27,6 +27,7 @@ class adb_connect:
         self.shared_adb_processes = shared_adb_processes
         self.on_finish = on_finish
         self.check_data = check_data
+        self.tab_keyevents = tab_keyevents
 
         self.test_counter_check = []
         self.check_ips = []
@@ -126,7 +127,7 @@ class adb_connect:
         connected_label_text = self.connected_devicesips.cget("text")
         connected_label_list = connected_label_text.split()
         new_writing = self.writing
-        for word in full_output.lower().split():
+        for word in full_output.lower().split():  # I can change this method to re.finditer
             if word == "connected" and "failed" not in full_output.lower():
                 self.stopla2 = True
                 self.is_process_running = False
@@ -136,6 +137,7 @@ class adb_connect:
                 with open("check.json", "r", encoding="utf-8") as f:
                     check_data = json.load(f)
                 check_data["connected_ips"][self.writing] = "connected"
+                self.check_data["connected_ips"][self.writing] = "connected"
                 with open("check.json", "w", encoding="utf-8") as fi:
                     json.dump(check_data, fi, indent=4)
                 self.test_counter += 1
@@ -143,6 +145,10 @@ class adb_connect:
                 self.var = self._get_var_for_ip(self.writing)
                 self.check_ips.append(self.check_btn_ip)
                 self.master_frame = self.check_btn_ip.master
+                already_exists = any(
+                    isinstance(widget, Checkbutton) and widget.cget("text") == self.current_text
+                    for widget in self.master_frame.winfo_children()
+                )
                 self.new_btn = Checkbutton(self.master_frame,
                                            text=self.current_text,
                                            variable=self.var,
@@ -150,14 +156,16 @@ class adb_connect:
                                            )
                 btn = self.new_btn
                 row = len(self.master_frame.winfo_children())
-                self.root.after(
-                    0, lambda b=btn, r=row: btn.grid(
-                        row=r, column=0
+
+                if not already_exists:
+                    self.root.after(
+                        0, lambda b=btn, r=row: btn.grid(
+                            row=r, column=0
+                        )
                     )
-                )
-                self.root.after(
-                    0, lambda b=btn: b.configure(text=new_writing)
-                )
+                    self.root.after(
+                        0, lambda b=btn: b.configure(text=new_writing)
+                    )
                 """
                 self.root.after(
                     0, lambda b=btn: b.configure(
