@@ -45,7 +45,8 @@ json_default_data = {
     "theme": {},
     "choosen_ips": [],
     "choosen_path_for_adb": {},
-    "did_adb_work": False
+    "did_adb_work": False,
+    "choosen_language": "en"
 }
 
 if not os.path.exists(file_path):
@@ -85,7 +86,7 @@ TAB_H = 32
 TAB_R = 8
 TAB_GAP = 2
 TAB_BG = "#2a2a3a"
-TAB_ACTIVE = "#5a95d8"
+TAB_ACTIVE = "#6ec9a4"
 TAB_HOVER = "#3a3a4a"
 TAB_FG = "#ffffff"
 TAB_FONT = ("Segoe UI", 9)
@@ -100,6 +101,7 @@ def make_tab(canvas, x, key, text, frame, lang_key):
     r, w, h = TAB_R, TAB_W, TAB_H
     bg_tag = f"bg_{key}"
     txt_tag = f"txt_{key}"
+    line_tag = f"line_{key}"
     color = TAB_BG
 
     canvas.create_arc(x, 0, x+2*r, 2*r, start=90, extent=90, fill=color,
@@ -113,8 +115,11 @@ def make_tab(canvas, x, key, text, frame, lang_key):
     txt_id = canvas.create_text(x + w//2, h//2, text=text,
                                 fill=TAB_FG, font=TAB_FONT, tags=txt_tag)
 
+    canvas.create_rectangle(x+2, h-3, x+w-2, h,
+                            fill=TAB_BG, outline="", tags=line_tag)
+
     _tabs[key] = {"frame": frame, "text_id": txt_id,
-                  "bg_tag": bg_tag, "lang_key": lang_key}
+                  "bg_tag": bg_tag, "line_tag": line_tag, "lang_key": lang_key}
 
     for tag in (bg_tag, txt_tag):
         canvas.tag_bind(tag, "<Button-1>", lambda e, k=key: switch_tab(k))
@@ -139,9 +144,10 @@ def switch_tab(key):
         v["frame"].place_forget()
         if k != key:
             _tab_canvas.itemconfig(v["bg_tag"], fill=TAB_BG)
+            _tab_canvas.itemconfig(v["line_tag"], fill=TAB_BG)
     _tabs[key]["frame"].place(in_=_content_frame, x=0, y=0,
                               relwidth=1, relheight=1)
-    _tab_canvas.itemconfig(_tabs[key]["bg_tag"], fill=TAB_ACTIVE)
+    _tab_canvas.itemconfig(_tabs[key]["line_tag"], fill=TAB_ACTIVE)
     _active_tab = key
     _on_tab_change(key)
 
@@ -242,6 +248,9 @@ def _on_tab_change(key):
 def update_all_widgets(lang_code):
     global current_lang
     current_lang = lang_code
+    check_data["choosen_language"] = lang_code
+    with open("check.json", "w", encoding="utf-8") as f:
+        json.dump(check_data, f, indent=4, ensure_ascii=False)
     if my_settings is not None:
         my_settings.current_lang = lang_code
     new_texts = data[lang_code]
@@ -271,8 +280,8 @@ def update_all_widgets(lang_code):
                 if widget.winfo_children():
                     recursive_update(widget)
                 if widget == my_settings.row_label2:
-                    widget.config(text=f"{data[current_lang]['l326']} {found_path}")
-
+                    widget.config(
+                        text=f"{data[current_lang]['l326']} {found_path}")
 
         recursive_update(root)
         root.update_idletasks()
@@ -341,7 +350,7 @@ def checks():
         min_btn, max_btn, close_btn, found_path, update_func=update_path,
         auto_finder_func=try_find_adb
     )
-    checker.app_startup(connected_devicesips, current_lang, data, my_settings)
+    checker.app_startup(connected_devicesips, current_lang, data, check_data, my_settings, update_lang_func=update_all_widgets)
 
 
 def update_path(new_path):
@@ -482,7 +491,9 @@ root.rowconfigure(0, weight=1)
 root.columnconfigure(0, weight=1)
 style = ttk.Style()
 style.configure("Siyah.TFrame", background="black")
-style.configure("Redbg.TButton", background="red", borderwidth=0, relief="flat")
+style.configure(
+    "Redbg.TButton", background="red", borderwidth=0, relief="flat"
+)
 
 border_color = "#3d3d3d"
 bg_color = "#1e1e1e"
