@@ -4,6 +4,7 @@ from tkinter import (Toplevel, Label, Button, Tk, PanedWindow,
 from tkinter import font
 from tkinter import ttk
 import os
+import re
 import json
 import subprocess
 import platform
@@ -310,7 +311,7 @@ def connect(event):
         tab1_input2, root, tab1_label_failed2, found_path, tab1_stop_adb,
         connected_devicesips, update_ui, test_counter,
         processes_in, check_btn_ip, ongoing_processes, shared_adb_processes,
-        check_data,
+        check_data, tab_keyevents,
         on_finish=lambda inst: active_adb_list.remove(inst) if inst in active_adb_list else None
     )
     active_adb_list.append(instance)
@@ -347,7 +348,8 @@ def checks():
         adb_btn_container, tab1_label, tab1_label2, log_text, tab1_input,
         tab1_input2, tab1_nmap_button, tab1_connect_button, root,
         nmap_btn_container, data, current_lang,
-        min_btn, max_btn, close_btn, found_path, update_func=update_path,
+        min_btn, max_btn, close_btn, found_path, scrollable_content,
+        update_func=update_path,
         auto_finder_func=try_find_adb
     )
     checker.app_startup(connected_devicesips, current_lang, data, check_data, my_settings, update_lang_func=update_all_widgets)
@@ -585,6 +587,11 @@ min_btn.bind("<Leave>", leave_enter)
 def catch_size(event):
     global paned_window, upper_frame
     if event.widget == root:
+        geo = root.winfo_geometry()
+        match = re.search(r'(\d+)x(\d+)', geo)
+        if match:
+            x, y = int(match.group(1)), int(match.group(2))
+            print(f"x: {x}, y: {y}")
         for m in all_menu:
             if m.winfo_viewable() and m.winfo_exists():
                 m.place_forget()
@@ -595,7 +602,10 @@ def catch_size(event):
             logging.info(event.height)
             paned_window.paneconfigure(upper_frame, minsize=350, height=550)
             logging.info("Minsize updated")
-
+        if x > 1300:
+            paned_window2.paneconfigure(upper_frame2, minsize=900)
+        else:
+            paned_window2.paneconfigure(upper_frame2, minsize=700)
 
 # FULL SCREEN(□)
 max_btn = Button(title_bar, text="▢", bg="#2d2d2d", fg="white", bd=0,
@@ -690,7 +700,7 @@ paned_window2.add(upper_frame2, minsize=700)
 paned_window2.pack(fill="both", expand=True, anchor="w", side="left")
 lower_frame2 = Frame(paned_window2)
 paned_window2.add(lower_frame2, minsize=50)
-lower_frame2_log_label = Frame(lower_frame2)
+lower_frame2_log_label = Frame(lower_frame2, bg="black")
 lower_frame2_connected_ips = Frame(lower_frame2)
 lower_frame2_connected_ips.grid(row=0, column=1)
 lower_frame2_log_label.grid(row=1, column=0)
