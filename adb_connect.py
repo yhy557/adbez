@@ -5,29 +5,28 @@ import os
 import json
 import logging
 
+
 from tkinter import Checkbutton, Label, IntVar
 
 
 class adb_connect:
-    def __init__(self, tab1_input2, root, tab1_label_failed2, found_path,
-                 tab1_stop_adb, connected_devicesips, update_ui,
-                 test_counter, processes_in, check_btn_ip, ongoing_processes,
-                 shared_adb_processes, check_data, tab_keyevents, on_finish=None):
-        self.tab1_input2 = tab1_input2
-        self.root = root
-        self.tab1_label_failed2 = tab1_label_failed2
-        self.found_path = found_path
-        self.tab1_stop_adb = tab1_stop_adb
-        self.connected_devicesips = connected_devicesips
-        self.update_ui = update_ui
-        self.test_counter = test_counter
-        self.processes_in = processes_in
-        self.check_btn_ip = check_btn_ip
-        self.ongoing_processes = ongoing_processes
-        self.shared_adb_processes = shared_adb_processes
+    def __init__(self, app, on_finish=None):
+        self.tab1_input2 = app.tab1_input2
+        self.root = app.root
+        self.tab1_label_failed2 = app.tab1_label_failed2
+        self.found_path = app.found_path
+        self.tab1_stop_adb = app.tab1_stop_adb
+        self.connected_devices_ips = app.connected_devices_ips
+        self.update_ui = app.update_ui
+        self.test_counter = app.test_counter
+        self.processes_in = app.processes_in
+        self.check_btn_ip = app.check_btn_ip
+        self.ongoing_processes = app.ongoing_processes
+        self.shared_adb_processes = app.shared_adb_processes
         self.on_finish = on_finish
-        self.check_data = check_data
-        self.tab_keyevents = tab_keyevents
+        self.check_data = app.check_data
+        self.tab_keyevents = app.tab_keyevents
+        self.upper_frame = app.upper_frame
 
         self.test_counter_check = []
         self.check_ips = []
@@ -35,6 +34,7 @@ class adb_connect:
         self.ongoing_processes_adb_list = []
         self.checkbutton_ips = []
         self.check_vars = {}
+        self.checkbutton_map = {}
         self.current_process_adb = None
         self.stopla2 = False
         self.is_process_running = False
@@ -50,6 +50,50 @@ class adb_connect:
 
     def test_ip_keyevent(self, ip):
         print(f"[test_ip_keyevent]-Clicked {ip}")
+
+    @staticmethod
+    def disconnect_ip(tab1_input2, found_path, check_data, connected_devices_ips, upper_frame, root,
+                      check_btn_ip, checkbutton_map):
+        root.update_idletasks()
+        label_text = tab1_input2.get().strip()
+        if label_text in checkbutton_map:
+            checkbutton_map[label_text].destroy()
+            del checkbutton_map[label_text]
+        logging.debug(f"current ip address:  {label_text}")
+        logging.info("Clicked disconnect")
+        connected_ips_text = connected_devices_ips.cget("text")
+        logging.info(f"list is: \n {connected_ips_text}")
+        connected_ips_list = connected_ips_text.split()
+
+        background_color = upper_frame.cget("background")
+        try:
+            if found_path and isinstance(found_path, str):
+                subprocess.Popen(
+                    [found_path, "disconnect", label_text],
+                    stdout=subprocess.PIPE,
+                    text=True
+                )
+                logging.debug(f"Disconnected to {label_text}")
+                check_btn_ip.grid_forget()
+                with open("check.json", "r", encoding="utf-8") as f:
+                    check_data = json.load(f)
+                ip_to_remove = label_text.strip()
+                logging.debug(f"Deleting ip: {ip_to_remove}")
+                if ip_to_remove in check_data["connected_ips"]:
+                    del check_data["connected_ips"][ip_to_remove]
+                with open("check.json", "w", encoding="utf-8") as fi:
+                    json.dump(check_data, fi, indent=4)
+                for i in connected_ips_list:
+                    if i == label_text:
+                        connected_ips_list.remove(i)
+                        new_text = "\n".join(connected_ips_list)
+                        root.update_idletasks()
+                        connected_devices_ips.configure(text=new_text)
+                        logging.debug("Deleted ip")
+                if connected_devices_ips.cget("text") == "":
+                    connected_devices_ips.configure(background=background_color)
+        except Exception as e:
+            logging.error("Error: %s", e)
 
     def show_adb_failed(self):
         self.root.update_idletasks()
@@ -156,6 +200,7 @@ class adb_connect:
                                            )
                 btn = self.new_btn
                 row = len(self.master_frame.winfo_children())
+                self.checkbutton_map[self.writing] = self.new_btn
 
                 if not already_exists:
                     self.root.after(
