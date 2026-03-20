@@ -14,31 +14,29 @@ logging.basicConfig(
 
 
 class nmap_scan:
-    def __init__(self, tab1_input, log_text, tab1_label_failed, tab1_stop_nmap,
-                 root, update_ui, menu_frame_found, found_enter_choosed_ip,
-                 button_references, processes_in, ongoing_processes, active_processes,
-                 shared_nmap_processes, settings_instance=None,
+    def __init__(self, app,
                  on_finish=None):
-        self.tab1_input = tab1_input
-        self.button_references = button_references
-        self.update_ui = update_ui
-        self.log_text = log_text
-        self.tab1_label_failed = tab1_label_failed
-        self.tab1_stop_nmap = tab1_stop_nmap
-        self.root = root
-        self.menu_frame_found = menu_frame_found
-        self.found_enter_choosed_ip = found_enter_choosed_ip
-        self.processes_in = processes_in
-        self.ongoing_processes = ongoing_processes
-        self.active_processes = active_processes
-        self.shared_nmap_processes = shared_nmap_processes
+        self.tab1_input             = app.tab1_input
+        self.log_text               = app.log_text
+        self.tab1_label_failed      = app.tab1_label_failed
+        self.tab1_stop_nmap         = app.tab1_stop_nmap
+        self.root                   = app.root
+        self.menu_frame_found       = app.menu_frame_found
+        self.processes_in           = app.processes_in
+        self.settings_instance      = app.my_settings
+        self.button_references      = app.button_references
+        self.shared_nmap_processes  = app.shared_nmap_processes
+        self.ongoing_processes      = app.ongoing_processes
+        self.active_processes       = app.active_processes
+        self.update_ui              = app.update_ui
+        self.found_enter_choosed_ip = app.found_enter_choosen_ip
         self.on_finish = on_finish
-        self.settings_instance = settings_instance
         self.current_process = None
         self.stopla = False
         self.current_ip_has_adb = False
         self.is_process_running = False
         self.found_ips = []
+
         logging.debug(
             f"button_references type: {type(self.button_references)}")
         t = threading.Thread(target=self.try_find)
@@ -138,15 +136,19 @@ class nmap_scan:
         if not self.stopla:
             self.stopla = True
             self.root.after(0, lambda: self.update_ui("Scan completed"))
-            self.active_processes.remove("nmap_process")
+            if "nmap_process" in self.active_processes:
+                self.active_processes.remove("nmap_process")
             self.root.after(0, lambda: self.my_process_btn.destroy())
             if self.my_process_btn in self.shared_nmap_processes:
                 self.shared_nmap_processes.remove(self.my_process_btn)
             if len(self.active_processes) == 0:
                 self.root.after(0,
                                 lambda: self.ongoing_processes.grid_forget())
+        if self.my_process_btn in self.shared_nmap_processes:
+            self.shared_nmap_processes.remove(self.my_process_btn)
         if len(self.shared_nmap_processes) == 0:
             self.root.after(0, lambda: self.tab1_stop_nmap.grid_forget())
+
             logging.debug("[try_find]-stop button is being deleted")
         self.root.after(0, lambda: self.log_text.config(state="disabled"))
         if self.settings_instance:
@@ -207,7 +209,7 @@ class nmap_scan:
 
                 if len(self.shared_nmap_processes) == 0:
                     self.root.after(0,
-                                    lambda: self.tab1_stop_nmap.grid_forget())
+                                    lambda: self.tab1_stop_nmap.destroy())
                 self.shared_nmap_processes.remove(self.my_process_btn)
 
                 self.root.after(0, lambda: self.my_process_btn.destroy())
