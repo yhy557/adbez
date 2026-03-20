@@ -2,6 +2,8 @@ from datetime import datetime
 import os
 import json
 import logging
+import platform
+import shutil
 from settings import settings_style
 logging.basicConfig(
     level=logging.INFO,
@@ -37,7 +39,8 @@ class startup_check:
             "choosen_ips": [],
             "choosen_path_for_adb": {},
             "did_adb_work": False,
-            "choosen_language": "en"
+            "choosen_language": "en",
+            "is_live_helper_on": False
         }
 
         if not os.path.exists(file_path):
@@ -60,4 +63,41 @@ class startup_check:
         connected_devicesips.configure(text="\n".join(json_ip.keys()))
         logging.debug("%s", data[current_lang]["l2"])
 
-        
+        if check_data["did_adb_work"] is not True:
+            self.try_find_adb()
+
+    # -----------------------------------------
+    def try_find_adb(self):
+        if platform.system() == "Windows":
+            path_for_now = "/AppData/Local/Android/Sdk/platform-tools/adb.exe"
+            tries = [
+                "C:/platform-tools/adb.exe",
+                os.path.expanduser("~") + path_for_now
+            ]
+        else:
+            tries = [
+                shutil.which("adb"),
+                "adb",
+                os.path.expanduser("~") + "/Android/Sdk/platform-tools/adb",
+                "/usr/bin/adb",
+                "/usr/local/bin/adb",
+            ]
+            tries = [t for t in tries if t is not None]
+
+        self.found_path = None
+
+        for path in tries:
+            if os.path.exists(path):
+                self.found_path = path
+
+        if self.found_path:
+            logging.debug("Found: %s", self.found_path)
+            self.check_data["did_adb_work"] = True
+            self.check_data["choosen_path_for_adb"] = self.found_path
+            with open("check.json", "w", encoding="utf-8") as f:
+                json.dump(self.check_data, f, indent=4, ensure_ascii=False)
+        else:
+            logging.warning("Not found")
+
+        print("Found path = ", self.found_path)
+
