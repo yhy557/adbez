@@ -31,7 +31,7 @@ class settings_style:
                  tab1_input, tab1_input2, tab1_nmap_button,
                  tab1_connect_button, root, nmap_btn_container, data,
                  current_lang, min_btn, max_btn, close_btn, found_path,
-                 scrollable_content,
+                 scrollable_content, get_text,
                  update_func, auto_finder_func):
         self.tab_connect = tab_connect
         self.tab_settings = tab_settings
@@ -57,8 +57,10 @@ class settings_style:
         self.scrollable_content = scrollable_content
         self.update_func = update_func
         self.auto_finder_func = auto_finder_func
+        self.get_text = get_text
 
         self.var = IntVar()
+        self.live_helper_var = IntVar()
         if check_data["theme"] == "dark":
             self.var.set(1)
         else:
@@ -74,7 +76,7 @@ class settings_style:
         # ── Card: body ───────────────────────────────────────────
         self.style_body = self.make_card(
             self.settings_style_frame,
-            self.data[self.current_lang]["l319"], "l319"
+            self.get_text("l319"), "l319"
         )
 
         row1 = Frame(self.style_body, bg=CARD)
@@ -82,11 +84,11 @@ class settings_style:
         Label(row1, text="Dark Mode", font=FONT_BOLD,
               bg=CARD, fg=FG, width=20, anchor="w").pack(side="left")
         Label(
-            row1, text=self.data[self.current_lang]["l322"],
+            row1, text=self.get_text("l322"),
             font=FONT_SMALL, bg=CARD, fg=FG_MUTED, name="l322").pack(side="left", padx=(0, 20))
         dark_theme_btn = Button(
             row1,
-            text=self.data[self.current_lang]["l324"] if self.var.get() == 1 else self.data[self.current_lang]["l323"],
+            text=self.get_text("l324") if self.var.get() == 1 else self.get_text("l323"),
             name="l324" if self.var.get() == 1 else "l323",
             font=FONT_BOLD,
             bg=ACCENT if self.var.get() == 1 else "#D1D5DB",
@@ -110,17 +112,17 @@ class settings_style:
         # ── Card: ADB ─────────────────────────────────────────────────
         self.body = self.make_card(
             self.settings_main_frame,
-            self.data[self.current_lang]["l320"], "l320"
+            self.get_text("l320"), "l320"
         )
 
         self.row2 = Frame(self.body, bg=CARD)
         self.row2.pack(fill="x", pady=4)
         self.row_label1 = Label(
-            self.row2, text=self.data[self.current_lang]["l325"], font=FONT_BOLD,
+            self.row2, text=self.get_text("l325"), font=FONT_BOLD,
             bg=CARD, fg=FG, width=20, anchor="w", name="l325"
         )
         self.row_label2 = Label(
-            self.row2, text=f"{self.data[self.current_lang]['l326']} {self.found_path}",
+            self.row2, text=(self.get_text("l326") + " " + self.found_path),
             font=FONT_SMALL, bg=CARD, fg=FG_MUTED, wraplength=300,
             name="l326"
         )
@@ -128,7 +130,7 @@ class settings_style:
         self.row_label2.pack(side="left", padx=(0, 20))
         choose_path_btn = Button(
             self.row2,
-            text=self.data[self.current_lang]["l328"],
+            text=self.get_text("l328"),
             name="l328",
             font=FONT,
             bg=BTN_BG,
@@ -143,7 +145,7 @@ class settings_style:
         )
         choose_path_auto_finder = Button(
             self.row2,
-            text=self.data[self.current_lang]["l327"],
+            text=self.get_text("l327"),
             name="l327",
             font=FONT,
             bg=BTN_BG,
@@ -160,6 +162,41 @@ class settings_style:
         choose_path_auto_finder.pack(side="right")
         choose_path_btn.bind("<Button-1>", self.choose_path)
         choose_path_auto_finder.bind("<Button-1>", self.auto_finder_adb)
+
+        self.live_helper = self.make_card(
+            self.settings_main_frame,
+            self.get_text("l329"), "l329"
+        )
+        self.row3 = Frame(self.live_helper, bg=CARD)
+        self.row3.pack(fill="x", pady=4)
+        self.row_label3 = Label(
+            self.row3, text="Live Helper",
+            font=FONT_SMALL, bg=CARD, fg=FG_MUTED, wraplength=300,
+            name="l329"
+        )
+        self.row_label3.pack(side="left")
+        self.live_helper_button = Button(
+            self.row3,
+            text=self.get_text("l324") if self.live_helper_var.get() == 1 else self.get_text("l323"),
+            name="l324" if self.live_helper_var.get() == 1 else "l323",
+            font=FONT_BOLD,
+            bg=ACCENT if self.live_helper_var.get() == 1 else "#CB2314",
+            fg="white" if self.live_helper_var.get() == 1 else FG,
+            activebackground=BTN_ACT,
+            activeforeground="white",
+            relief="flat",
+            cursor="hand2",
+            padx=16,
+            pady=5,
+            bd=0,
+            width=10,
+            command=lambda: [
+                self.live_helper_var.set(0 if self.live_helper_var.get() == 1 else 1),
+                self._toggle_live_helper(self.live_helper_button, self.live_helper_var)
+            ]
+        )
+        self.live_helper_button.pack(side="right")
+        
 
     @property
     def is_dark(self):
@@ -191,36 +228,48 @@ class settings_style:
         choosen_path = filedialog.askopenfilename()
         if choosen_path:
             self.update_func(choosen_path)
-            self.row_label2.configure(text=f"{self.data[self.current_lang]["l326"]} {choosen_path}")
+            self.row_label2.configure(text=self.get_text("l326") + " " + choosen_path)
 
     def auto_finder_adb(self, event):
         self.auto_finder_func()
         adb_path = self.check_data["choosen_path_for_adb"]
         self.root.after(
-            1000, lambda: self.row_label2.configure(text=f"{self.data[self.current_lang]["l326"]} {adb_path}")
+            1000, lambda: self.row_label2.configure(text=self.get_text("l326") + " " + adb_path)
         )
 
     def check_dark_theme_btn(self, *args):
         if self.var.get() == 1:
-            print("Choosen")
+            print("[check_Dark_theme_btn]-Choosen")
             self.check_data["theme"] = "dark"
-            with open("check.json", "w", encoding="utf-8") as fi:
-                json.dump(self.check_data, fi, indent=4)
             self.choose_theme("#292423", "white")
             self.choose_theme_special()
         else:
             self.check_data["theme"] = "white"
-            with open("check.json", "w", encoding="utf-8") as fi:
-                json.dump(self.check_data, fi, indent=4)
             self.choose_theme("SystemButtonFace", "black")
             self.choose_themeW("SystemButtonFace")
             print("the election was canceled")
+        with open("check.json", "w", encoding="utf-8") as fi:
+            json.dump(self.check_data, fi, indent=4, ensure_ascii=False)
+
+    def check_live_helper_is_on(self, *args):
+        if self.live_helper_var.get() == 1:
+            print("[check_live_helper_is_on] - Choosen")
+            self.check["is_live_helper_on"] = True
+        else:
+            self.check["is_live_helper_on"] = False
+        with open("check.json", "w", encoding="utf-8") as le:
+            json.dump(self.check_data, le, indent=4, ensure_ascii=False)
 
     def _toggle(self, btn, var):
         if var.get() == 1:
-            btn.config(text=self.data[self.current_lang]["l324"], bg=ACCENT, fg="white", relief="flat")
+            btn.config(text=self.get_text("l324"), bg=ACCENT, fg="white", relief="flat")
         else:
-            btn.config(text=self.data[self.current_lang]["l323"], bg="#D1D5DB", fg=FG, relief="flat")
+            btn.config(text=self.get_text("l323"), bg="#D1D5DB", fg=FG, relief="flat")
+    def _toggle_live_helper(self, btn, var):
+        if var.get() == 1:
+            btn.config(text=self.get_text("l324"), bg="#31AD12", fg="white", relief="flat")
+        else:
+            btn.config(text=self.get_text("l323"), bg="#CB2314", fg=FG, relief="flat")
 
     def apply_button_style(self, container):
         for widget in container.winfo_children():
