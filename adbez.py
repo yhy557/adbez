@@ -1,28 +1,29 @@
+import json
+import logging
+import os
+import platform
+import re
+from datetime import datetime
 from tkinter import (Toplevel, Label, Button, Tk, PanedWindow,
                      Frame, Canvas, Scrollbar, Y, Entry,
                      Text, Checkbutton)
 from tkinter import font
 from tkinter import ttk
-import os
-import re
-import json
-import subprocess
-import platform
-import shutil
-import logging
-from datetime import datetime
+import tkinter as tk
 # MY FILES
 import adb_connect as adbc
 import nmap_scan as nmaps
-from checks import startup_check
+from tab_control import TabControl
+import checks as appchecks
 from scroll_buttons import buttons
 from settings import settings_style
-import tkinter as tk
+
 # SOME CONFIGURE FOR LOGGING
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(asctime)s - [%(levelname)s] - %(message)s',
-    datefmt='%H:%M:%S'
+    datefmt='%H:%M:%S',
+    force=True
 )
 default_path = os.path.dirname(os.path.abspath(__file__))
 file_path = os.path.join(default_path, "check.json")
@@ -33,7 +34,6 @@ if platform.system() == "Windows":
         ctypes.windll.shcore.SetProcessDpiAwareness(1)
     except Exception:
         ctypes.windll.user32.SetProcessDPIAware()
-
 
 with open("lang.json", "r", encoding="utf-8") as e:
     data = json.load(e)
@@ -47,8 +47,10 @@ json_default_data = {
     "choosen_ips": [],
     "choosen_path_for_adb": {},
     "did_adb_work": False,
-    "choosen_language": "en"
-}
+    "choosen_language": "en",
+    "is_live_helper_on": False
+}    
+
 
 if not os.path.exists(file_path):
     with open(file_path, "w") as f:
@@ -75,127 +77,6 @@ if platform.system() == "Windows":
         root.withdraw()
         root.after(10, root.deiconify)
 
-button_references = []
-current_lang = "en"
-current_theme = ""
-shared_adb_processes = []
-shared_nmap_processes = []
-my_settings = None
-
-TAB_W = 110
-TAB_H = 32
-TAB_R = 8
-TAB_GAP = 2
-TAB_BG = "#2a2a3a"
-TAB_ACTIVE = "#6ec9a4"
-TAB_HOVER = "#3a3a4a"
-TAB_FG = "#ffffff"
-TAB_FONT = ("Segoe UI", 9)
-
-_tabs = {}   # key -> {frame, text_id, bg_tag, lang_key}
-_active_tab = None
-_tab_canvas = None
-_content_frame = None
-
-
-def make_tab(canvas, x, key, text, frame, lang_key):
-    r, w, h = TAB_R, TAB_W, TAB_H
-    bg_tag = f"bg_{key}"
-    txt_tag = f"txt_{key}"
-    line_tag = f"line_{key}"
-    color = TAB_BG
-
-    canvas.create_arc(x, 0, x+2*r, 2*r, start=90, extent=90, fill=color,
-                      outline="", tags=bg_tag)
-    canvas.create_arc(x+w-2*r, 0, x+w, 2*r, start=0, extent=90, fill=color,
-                      outline="", tags=bg_tag)
-    canvas.create_rectangle(x+r, 0, x+w-r, h, fill=color,
-                            outline="", tags=bg_tag)
-    canvas.create_rectangle(x, r, x+w, h, fill=color, outline="", tags=bg_tag)
-
-    txt_id = canvas.create_text(x + w//2, h//2, text=text,
-                                fill=TAB_FG, font=TAB_FONT, tags=txt_tag)
-
-    canvas.create_rectangle(x+2, h-3, x+w-2, h,
-                            fill=TAB_BG, outline="", tags=line_tag)
-
-    _tabs[key] = {"frame": frame, "text_id": txt_id,
-                  "bg_tag": bg_tag, "line_tag": line_tag, "lang_key": lang_key}
-
-    for tag in (bg_tag, txt_tag):
-        canvas.tag_bind(tag, "<Button-1>", lambda e, k=key: switch_tab(k))
-        canvas.tag_bind(tag, "<Enter>",
-                        lambda e, k=key: _tab_hover(k, True))
-        canvas.tag_bind(tag, "<Leave>",
-                        lambda e, k=key: _tab_hover(k, False))
-
-
-def _tab_hover(key, entering):
-    if key == _active_tab:
-        return
-    color = TAB_HOVER if entering else TAB_BG
-    _tab_canvas.itemconfig(_tabs[key]["bg_tag"], fill=color)
-
-
-def switch_tab(key):
-    global _active_tab
-    if key == _active_tab:
-        return
-    for k, v in _tabs.items():
-        v["frame"].place_forget()
-        if k != key:
-            _tab_canvas.itemconfig(v["bg_tag"], fill=TAB_BG)
-            _tab_canvas.itemconfig(v["line_tag"], fill=TAB_BG)
-    _tabs[key]["frame"].place(in_=_content_frame, x=0, y=0,
-                              relwidth=1, relheight=1)
-    _tab_canvas.itemconfig(_tabs[key]["line_tag"], fill=TAB_ACTIVE)
-    _active_tab = key
-    _on_tab_change(key)
-
-
-def open_menu(event, frame, choosen_button, selected_tab):
-    logging.debug(f"{choosen_button} is opening")
-    root.update_idletasks()
-    if frame.winfo_viewable():
-        frame.place_forget()
-        logging.debug(f"{frame} is deleted")
-        return
-    button_x = choosen_button.winfo_rootx()
-    button_y = choosen_button.winfo_rooty()
-    button_xp = selected_tab.winfo_rootx()
-    button_yp = selected_tab.winfo_rooty()
-
-    logging.debug(f"Real screen: {button_x}, {button_y}")
-    logging.debug(f"This window: {button_xp}, {button_yp}")
-    try:
-        frame.place(x=(button_x - button_xp) + choosen_button.winfo_width(),
-                    y=(button_y - button_yp), anchor="nw")
-        for child in frame.winfo_children():
-            child.pack(fill="x")
-        root.update_idletasks()
-        now_x, now_y = frame.winfo_rootx(), frame.winfo_rooty()
-        logging.debug(f"Created found menu at: {now_x, now_y}")
-    except Exception as e:
-        logging.error("[E]Menu can't be created: %s", e)
-
-
-# IP MENU EVENTS
-def enter_choosed_ip(event):
-    clicked_button = event.widget
-    clicked_button_label = clicked_button.cget("text")
-    logging.info(f"Pressed {clicked_button_label}")
-    if menu_frame.winfo_exists() and menu_frame.winfo_viewable():
-        menu_frame.place_forget()
-        tab1_input.delete(0, "end")
-        tab1_input.insert(0, clicked_button_label)
-
-
-# ADB MENU EVENTS
-def found_enter_choosed_ip(event, ip):
-    logging.info(f"Pressed {ip}")
-    if menu_frame_found.winfo_exists() and menu_frame_found.winfo_viewable():
-        tab1_input2.delete(0, "end")
-        tab1_input2.insert(0, ip)
 
 
 # FOR MESSAGE BALLON, GEMINI GAVE ME THIS CODE------------------
@@ -222,7 +103,7 @@ class Tooltip:
 
         label = Label(tw, text=self.text, background="#ffffe0",
                       relief="solid", borderwidth=1,
-                      font=("tahoma", "8", "normal"))
+                      font=("tahoma", 8, "normal"))
         label.pack()
 
     def hide_tooltip(self, event=None):
@@ -230,764 +111,788 @@ class Tooltip:
             self.tooltip_window.destroy()
             self.tooltip_window = None
 
-
-def _on_tab_change(key):
-    for m in all_menu:
-        if m.winfo_exists():
-            m.place_forget()
-        else:
-            logging.warning(f"{m} is null")
-    if key == "keyevents":
-        global load_clicked
-        btn_instance.restart_number()
-        canvas2.yview_moveto(0)
-        delete_widgets()
-        btn_instance.load_again()
-    logging.debug(key)
-
-
-def update_all_widgets(lang_code):
-    global current_lang
-    current_lang = lang_code
-    check_data["choosen_language"] = lang_code
-    with open("check.json", "w", encoding="utf-8") as f:
-        json.dump(check_data, f, indent=4, ensure_ascii=False)
-    if my_settings is not None:
-        my_settings.current_lang = lang_code
-    new_texts = data[lang_code]
-    btn_instance.current_lang = lang_code
-    btn_instance.load_again()
-
-    # Update canvas tab texts
-    for info in _tabs.values():
-        lk = info["lang_key"]
-        if lk in new_texts:
-            _tab_canvas.itemconfig(info["text_id"], text=new_texts[lk])
-
-    try:
-        with open("lang.json", "r", encoding="utf-8") as f:
-            full_data = json.load(f)
-        selected_texts = full_data[lang_code]
-
-        def recursive_update(container):
-            for widget in container.winfo_children():
-                w_name = str(widget).split('.')[-1]
-                if w_name in selected_texts:
-                    try:
-                        widget.config(text=selected_texts[w_name])
-                    except Exception as e:
-                        logging.error("An error occurred while updating and finding widgets: %s", e)
-                        pass
-                if widget.winfo_children():
-                    recursive_update(widget)
-                if widget == my_settings.row_label2:
-                    widget.config(
-                        text=f"{data[current_lang]['l326']} {found_path}")
-
-        recursive_update(root)
-        root.update_idletasks()
-        logging.info(f"Language changed to: {lang_code}")
-    except Exception as e:
-        logging.error("Language update error: %s", e)
-
-
-def update_ui(output):
-    log_text.config(state="normal")
-    log_text.insert("end", f"\n {output}")
-    log_text.see("end")
-    log_text.config(state="disabled")
-
-
-# TO ACCESS THE FUNCTIONS WITHIN THE CLASS-
-active_adb = None
-active_nmap = None
-
-found_path = check_data["choosen_path_for_adb"]
-
-
-def connect(event):
-    global active_adb, found_path
-    instance = adbc.adb_connect(
-        tab1_input2, root, tab1_label_failed2, found_path, tab1_stop_adb,
-        connected_devicesips, update_ui, test_counter,
-        processes_in, check_btn_ip, ongoing_processes, shared_adb_processes,
-        check_data, tab_keyevents,
-        on_finish=lambda inst: active_adb_list.remove(inst) if inst in active_adb_list else None
-    )
-    active_adb_list.append(instance)
-
-
-def stop_adb_event(event):
-    if active_adb_list:
-        active_adb_list[0].stop_adb()
-
-
-def scan(event):
-    global active_nmap
-    active_nmap = nmaps.nmap_scan(
-        tab1_input, log_text, tab1_label_failed, tab1_stop_nmap, root,
-        update_ui, menu_frame_found, found_enter_choosed_ip, button_references,
-        processes_in, ongoing_processes, active_processes,
-        shared_nmap_processes, settings_instance=my_settings,
-        on_finish=lambda inst: active_nmap_list.remove(inst) if inst in active_nmap_list else None
-    )
-    active_nmap_list.append(active_nmap)
-
-
-def stop_nmap_event(event):
-    if active_nmap_list:
-        active_nmap_list[0].stop_nmap()
-
-
-def checks():
-    global my_settings
-    checker = startup_check()
-    my_settings = settings_style(
-        check_data, tab_connect, tab_settings,
-        paned_window, upper_frame, nmap_input_row, adb_input_row,
-        adb_btn_container, tab1_label, tab1_label2, log_text, tab1_input,
-        tab1_input2, tab1_nmap_button, tab1_connect_button, root,
-        nmap_btn_container, data, current_lang,
-        min_btn, max_btn, close_btn, found_path, scrollable_content,
-        update_func=update_path,
-        auto_finder_func=try_find_adb
-    )
-    checker.app_startup(connected_devicesips, current_lang, data, check_data, my_settings, update_lang_func=update_all_widgets)
-
-
-def update_path(new_path):
-    global found_path
-    found_path = new_path
-    check_data["choosen_path_for_adb"] = found_path
-    with open("check.json", "w", encoding="utf-8") as f:
-        json.dump(check_data, f, indent=4, ensure_ascii=False)
-
-
-# -----------------------------------------
-def try_find_adb():
-    global found_path
-    if platform.system() == "Windows":
-        path_for_now = "/AppData/Local/Android/Sdk/platform-tools/adb.exe"
-        tries = [
-            "C:/platform-tools/adb.exe",
-            os.path.expanduser("~") + path_for_now
-        ]
-    else:
-        tries = [
-            shutil.which("adb"),
-            "adb",
-            os.path.expanduser("~") + "/Android/Sdk/platform-tools/adb",
-            "/usr/bin/adb",
-            "/usr/local/bin/adb",
-        ]
-        tries = [t for t in tries if t is not None]
-
-    found_path = None
-
-    for path in tries:
-        if os.path.exists(path):
-            found_path = path
-
-    if found_path:
-        logging.debug("Found: %s", found_path)
-        check_data["did_adb_work"] = True
-        check_data["choosen_path_for_adb"] = found_path
-        with open("check.json", "w", encoding="utf-8") as f:
-            json.dump(check_data, f, indent=4, ensure_ascii=False)
-    else:
-        logging.warning("Not found")
-
-    print("Found path = ", found_path)
-
-
-def start_move(event):
-    root.x = event.x
-    root.y = event.y
-
-
-def stop_move(event):
-    root.x = None
-    root.y = None
-
-
-def on_move(event):
-    deltax = event.x - root.x
-    deltay = event.y - root.y
-    x = root.winfo_x() + deltax
-    y = root.winfo_y() + deltay
-    root.geometry(f"+{x}+{y}")
-
-
-def changed_paned(event):
-    if menu_frame.winfo_viewable() and menu_frame.winfo_exists():
-        menu_frame.place_forget()
-        logging.debug("menu_frame is deleted")
-    else:
-        logging.debug("menu_frame is null")
-    if menu_frame_found.winfo_viewable() and menu_frame_found.winfo_exists():
-        menu_frame_found.place_forget()
-        logging.debug("menu_frame_found is deleted")
-
-
-def minimize_window():
-    root.state('withdrawn')
-    root.overrideredirect(False)
-    root.iconify()
-
-
-def on_deiconify(event):
-    if not root.overrideredirect():
-        root.overrideredirect(True)
-        if platform.system() == "Windows":
-            root.after(10, lambda: show_in_taskbar(root))
-
-
-def maximize_window():
-    if root.state() == 'zoomed':
-        root.state('normal')
-    else:
-        root.state('zoomed')
-
-
-# FOR SCROLLING
-def on_frame_configure(event):
-    canvas2.configure(scrollregion=canvas2.bbox("all"))
-
-
-def _on_mousewheel(event):
-    # Windows and MacOS
-    canvas2.yview_scroll(int(-1*(event.delta/120)), "units")
-
-
-# FOR LINUX
-def _on_scroll_up(event):
-    canvas2.yview_scroll(-1, "units")
-
-
-def _on_scroll_down(event):
-    canvas2.yview_scroll(1, "units")
-
-
-def close_menus(event):
-    logging.debug("All menus are closing")
-    if isinstance(event.widget, Button):
-        return
-    for menus in all_menu:
-        if menus.winfo_viewable() and menus.winfo_exists():
-            menus.place_forget()
-
-
-load_clicked = 0
-
-# MAIN PANEL
-root = Tk()
-root.minsize(800, 350)
-root.title("AdbEz")
-root.config(background="gray")
-root.bind("<Map>", on_deiconify)
-root.bind("<Button-1>", close_menus)
-root.geometry("1000x700")
-root.overrideredirect(True)
-root.config(bg='#1e1e1e')
-root.rowconfigure(0, weight=1)
-root.columnconfigure(0, weight=1)
-style = ttk.Style()
-style.configure("Siyah.TFrame", background="black")
-style.configure(
-    "Redbg.TButton", background="red", borderwidth=0, relief="flat"
-)
-
+TAB_W = 110
+TAB_H = 32
+TAB_GAP = 2
 border_color = "#3d3d3d"
 bg_color = "#1e1e1e"
 
-# OUTER FRAME
-external_frame = tk.Frame(root, bg=border_color, bd=0)
-external_frame.pack(fill="both", expand=True)
+CATEGORY_COUNT = 8
 
-# INNER MAIN AREA
-main_area = tk.Frame(external_frame, bg=bg_color, bd=0)
-main_area.pack(fill="both", expand=True, padx=1, pady=1)
+class MainApp:
+    def __init__(self):
+        self.nmap_router = NmapRouter(self)
+        self.adb_router = AdbRouter(self)
+        self.found_path = check_data["choosen_path_for_adb"]
+        self.check_data = check_data
 
-# FOR SIZABLE
-sizegrip = ttk.Sizegrip(main_area)
-sizegrip.pack(side="right", anchor="se")
-sizegrip2 = ttk.Sizegrip(main_area)
-sizegrip2.pack(side="left", anchor="nw")
+        self.current_lang = "en"
+        self.current_theme = ""
+        self.shared_adb_processes = []
+        self.shared_nmap_processes = []
+        self.active_adb_list = []
+        self.category_btn = []
+        self.button_references = []
+        self.active_processes = []
+        self.my_settings = None
+        self._tab_canvas = None
+        self._content_frame = None
 
-# TITLE BAR
-title_bar = tk.Frame(main_area, bg="#2d2d2d", height=30)
-title_bar.pack(fill="x")
+        self._tabs = {}   # key -> {frame, text_id, bg_tag, lang_key}
+        self.load_clicked = 0
+        self.test_counter = 0
 
-title_bar.bind("<ButtonPress-1>", start_move)
-title_bar.bind("<ButtonRelease-1>", stop_move)
-title_bar.bind("<B1-Motion>", on_move)
+        # MAIN PANEL
+        self.root = Tk()
+        self.root.minsize(800, 350)
+        self.root.title("AdbEz")
+        self.root.config(background="gray")
+        self.root.bind("<Map>", self.on_deiconify)
+        self.root.bind("<Button-1>", self.close_menus)
+        self.root.geometry("1000x700")
+        self.root.overrideredirect(True)
+        self.root.config(bg='#1e1e1e')
+        self.root.rowconfigure(0, weight=1)
+        self.root.columnconfigure(0, weight=1)
+        style = ttk.Style()
+        style.configure("Siyah.TFrame", background="black")
+        style.configure(
+            "Redbg.TButton", background="red", borderwidth=0, relief="flat"
+        )
+        # CATCHING SIZE OF THE WINDOW FOR IP MENU
+        self.root.bind("<Configure>", self.catch_size)
 
-title_label = Label(title_bar, text="ADBez",
-                    bg="#2d2d2d", fg="white",
-                    font=("Arial", 9))
-title_label.pack(side="left", padx=10)
+        self._build_main_window()
+        grip_canvas = Canvas(self.root, width=14, height=15, bg="#ffffff",
+                     highlightthickness=0, cursor="size_nw_se")
+        grip_canvas.create_text(10, 10, text="◤", fill="#666666", font=("Arial", 20))
+        grip_canvas.place(relx=0.0, rely=0.02, anchor="sw", x=1, y=-1)
+        grip_canvas.propagate(False)
+        def start_resize(event):
+            grip_canvas.start_x = self.root.winfo_x()
+            grip_canvas.start_y = self.root.winfo_y()
+            grip_canvas.start_w = self.root.winfo_width()
+            grip_canvas.start_h = self.root.winfo_height()
+            grip_canvas.press_x = event.x_root
+            grip_canvas.press_y = event.y_root
+
+        def do_resize(event):
+            dx = event.x_root - grip_canvas.press_x
+            dy = event.y_root - grip_canvas.press_y
+
+            new_x = grip_canvas.start_x + dx
+            new_y = grip_canvas.start_y + dy
+            new_w = grip_canvas.start_w - dx
+            new_h = grip_canvas.start_h - dy
+
+            if new_w > 250 and new_h > 180:
+                self.root.geometry(f"{new_w}x{new_h}+{new_x}+{new_y}")
+
+        grip_canvas.bind("<Button-1>", start_resize)
+        grip_canvas.bind("<B1-Motion>", do_resize)
+
+        style = ttk.Style()
+        style.configure("Grip.TLabel", font=("Arial", 22), foreground="#666666")
+        # DEFINITION
+        self.tab_connect = Frame(self._content_frame)
+        self.tab_keyevents = Frame(self._content_frame)
+        tab_usefull = ttk.Frame(self._content_frame)
+        tab_danger = ttk.Frame(self._content_frame)
+        tab_everything = ttk.Frame(self._content_frame)
+        tab_learn = ttk.Frame(self._content_frame)
+        tab_terminal = ttk.Frame(self._content_frame)
+        self.tab_settings = Frame(self._content_frame)
+        tab_connected = ttk.Frame(self._content_frame)
+
+        self._tab_defs = [
+            ("connect",    data[self.current_lang]["l7"],  self.tab_connect,    "l7"),
+            ("keyevents",  data[self.current_lang]["l8"],  self.tab_keyevents,  "l8"),
+            ("usefull",    data[self.current_lang]["l9"],  tab_usefull,    "l9"),
+            ("danger",     data[self.current_lang]["l10"], tab_danger,     "l10"),
+            ("everything", data[self.current_lang]["l11"], tab_everything, "l11"),
+            ("learn",      data[self.current_lang]["l12"], tab_learn,      "l12"),
+            ("terminal",   data[self.current_lang]["l16"], tab_terminal,   "l16"),
+            ("settings",   data[self.current_lang]["l17"], self.tab_settings,   "l17"),
+            ("connected",  data[self.current_lang]["l18"], tab_connected,  "l18"),
+        ]
+        self.background_color = bg_color
+        self._build_tab_connect()
+        self._build_tab_keyevents()
+        self._bind_events()
+
+        # BLOCKS-----------------------------------------------
+        self.root.update_idletasks()
+        self.root.after(100, lambda: self.paned_window.sash_place(0, 0, 420))
+
+        # WINDOWS-----------------------
+        self.canvas2.bind_all("<MouseWheel>", self._on_mousewheel)
+        # ------------------------------
+        # LINUX-------------------------
+        self.canvas2.bind_all("<Button-4>", self._on_scroll_up)
+        self.canvas2.bind_all("<Button-5>", self._on_scroll_down)
+        # ------------------------------
+        # ---------------------------------------------------
+        # -----------------------------------------------------
+
+        self.canvas2.bind("<Configure>", self.on_canvas_resize)
+        # PLACEMENT CONFIGURATION
+        self.upper_frame.rowconfigure(0, weight=1)
+        self.upper_frame.rowconfigure(8, weight=1)
+        self.upper_frame.columnconfigure(0, weight=1)
+        self.upper_frame.columnconfigure(1, weight=0)
+        self.upper_frame.columnconfigure(2, weight=1)
+        
+        self.checks()
+        if platform.system() == "Windows":
+            show_in_taskbar(self.root)
 
 
-def on_enter(event):
-    event.widget.configure(bg="lightblue")
+    def _build_main_window(self):
 
+        # OUTER FRAME
+        external_frame = tk.Frame(self.root, bg=border_color, bd=0)
+        external_frame.pack(fill="both", expand=True)
+        # INNER MAIN AREA
+        main_area = tk.Frame(external_frame, bg=bg_color, bd=0)
+        main_area.pack(fill="both", expand=True, padx=1, pady=1)
+        # TITLE BAR
+        title_bar = tk.Frame(main_area, bg="#2d2d2d", height=30)
+        title_bar.pack(fill="x")
+        title_bar.bind("<ButtonPress-1>", self.start_move)
+        title_bar.bind("<ButtonRelease-1>", self.stop_move)
+        title_bar.bind("<B1-Motion>", self.on_move)
+        frm = ttk.Frame(main_area, style="Siyah.TFrame", padding=10)
+        frm.pack(fill="both", expand=True) 
+        # FOR SIZABLE
+        sizegrip = ttk.Sizegrip(main_area)
+        sizegrip.pack(side="right", anchor="se")
 
-def leave_enter(event):
-    event.widget.configure(bg="#2d2d2d")
+        title_label = Label(title_bar, text="ADBez",
+                            bg="#2d2d2d", fg="white",
+                            font=("Arial", 9))
+        title_label.pack(side="left", padx=10)
+        self.min_btn = Button(title_bar, text="—", bg="#2d2d2d", fg="white", bd=0,
+                        activebackground="#404040", activeforeground="white",
+                        command=self.minimize_window, width=4, font=("Arial", 9))
+        self.min_btn.pack(side="right", fill="y")
+        self.min_btn.bind("<Enter>", self.on_enter)
+        self.min_btn.bind("<Leave>", self.leave_enter)
 
+        # FULL SCREEN(□)
+        self.max_btn = Button(title_bar, text="▢", bg="#2d2d2d", fg="white", bd=0,
+                        activebackground="#404040", activeforeground="white",
+                        command=self.maximize_window, width=4, font=("Arial", 10))
+        self.max_btn.pack(side="right", fill="y")
+        self.max_btn.bind("<Enter>", self.on_enter)
+        self.max_btn.bind("<Leave>", self.leave_enter)
 
-def disconnect_ip(event):
-    root.update_idletasks()
-    label_text = tab1_input2.get().strip()
-    logging.debug(f"current ip address:  {label_text}")
-    logging.info("Clicked disconnect")
-    connected_ips_text = connected_devicesips.cget("text")
-    logging.info(f"list is: \n {connected_ips_text}")
-    connected_ips_list = connected_ips_text.split()
+        self.close_btn = Button(title_bar, text="✕", bg="#2d2d2d", fg="white", bd=0,
+                        activebackground="red", command=self.root.destroy, width=4)
+        self.close_btn.pack(side="right", fill="y")
+        self.close_btn.bind("<Enter>", self.on_enter)
+        self.close_btn.bind("<Leave>", self.leave_enter)
+        _tab_bar = Frame(frm, bg="#1e1e1e")
+        _tab_bar.pack(fill="x", pady=(0, 4))
 
-    background_color = upper_frame.cget("background")
-    try:
-        if found_path and isinstance(found_path, str):
-            subprocess.Popen(
-                [found_path, "disconnect", label_text],
-                stdout=subprocess.PIPE,
-                text=True
+        self._content_frame = Frame(frm, bg="#1e1e1e")
+        self._content_frame.pack(fill="both", expand=True)
+
+        self._tab_canvas = Canvas(
+            _tab_bar, bg="#1e1e1e", height=TAB_H, highlightthickness=0)
+
+        _scroll_left = Button(_tab_bar, text="◀", bg="#1e1e1e", fg="white", bd=0,
+                            activebackground="#2a2a3a", width=2,
+                            command=lambda: self._tab_canvas.xview_scroll(-2, "units"))
+        _scroll_left.pack(side="left")
+
+        self._tab_canvas.pack(side="left", fill="x", expand=True)
+        self._tab_canvas.bind(
+            "<MouseWheel>",
+            lambda e: self._tab_canvas.xview_scroll(int(-1*(e.delta/120)), "units")
+        )
+
+        _scroll_right = Button(_tab_bar, text="▶", bg="#1e1e1e", fg="white", bd=0,
+                            activebackground="#2a2a3a", width=2,
+                            command=lambda: self._tab_canvas.xview_scroll(2, "units"))
+        _scroll_right.pack(side="left")
+
+    def _build_tab_connect(self):
+        # -TAB_CONNECT LAYOUTS
+        self.paned_window = PanedWindow(self.tab_connect, orient="vertical", bd=1,
+                                relief="sunken", sashwidth=4,
+                                sashrelief="sunken", background="black")
+        self.paned_window.pack(fill="both", expand=True)
+        self.upper_frame = Frame(self.paned_window)
+        self.paned_window.add(self.upper_frame, minsize=300)
+        lower_frame = Frame(self.paned_window, background="black")
+        self.paned_window.add(lower_frame, minsize=50)
+        # -NMAP INPUT ROW
+        self.nmap_input_row = Frame(self.upper_frame)
+        self.nmap_input_row.grid(row=2, column=1, sticky="ew", padx=(10))
+        self.nmap_input_row.columnconfigure(1, minsize=300)
+        self.nmap_input_row.columnconfigure(0, weight=0)
+        self.nmap_input_row.columnconfigure(1, weight=1)
+        self.nmap_input_row.columnconfigure(2, weight=0)
+        # -ADB INPUT ROW
+        self.adb_input_row = Frame(self.upper_frame)
+        self.adb_btn_container = Frame(self.upper_frame)
+        self.adb_btn_container.grid(row=7, column=1, sticky="n")
+        self.adb_input_row.grid(row=6, column=1, sticky="ew", padx=(10))
+
+        self.adb_input_row.columnconfigure(0, weight=0)
+        self.adb_input_row.columnconfigure(1, weight=1)
+        self.adb_input_row.columnconfigure(2, weight=0)
+        # -NMAP BUTTON ROW
+        self.nmap_btn_container = Frame(self.upper_frame)
+        self.nmap_btn_container.grid(row=3, column=1, sticky="n")
+        self.nmap_btn_container.columnconfigure(0, weight=0)
+        self.nmap_btn_container.columnconfigure(1, weight=0)
+        # -LANGUAGE BUTTON ROW
+        lang_btn_container = ttk.Frame(self.upper_frame)
+        lang_btn_container.grid(row=0, column=0, sticky="nw")
+
+        self.ongoing_processes = ttk.Frame(self.upper_frame)
+        connected_container = ttk.Frame(self.upper_frame)
+        connected_container.grid(row=0, column=2, sticky="ne")
+
+        # NMAP IP MENU
+        self.menu_frame = Frame(self.upper_frame, background="red")
+        menu_frame_in1 = Button(self.menu_frame, text="192.168.1.0/24")
+        menu_frame_in2 = Button(self.menu_frame, text="127.0.0.0/24")
+        # ADB IP MENU
+        self.menu_frame_found = Frame(self.upper_frame, background="red")
+        self.log_text = Text(lower_frame, height=1)
+        # LANGUAGES MENU
+        self.menu_frame_lang = Frame(self.upper_frame, background="red")
+        menu_frame_lang1 = Button(self.menu_frame_lang, text="English")
+        menu_frame_lang2 = Button(self.menu_frame_lang, text="Turkce")
+        menu_frame_lang3 = Button(self.menu_frame_lang, text="Português")
+
+        # DEFINITION
+        self.tab1_label = Label(self.upper_frame, text=self.get_text("l3"), name="l3")
+        self.tab1_input = Entry(self.nmap_input_row, font="bold")
+        self.tab1_nmap_button = Button(
+            self.nmap_btn_container, text=self.get_text("l4"), name="l4"
+        )
+        self.tab1_label2 = Label(self.upper_frame, text=self.get_text("l5"), name="l5")
+        self.tab1_input2 = Entry(self.adb_input_row, font="bold")
+        self.tab1_connect_button = Button(
+            self.adb_btn_container, text=self.get_text("l6"), name="l6"
+        )
+        self.tab1_label_failed = Label(self.upper_frame, text="", foreground="red", width=26)
+        self.tab1_label_failed2 = Label(self.upper_frame, text="", foreground="red", width=26)
+        tab1_lang_button = Button(
+            lang_btn_container, text="Languages", width=10, height="1", bg="lightblue"
+        )
+        tab1_disconnect_button = Button(
+            self.adb_btn_container, text=self.get_text("l19"), name="l19"
+        )
+        tab1_disconnect_button.grid(row=1, column=0)
+        tab1_disconnect_button.bind("<Button-1>", lambda e: adbc.adb_connect.disconnect_ip(
+            self.tab1_input2, self.found_path, check_data, self.connected_devices_ips, self.upper_frame,
+            self.root, self.check_btn_ip, self.active_adb_list[0].checkbutton_map if self.active_adb_list else {}
+        ))
+
+        processes_lists_text = Label(
+            self.ongoing_processes,
+            text=self.get_text("l318"), name="l318"
+        )
+        self.processes_in = Button(self.ongoing_processes)
+        processes_lists_text.pack(fill="x")
+        connected_devices = Label(
+            connected_container, text=self.get_text("l20"), name="l20",
+            background="lightgray"
+        )
+
+        self.connected_devices_ips = Label(connected_container)
+        is_text_empty = self.connected_devices_ips.cget("text")
+        connected_devices.grid(row=0, column=0, sticky="nsew")
+        self.connected_devices_ips.grid(row=1, column=0, sticky="nsew")
+
+        # PLACEMENT
+        tab1_lang_button.grid(row=0, column=0, sticky="nsew")
+
+        # I WANT TO USE MENUBUTTON BUT IT CAN'T DO THE FEATURES I WANT
+        # SO WE WILL CREATE OUR OWN MENU
+        # tab1_choose_ip = ttk.Menubutton(nmap_input_row, text="Choose")
+        tab1_choose_ip = Button(
+            self.nmap_input_row, text=self.get_text("l13"),
+            name="l13", takefocus=False, width=10, cursor="hand2"
+        )
+        tab1_found_ip = Button(
+            self.adb_input_row, text=self.get_text("l14"), name="l14", takefocus=False,
+            cursor="hand2"
+        )
+
+        self.tab1_label.grid(row=1, column=1, sticky="n", pady=(0, 5), padx=(0, 285))
+        self.tab1_input.grid(row=0, column=1, sticky="ew", pady=(0, 10))
+        tab1_choose_ip.grid(row=0, column=2, sticky="we", padx=(15, 0), pady=(0, 10))
+        self.tab1_nmap_button.grid(row=0, column=0, sticky="ew")
+        # nmap_btn_container.columnconfigure(0, minsize=100)
+
+        self.tab1_label2.grid(row=4, column=1, sticky="n", padx=(0, 295))
+        self.tab1_input2.grid(row=0, column=1, sticky="ew")
+        tab1_found_ip.grid(row=0, column=2, sticky="ew", padx=(15, 0))
+        self.tab1_connect_button.grid(row=0, column=0, sticky="ew", padx=(5, 0))
+        self.log_text.pack(fill="both", expand=True)
+
+        # STOP NMAP-ADB BUTTON
+        self.tab1_stop_nmap = ttk.Button(
+            self.nmap_btn_container, text=self.get_text("l15"),
+            name="l15", takefocus=False, style="Redbg.TButton"
+        )
+        self.tab1_stop_adb = ttk.Button(
+            self.adb_btn_container, text=self.get_text("l15"),
+            name="l15", takefocus=False, style="Redbg.TButton"
+        )
+
+        # BUTTON EVENTS-----------------------------------------------
+        tab1_lang_button.bind(
+            "<Button-1>",
+            lambda event: self.open_menu(
+                event, self.menu_frame_lang, tab1_lang_button, self.tab_connect
             )
-            logging.debug(f"Disconnected to {label_text}")
-            check_btn_ip.grid_forget()
-            with open("check.json", "r", encoding="utf-8") as f:
-                check_data = json.load(f)
-            ip_to_remove = label_text.strip()
-            logging.debug(f"Deleting ip: {ip_to_remove}")
-            if ip_to_remove in check_data["connected_ips"]:
-                del check_data["connected_ips"][ip_to_remove]
-            with open("check.json", "w", encoding="utf-8") as fi:
-                json.dump(check_data, fi, indent=4)
-            for i in connected_ips_list:
-                if i == label_text:
-                    connected_ips_list.remove(i)
-                    new_text = "\n".join(connected_ips_list)
-                    root.update_idletasks()
-                    connected_devicesips.configure(text=new_text)
-                    logging.debug("Deleted ip")
-            if connected_devicesips.cget("text") == "":
-                connected_devicesips.configure(background=background_color)
-    except Exception as e:
-        logging.error("Error: %s", e)
+        )
+        tab1_choose_ip.bind(
+            "<Button-1>",
+            lambda event: self.open_menu(
+                event, self.menu_frame, tab1_choose_ip, self.tab_connect
+            )
+        )
+
+        self.tab1_nmap_button.bind("<Button-1>", self.nmap_router.scan)
+        self.tab1_connect_button.bind("<Button-1>", self.adb_router.connect)
+        tab1_found_ip.bind(
+            "<Button-1>",
+            lambda event: self.open_menu(
+                event, self.menu_frame_found, tab1_found_ip, self.tab_connect
+            )
+        )
+        # nmap ip menu events
+        menu_frame_in1.bind("<Button-1>", self.enter_choosed_ip)
+        menu_frame_in2.bind("<Button-1>", self.enter_choosed_ip)
+        # lang menu events
+        menu_frame_lang1.bind("<Button-1>", lambda event: self.update_all_widgets("en"))
+        menu_frame_lang2.bind("<Button-1>", lambda event: self.update_all_widgets("tr"))
+        menu_frame_lang3.bind("<Button-1>", lambda event: self.update_all_widgets("pt"))
+
+        # stop nmap button event
+        self.tab1_stop_nmap.bind("<Button-1>", self.nmap_router.stop_nmap_event)
+        self.tab1_stop_adb.bind("<Button-1>", self.adb_router.stop_adb_event)
+
+        # CATCHING PANED WINDOW EVENT
+        self.paned_window.bind("<B1-Motion>", self.changed_paned)
+
+    def _build_tab_keyevents(self):
+        # FONT STYLE DEFINITION
+        custom_font = font.Font(size=8)
+        keyevents_buttons = []
+        keyevents_labels = []
+
+        # -TAB_KEYEVENTS LAYOUTS
+        self.paned_window2 = PanedWindow(self.tab_keyevents, orient="horizontal", bd=1,
+                                    relief="sunken", sashwidth=4,
+                                    sashrelief="sunken", bg="black")
+        self.upper_frame2 = Frame(self.paned_window2)
+        self.paned_window2.add(self.upper_frame2, minsize=700)
+        self.paned_window2.pack(fill="both", expand=True, anchor="w", side="left")
+        lower_frame2 = Frame(self.paned_window2)
+        self.paned_window2.add(lower_frame2, minsize=50)
+        lower_frame2_log_label = Frame(lower_frame2, bg="black")
+        lower_frame2_connected_ips = Frame(lower_frame2)
+        lower_frame2_connected_ips.grid(row=0, column=1)
+        lower_frame2_log_label.grid(row=1, column=0)
+        lower_frame2_connected_ips.configure(bg="yellow")
+        lower_frame2.config(bg="lightblue")
+        lower_frame2.rowconfigure(2, weight=1)
+        lower_frame2.grid_columnconfigure(0, weight=1)
+        self.paned_window2.paneconfigure(lower_frame2, minsize=1)
 
 
-min_btn = Button(title_bar, text="—", bg="#2d2d2d", fg="white", bd=0,
-                 activebackground="#404040", activeforeground="white",
-                 command=minimize_window, width=4, font=("Arial", 9))
-min_btn.pack(side="right", fill="y")
-min_btn.bind("<Enter>", on_enter)
-min_btn.bind("<Leave>", leave_enter)
+        # TAB_KEYEVENTS--------------------------------------
+        self.canvas2 = Canvas(self.upper_frame2, bg="red", highlightthickness=0)
+        self.canvas2.pack(side="left", fill="both", expand=True)
+        scrollable_bar = Scrollbar(self.upper_frame2, orient="vertical",
+                                command=self.canvas2.yview, background="yellow")
+        scrollable_bar.pack(fill=Y, side="right", anchor="e")
+        self.canvas2.configure(yscrollcommand=scrollable_bar.set)
+        self.scrollable_content = Frame(self.canvas2)
+        self.canvas_window = self.canvas2.create_window((0, 0), window=self.scrollable_content,
+                                            anchor="nw")
+        self.scrollable_content.bind("<Configure>", self.on_frame_configure)
+        tab2_scroll_button_frame = Frame(self.scrollable_content)
+        tab2_scroll_load_frame = Frame(self.scrollable_content)
+        up_bar = Frame(self.scrollable_content)
+        up_bar.pack(expand=True)
+        tab2_scroll_button_frame.pack(fill="x", expand=True)
+        tab2_scroll_load_frame.pack(expand=True, fill="x")
+        up_bar.columnconfigure(0, weight=1)
+        up_bar.columnconfigure(3, weight=1)
+
+        connected_container2 = ttk.Frame(lower_frame2)
+        connected_container2.grid(row=0, column=0, sticky="n")
+
+        connected_devices2 = Label(
+            connected_container2, text=self.get_text("l20"), name="l20"
+        )
+        self.check_btn_ip = Checkbutton(connected_container2)
+        connected_devices2.grid(row=0, column=0, sticky="nsew")
+
+        # CATEGORY MENU
+        menu_frame_category = Frame(self.upper_frame2, background="blue")
+        for b in range(CATEGORY_COUNT):
+            btn_key = f"l{b+310}"
+            menu_frame_category_in1 = Button(
+                menu_frame_category, text=self.get_text(btn_key),
+                name=btn_key, font=custom_font
+            )
+            menu_frame_category_in1.bind(
+                "<Button-1>", lambda event, k=btn_key: self.btn_instance.categorize(k)
+            )
+            self.category_btn.append(menu_frame_category_in1)
+
+        search = Entry(up_bar)
+        search.grid(row=0, column=1)
+        tab2_category_button = Button(up_bar, text=self.get_text("l309"),
+                                    name="l309")
+        tab2_category_button.bind(
+            "<Button-1>",
+            lambda event: self.open_menu(
+                event, menu_frame_category, tab2_category_button, self.tab_keyevents
+            )
+        )
+        tab2_category_button.grid(row=0, column=2)
+
+        tab2_log_label = Label(
+            lower_frame2_log_label, text="Logs", background="lightblue"
+        )
+        tab2_log_label.grid(row=0, column=0)
+        tab2_log_box = Text(lower_frame2)
+        tab2_log_box.grid(row=1, column=0, rowspan=2, sticky="w", padx=(5, 5))
+        tab2_load_more_btn = Button(tab2_scroll_load_frame, text="Load more...")
+        tab2_load_more_btn.pack()
+        tab2_load_more_btn.bind(
+            "<Button-1>",
+            lambda e: self.btn_instance.called_test_function()
+        )
 
 
-def catch_size(event):
-    global paned_window, upper_frame
-    if event.widget == root:
-        geo = root.winfo_geometry()
-        match = re.search(r'(\d+)x(\d+)', geo)
-        if match:
-            x, y = int(match.group(1)), int(match.group(2))
-            print(f"x: {x}, y: {y}")
-        for m in all_menu:
-            if m.winfo_viewable() and m.winfo_exists():
-                m.place_forget()
-                logging.debug(f"{m} is deleted")
+        self.btn_instance = buttons(
+            tab2_scroll_button_frame,
+            self.root,
+            tab2_load_more_btn,
+            tab2_scroll_load_frame,
+            keyevents_buttons,
+            keyevents_labels,
+            data,
+            self.current_lang,
+            self.background_color,
+            self.canvas2,
+            up_bar,
+            self.get_text
+        )
+
+
+
+        self.all_menu = [self.menu_frame, self.menu_frame_found, self.menu_frame_lang, menu_frame_category]
+        some_keywords = [self._tab_canvas, self._tabs, self.all_menu, self.btn_instance,
+                         self.canvas2, tab2_scroll_button_frame, self._content_frame]
+
+        self.tabcontrol = TabControl(*some_keywords)
+        _x = 0
+        for _key, _text, _frame, _lk in self._tab_defs:
+            self.tabcontrol.make_tab(self._tab_canvas, _x, _key, _text, _frame, _lk)
+            _x += TAB_W + TAB_GAP
+        self._tab_canvas.config(scrollregion=(0, 0, _x, TAB_H))
+
+    def _bind_events(self):
+        pass
+
+    def get_text(self, key, default=""):
+        lang_data = data.get(self.current_lang, {})
+        item = lang_data.get(key, default)
+        if isinstance(item, dict):
+            return item.get("text", default)
+        
+        return item
+
+
+    def on_enter(self, event):
+        event.widget.configure(bg="lightblue")
+
+    def leave_enter(self, event):
+        event.widget.configure(bg="#2d2d2d")
+
+    def catch_size(self, event):
+        if event.widget == self.root:
+            geo = self.root.winfo_geometry()
+            match = re.search(r'(\d+)x(\d+)', geo)
+            if match:
+                x, y = int(match.group(1)), int(match.group(2))
+                print(f"x: {x}, y: {y}")
+            for m in self.all_menu:
+                if m.winfo_viewable() and m.winfo_exists():
+                    m.place_forget()
+                    logging.debug(f"{m} is deleted")
+                else:
+                    logging.debug(f"{m} is null")
+            if event.height > 600:
+                logging.info(event.height)
+                self.paned_window.paneconfigure(self.upper_frame, minsize=350, height=550)
+                logging.info("Minsize updated")
+            if x > 1300:
+                self.paned_window2.paneconfigure(self.upper_frame2, minsize=900)
             else:
-                logging.debug(f"{m} is null")
-        if event.height > 600:
-            logging.info(event.height)
-            paned_window.paneconfigure(upper_frame, minsize=350, height=550)
-            logging.info("Minsize updated")
-        if x > 1300:
-            paned_window2.paneconfigure(upper_frame2, minsize=900)
+                self.paned_window2.paneconfigure(self.upper_frame2, minsize=700)
+
+    # FOR EXPAND WINDOW
+    def on_canvas_resize(self, event):
+        logging.debug("ON_CANVAS_RESİZE")
+        self.canvas2.itemconfig(self.canvas_window, width=event.width)
+
+
+    def update_all_widgets(self, lang_code):
+        logging.debug("UPDATE_ALL_WIDGETS")
+        self.current_lang = lang_code
+        check_data["choosen_language"] = lang_code
+        with open("check.json", "w", encoding="utf-8") as f:
+            json.dump(check_data, f, indent=4, ensure_ascii=False)
+        if self.my_settings is not None:
+            self.my_settings.current_lang = lang_code
+        new_texts = data[lang_code]
+        self.btn_instance.current_lang = lang_code
+        self.btn_instance.load_again()
+
+        # Update canvas tab texts
+        for info in self._tabs.values():
+            lk = info["lang_key"]
+            if lk in new_texts:
+                self._tab_canvas.itemconfig(info["text_id"], text=new_texts[lk]["text"])
+
+        try:
+            with open("lang.json", "r", encoding="utf-8") as f:
+                full_data = json.load(f)
+            selected_texts = full_data[lang_code]["text"]
+            
+
+            def recursive_update(container):
+                for widget in container.winfo_children():
+                    w_name = str(widget).split('.')[-1]
+                    if w_name in selected_texts:
+                        try:
+                            widget.config(text=selected_texts[w_name])
+                        except Exception as e:
+                            logging.error("An error occurred while updating and finding widgets: %s", e)
+                            pass
+                    if widget.winfo_children():
+                        recursive_update(widget)
+                    if widget == self.my_settings.row_label2:
+                        widget.config(
+                            text=self.get_text("l326") + " " + self.found_path)
+
+            recursive_update(self.root)
+            self.root.update_idletasks()
+            logging.info(f"Language changed to: {lang_code}")
+        except Exception as e:
+            logging.error("Language update error: %s", e)
+
+
+    def update_ui(self, output):
+        logging.debug("UPDATE UI")
+        self.log_text.config(state="normal")
+        self.log_text.insert("end", f"\n {output}")
+        self.log_text.see("end")
+        self.log_text.config(state="disabled")
+
+
+    def checks(self):
+        checker = appchecks.startup_check()
+        self.my_settings = settings_style(
+            check_data, self.tab_connect, self.tab_settings,
+            self.paned_window, self.upper_frame, self.nmap_input_row, self.adb_input_row,
+            self.adb_btn_container, self.tab1_label, self.tab1_label2, self.log_text, self.tab1_input,
+            self.tab1_input2, self.tab1_nmap_button, self.tab1_connect_button, self.root,
+            self.nmap_btn_container, data, self.current_lang,
+            self.min_btn, self.max_btn, self.close_btn, self.found_path, self.scrollable_content,
+            self.get_text,
+            update_func=self.update_path,
+            auto_finder_func=checker.try_find_adb
+        )
+        checker.app_startup(self.connected_devices_ips, self.current_lang, data, check_data, self.my_settings, update_lang_func=self.update_all_widgets)
+
+
+    def update_path(self, new_path):
+        self.found_path = new_path
+        check_data["choosen_path_for_adb"] = self.found_path
+        with open("check.json", "w", encoding="utf-8") as f:
+            json.dump(check_data, f, indent=4, ensure_ascii=False)
+
+
+    def start_move(self, event):
+        logging.debug("START_MOVE")
+        self.root.x = event.x
+        self.root.y = event.y
+
+
+    def stop_move(self, event):
+        logging.debug("STOP_MOVE")
+        self.root.x = None
+        self.root.y = None
+
+
+    def on_move(self, event):
+        deltax = event.x - self.root.x
+        deltay = event.y - self.root.y
+        x = self.root.winfo_x() + deltax
+        y = self.root.winfo_y() + deltay
+        self.root.geometry(f"+{x}+{y}")
+
+
+    def changed_paned(self, event):
+        if self.menu_frame.winfo_viewable() and self.menu_frame.winfo_exists():
+            self.menu_frame.place_forget()
+            logging.debug("menu_frame is deleted")
         else:
-            paned_window2.paneconfigure(upper_frame2, minsize=700)
-
-# FULL SCREEN(□)
-max_btn = Button(title_bar, text="▢", bg="#2d2d2d", fg="white", bd=0,
-                 activebackground="#404040", activeforeground="white",
-                 command=maximize_window, width=4, font=("Arial", 10))
-max_btn.pack(side="right", fill="y")
-max_btn.bind("<Enter>", on_enter)
-max_btn.bind("<Leave>", leave_enter)
-
-close_btn = Button(title_bar, text="✕", bg="#2d2d2d", fg="white", bd=0,
-                   activebackground="red", command=root.destroy, width=4)
-close_btn.pack(side="right", fill="y")
-close_btn.bind("<Enter>", on_enter)
-close_btn.bind("<Leave>", leave_enter)
-
-# CATCHING SIZE OF THE WINDOW FOR IP MENU
-root.bind("<Configure>", catch_size)
-frm = ttk.Frame(main_area, style="Siyah.TFrame", padding=10)
-frm.pack(fill="both", expand=True)
-
-_tab_bar = Frame(frm, bg="#1e1e1e")
-_tab_bar.pack(fill="x", pady=(0, 4))
-
-_scroll_left = Button(_tab_bar, text="◀", bg="#1e1e1e", fg="white", bd=0,
-                      activebackground="#2a2a3a", width=2,
-                      command=lambda: _tab_canvas.xview_scroll(-2, "units"))
-_scroll_left.pack(side="left")
-
-_tab_canvas = Canvas(
-    _tab_bar, bg="#1e1e1e", height=TAB_H, highlightthickness=0)
-_tab_canvas.pack(side="left", fill="x", expand=True)
-
-_scroll_right = Button(_tab_bar, text="▶", bg="#1e1e1e", fg="white", bd=0,
-                       activebackground="#2a2a3a", width=2,
-                       command=lambda: _tab_canvas.xview_scroll(2, "units"))
-_scroll_right.pack(side="left")
-
-_tab_canvas.bind(
-    "<MouseWheel>",
-    lambda e: _tab_canvas.xview_scroll(int(-1*(e.delta/120)), "units")
-)
-
-_content_frame = Frame(frm, bg="#1e1e1e")
-_content_frame.pack(fill="both", expand=True)
-
-# DEFINITION
-tab_connect = Frame(_content_frame)
-tab_keyevents = Frame(_content_frame)
-tab_usefull = ttk.Frame(_content_frame)
-tab_danger = ttk.Frame(_content_frame)
-tab_everything = ttk.Frame(_content_frame)
-tab_learn = ttk.Frame(_content_frame)
-tab_terminal = ttk.Frame(_content_frame)
-tab_settings = Frame(_content_frame)
-tab_connected = ttk.Frame(_content_frame)
-
-_tab_defs = [
-    ("connect",    data[current_lang]["l7"],  tab_connect,    "l7"),
-    ("keyevents",  data[current_lang]["l8"],  tab_keyevents,  "l8"),
-    ("usefull",    data[current_lang]["l9"],  tab_usefull,    "l9"),
-    ("danger",     data[current_lang]["l10"], tab_danger,     "l10"),
-    ("everything", data[current_lang]["l11"], tab_everything, "l11"),
-    ("learn",      data[current_lang]["l12"], tab_learn,      "l12"),
-    ("terminal",   data[current_lang]["l16"], tab_terminal,   "l16"),
-    ("settings",   data[current_lang]["l17"], tab_settings,   "l17"),
-    ("connected",  data[current_lang]["l18"], tab_connected,  "l18"),
-]
-_x = 0
-for _key, _text, _frame, _lk in _tab_defs:
-    make_tab(_tab_canvas, _x, _key, _text, _frame, _lk)
-    _x += TAB_W + TAB_GAP
-_tab_canvas.config(scrollregion=(0, 0, _x, TAB_H))
-
-# BLOCKS-----------------------------------------------
-# -TAB_CONNECT LAYOUTS
-paned_window = PanedWindow(tab_connect, orient="vertical", bd=1,
-                           relief="sunken", sashwidth=4,
-                           sashrelief="sunken", background="black")
-paned_window.pack(fill="both", expand=True)
-upper_frame = Frame(paned_window)
-paned_window.add(upper_frame, minsize=300)
-lower_frame = Frame(paned_window, background="black")
-paned_window.add(lower_frame, minsize=50)
-root.update_idletasks()
-root.after(100, lambda: paned_window.sash_place(0, 0, 420))
-# -TAB_KEYEVENTS LAYOUTS
-paned_window2 = PanedWindow(tab_keyevents, orient="horizontal", bd=1,
-                            relief="sunken", sashwidth=4,
-                            sashrelief="sunken", bg="black")
-upper_frame2 = Frame(paned_window2)
-paned_window2.add(upper_frame2, minsize=700)
-paned_window2.pack(fill="both", expand=True, anchor="w", side="left")
-lower_frame2 = Frame(paned_window2)
-paned_window2.add(lower_frame2, minsize=50)
-lower_frame2_log_label = Frame(lower_frame2, bg="black")
-lower_frame2_connected_ips = Frame(lower_frame2)
-lower_frame2_connected_ips.grid(row=0, column=1)
-lower_frame2_log_label.grid(row=1, column=0)
-lower_frame2_connected_ips.configure(bg="yellow")
-
-upper_frame2.config()
-lower_frame2.config(bg="lightblue")
-lower_frame2.rowconfigure(2, weight=1)
-lower_frame2.grid_columnconfigure(0, weight=1)
-paned_window2.paneconfigure(lower_frame2, minsize=1)
-# -NMAP INPUT ROW
-nmap_input_row = Frame(upper_frame)
-nmap_input_row.grid(row=2, column=1, sticky="ew", padx=(10))
-nmap_input_row.columnconfigure(1, minsize=300)
-nmap_input_row.columnconfigure(0, weight=0)
-nmap_input_row.columnconfigure(1, weight=1)
-nmap_input_row.columnconfigure(2, weight=0)
-# -ADB INPUT ROW
-adb_input_row = Frame(upper_frame)
-adb_btn_container = Frame(upper_frame)
-adb_btn_container.grid(row=7, column=1, sticky="n")
-adb_input_row.grid(row=6, column=1, sticky="ew", padx=(10))
-
-adb_input_row.columnconfigure(0, weight=0)
-adb_input_row.columnconfigure(1, weight=1)
-adb_input_row.columnconfigure(2, weight=0)
-# -NMAP BUTTON ROW
-nmap_btn_container = Frame(upper_frame)
-nmap_btn_container.grid(row=3, column=1, sticky="n")
-nmap_btn_container.columnconfigure(0, weight=0)
-nmap_btn_container.columnconfigure(1, weight=0)
-# -LANGUAGE BUTTON ROW
-lang_btn_container = ttk.Frame(upper_frame)
-lang_btn_container.grid(row=0, column=0, sticky="nw")
-# TAB_KEYEVENTS--------------------------------------
-canvas2 = Canvas(upper_frame2, bg="red", highlightthickness=0)
-canvas2.pack(side="left", fill="both", expand=True)
-scrollable_bar = Scrollbar(upper_frame2, orient="vertical",
-                           command=canvas2.yview, background="yellow")
-scrollable_bar.pack(fill=Y, side="right", anchor="e")
-canvas2.configure(yscrollcommand=scrollable_bar.set)
-scrollable_content = Frame(canvas2)
-canvas_window = canvas2.create_window((0, 0), window=scrollable_content,
-                                      anchor="nw")
-scrollable_content.bind("<Configure>", on_frame_configure)
-tab2_seperate_scroll_BTN = Frame(scrollable_content)
-tab2_seperate_scroll_LOAD = Frame(scrollable_content)
-up_bar = Frame(scrollable_content)
-up_bar.pack(expand=True)
-tab2_seperate_scroll_BTN.pack(fill="x", expand=True)
-tab2_seperate_scroll_LOAD.pack(expand=True, fill="x")
-up_bar.columnconfigure(0, weight=1)
-up_bar.columnconfigure(3, weight=1)
-
-# WINDOWS-----------------------
-canvas2.bind_all("<MouseWheel>", _on_mousewheel)
-# ------------------------------
-# LINUX-------------------------
-canvas2.bind_all("<Button-4>", _on_scroll_up)
-canvas2.bind_all("<Button-5>", _on_scroll_down)
-# ------------------------------
-search = Entry(up_bar, text="Hi")
-search.grid(row=0, column=1)
-tab2_category_button = Button(up_bar, text=data[current_lang]["l309"],
-                              name="l309")
-tab2_category_button.bind(
-    "<Button-1>",
-    lambda event: open_menu(
-        event, menu_frame_category, tab2_category_button, tab_keyevents
-    )
-)
-tab2_category_button.grid(row=0, column=2)
-# ---------------------------------------------------
-# -----------------------------------------------------
+            logging.debug("menu_frame is null")
+        if self.menu_frame_found.winfo_viewable() and self.menu_frame_found.winfo_exists():
+            self.menu_frame_found.place_forget()
+            logging.debug("menu_frame_found is deleted")
 
 
-# FOR EXPAND WINDOW
-def on_canvas_resize(event):
-    canvas2.itemconfig(canvas_window, width=event.width)
+    def minimize_window(self):
+        self.root.state('withdrawn')
+        self.root.overrideredirect(False)
+        self.root.iconify()
 
 
-canvas2.bind("<Configure>", on_canvas_resize)
-# PLACEMENT CONFIGURATION
-upper_frame.rowconfigure(0, weight=1)
-upper_frame.rowconfigure(8, weight=1)
-upper_frame.columnconfigure(0, weight=1)
-upper_frame.columnconfigure(1, weight=0)
-upper_frame.columnconfigure(2, weight=1)
-
-# FONT STYLE DEFINITION
-custom_font = font.Font(size=8)
-# DEFINITION
-tab1_label = Label(upper_frame, text=data[current_lang]["l3"], name="l3")
-tab1_input = Entry(nmap_input_row, font="bold")
-tab1_nmap_button = Button(
-    nmap_btn_container, text=data[current_lang]["l4"], name="l4"
-)
-tab1_label2 = Label(upper_frame, text=data[current_lang]["l5"], name="l5")
-tab1_input2 = Entry(adb_input_row, font="bold")
-tab1_connect_button = Button(
-    adb_btn_container, text=data[current_lang]["l6"], name="l6"
-)
-tab1_label_failed = Label(upper_frame, text="", foreground="red", width=26)
-tab1_label_failed2 = Label(upper_frame, text="", foreground="red", width=26)
-tab1_lang_button = Button(
-    lang_btn_container, text="Languages", width=10, height="1", bg="lightblue"
-)
-tab1_disconnect_button = Button(
-    adb_btn_container, text=data[current_lang]["l19"], name="l19"
-)
-tab1_disconnect_button.grid(row=1, column=0)
-tab1_disconnect_button.bind("<Button-1>", disconnect_ip)
-
-tab2_log_label = Label(
-    lower_frame2_log_label, text="Logs", background="lightblue"
-)
-tab2_log_label.grid(row=0, column=0)
-tab2_log_box = Text(lower_frame2)
-tab2_log_box.grid(row=1, column=0, rowspan=2, sticky="w", padx=(5, 5))
-tab2_load_more_btn = Button(tab2_seperate_scroll_LOAD, text="Load more...")
-tab2_load_more_btn.pack()
-tab2_load_more_btn.bind(
-    "<Button-1>",
-    lambda e: btn_instance.called_test_function()
-)
+    def on_deiconify(self, event):
+        if not self.root.overrideredirect():
+            self.root.overrideredirect(True)
+            if platform.system() == "Windows":
+                self.root.after(10, lambda: show_in_taskbar(self.root))
 
 
-connected_container2 = ttk.Frame(lower_frame2)
-connected_container2.grid(row=0, column=0, sticky="n")
-
-test_counter = 0
-connected_devices2 = Label(
-    connected_container2, text=data[current_lang]["l20"], name="l20"
-)
-check_btn_ip = Checkbutton(connected_container2)
-connected_devices2.grid(row=0, column=0, sticky="nsew")
-ongoing_processes = ttk.Frame(upper_frame)
-
-active_processes = []
-active_adb_list = []
-active_nmap_list = []
-keyevents_buttons = []
-keyevents_labels = []
-background_color = upper_frame.cget("background")
-btn_instance = buttons(
-    tab2_seperate_scroll_BTN,
-    root,
-    tab2_load_more_btn,
-    tab2_seperate_scroll_LOAD,
-    keyevents_buttons,
-    keyevents_labels,
-    data,
-    current_lang,
-    background_color,
-    canvas2,
-    up_bar
-)
+    def maximize_window(self):
+        if self.root.state() == 'zoomed':
+            self.root.state('normal')
+        else:
+            self.root.state('zoomed')
 
 
-connected_container = ttk.Frame(upper_frame)
-connected_container.grid(row=0, column=2, sticky="ne")
-processes_lists_text = Label(ongoing_processes,
-                             text=data[current_lang]["l318"], name="l318")
-processes_in = Button(ongoing_processes)
-processes_lists_text.pack(fill="x")
-connected_devices = Label(
-    connected_container, text=data[current_lang]["l20"], name="l20",
-    background="lightgray"
-)
-connected_devicesips = Label(connected_container)
-is_text_empty = connected_devicesips.cget("text")
-connected_devices.grid(row=0, column=0, sticky="nsew")
-connected_devicesips.grid(row=1, column=0, sticky="nsew")
-
-# I WANT TO USE MENUBUTTON BUT IT CAN'T DO THE FEATURES I WANT
-# SO WE WILL CREATE OUR OWN MENU
-# tab1_choose_ip = ttk.Menubutton(nmap_input_row, text="Choose")
-tab1_choose_ip = Button(
-    nmap_input_row, text=data[current_lang]["l13"],
-    name="l13", takefocus=False, width=10, cursor="hand2"
-)
-tab1_found_ip = Button(
-    adb_input_row, text=data[current_lang]["l14"], name="l14", takefocus=False,
-    cursor="hand2"
-)
-# STOP NMAP-ADB BUTTON
-tab1_stop_nmap = ttk.Button(
-    nmap_btn_container, text=data[current_lang]["l15"],
-    name="l15", takefocus=False, style="Redbg.TButton"
-)
-tab1_stop_adb = ttk.Button(
-    adb_btn_container, text=data[current_lang]["l15"],
-    name="l15", takefocus=False, style="Redbg.TButton"
-)
-# NMAP IP MENU
-menu_frame = Frame(upper_frame, background="red")
-menu_frame_in1 = Button(menu_frame, text="192.168.1.0/24")
-menu_frame_in2 = Button(menu_frame, text="127.0.0.0/24")
-# ADB IP MENU
-menu_frame_found = Frame(upper_frame, background="red")
-log_text = Text(lower_frame, height=1)
-# LANGUAGES MENU
-menu_frame_lang = Frame(upper_frame, background="red")
-menu_frame_lang1 = Button(menu_frame_lang, text="English")
-menu_frame_lang2 = Button(menu_frame_lang, text="Turkce")
-menu_frame_lang3 = Button(menu_frame_lang, text="Português")
-# CATEGORY MENU
-category_btn = []
-menu_frame_category = Frame(upper_frame2, background="blue")
-for b in range(8):
-    btn_key = f"l{b+310}"
-    menu_frame_category_in1 = Button(
-        menu_frame_category, text=data[current_lang][btn_key],
-        name=btn_key, font=custom_font
-    )
-    menu_frame_category_in1.bind(
-        "<Button-1>", lambda event, k=btn_key: btn_instance.categorize(k)
-    )
-    category_btn.append(menu_frame_category_in1)
-
-# PLACEMENT
-tab1_lang_button.grid(row=0, column=0, sticky="nsew")
-
-tab1_label.grid(row=1, column=1, sticky="n", pady=(0, 5), padx=(0, 285))
-tab1_input.grid(row=0, column=1, sticky="ew", pady=(0, 10))
-tab1_choose_ip.grid(row=0, column=2, sticky="we", padx=(15, 0), pady=(0, 10))
-tab1_nmap_button.grid(row=0, column=0, sticky="ew")
-# nmap_btn_container.columnconfigure(0, minsize=100)
-
-tab1_label2.grid(row=4, column=1, sticky="n", padx=(0, 295))
-tab1_input2.grid(row=0, column=1, sticky="ew")
-tab1_found_ip.grid(row=0, column=2, sticky="ew", padx=(15, 0))
-tab1_connect_button.grid(row=0, column=0, sticky="ew", padx=(5, 0))
-log_text.pack(fill="both", expand=True)
-
-# BUTTON EVENTS-----------------------------------------------
-tab1_lang_button.bind(
-    "<Button-1>",
-    lambda event: open_menu(
-        event, menu_frame_lang, tab1_lang_button, tab_connect
-    )
-)
-tab1_choose_ip.bind(
-    "<Button-1>",
-    lambda event: open_menu(
-        event, menu_frame, tab1_choose_ip, tab_connect
-    )
-)
-tab1_nmap_button.bind("<Button-1>", scan)
-tab1_connect_button.bind("<Button-1>", connect)
-tab1_found_ip.bind(
-    "<Button-1>",
-    lambda event: open_menu(
-        event, menu_frame_found, tab1_found_ip, tab_connect
-    )
-)
-
-# nmap ip menu events
-menu_frame_in1.bind("<Button-1>", enter_choosed_ip)
-menu_frame_in2.bind("<Button-1>", enter_choosed_ip)
-# lang menu events
-menu_frame_lang1.bind("<Button-1>", lambda event: update_all_widgets("en"))
-menu_frame_lang2.bind("<Button-1>", lambda event: update_all_widgets("tr"))
-menu_frame_lang3.bind("<Button-1>", lambda event: update_all_widgets("pt"))
-
-# stop nmap button event
-tab1_stop_nmap.bind("<Button-1>", stop_nmap_event)
-tab1_stop_adb.bind("<Button-1>", stop_adb_event)
-
-# CATCHING PANED WINDOW EVENT
-paned_window.bind("<B1-Motion>", changed_paned)
+    # FOR SCROLLING
+    def on_frame_configure(self, event):
+        logging.debug("ON_FRAME_CONFIGURE")
+        self.canvas2.configure(scrollregion=self.canvas2.bbox("all"))
 
 
-# FOR CATCHING CURRENT TAB
-def delete_widgets():
-    for widgets in tab2_seperate_scroll_BTN.winfo_children()[60:]:
-        widgets.destroy()
-        logging.debug("Widgets are deleting")
+    def _on_mousewheel(self, event):
+        # Windows and MacOS
+        self.canvas2.yview_scroll(int(-1*(event.delta/120)), "units")
 
 
-all_menu = [menu_frame, menu_frame_found, menu_frame_lang, menu_frame_category]
+    # FOR LINUX
+    def _on_scroll_up(self, event):
+        self.canvas2.yview_scroll(-1, "units")
 
-switch_tab("connect")
 
-if check_data["did_adb_work"] is not True:
-    try_find_adb()
-checks()
-if platform.system() == "Windows":
-    show_in_taskbar(root)
-root.mainloop()
+    def _on_scroll_down(self, event):
+        self.canvas2.yview_scroll(1, "units")
+
+
+    def close_menus(self, event):
+        if isinstance(event.widget, Button):
+            return
+        for menus in self.all_menu:
+            if menus.winfo_viewable() and menus.winfo_exists():
+                logging.debug("All menus are closing")
+                menus.place_forget()
+
+
+    def open_menu(self, event, frame, choosen_button, selected_tab):
+        logging.debug(f"{choosen_button} is opening")
+        self.root.update_idletasks()
+        if frame.winfo_viewable():
+            frame.place_forget()
+            logging.debug(f"{frame} is deleted")
+            return
+        button_x = choosen_button.winfo_rootx()
+        button_y = choosen_button.winfo_rooty()
+        button_xp = selected_tab.winfo_rootx()
+        button_yp = selected_tab.winfo_rooty()
+
+        logging.debug(f"Real screen: {button_x}, {button_y}")
+        logging.debug(f"This window: {button_xp}, {button_yp}")
+        try:
+            frame.place(x=(button_x - button_xp) + choosen_button.winfo_width(),
+                        y=(button_y - button_yp), anchor="nw")
+            for child in frame.winfo_children():
+                child.pack(fill="x")
+            self.root.update_idletasks()
+            now_x, now_y = frame.winfo_rootx(), frame.winfo_rooty()
+            logging.debug(f"Created found menu at: {now_x, now_y}")
+        except Exception as e:
+            logging.error("[E]Menu can't be created: %s", e)
+
+
+    # IP MENU EVENTS
+    def enter_choosed_ip(self, event):
+        clicked_button = event.widget
+        clicked_button_label = clicked_button.cget("text")
+        logging.info(f"Pressed {clicked_button_label}")
+        if self.menu_frame.winfo_exists() and self.menu_frame.winfo_viewable():
+            self.menu_frame.place_forget()
+            self.tab1_input.delete(0, "end")
+            self.tab1_input.insert(0, clicked_button_label)
+
+
+    # ADB MENU EVENTS
+    def found_enter_choosen_ip(self, event, ip):
+        logging.info(f"Pressed {ip}")
+        if self.menu_frame_found.winfo_exists() and self.menu_frame_found.winfo_viewable():
+            self.tab1_input2.delete(0, "end")
+            self.tab1_input2.insert(0, ip)
+    
+
+
+class AdbRouter:
+    def __init__(self, app):
+        self.app = app
+        # TO ACCESS THE FUNCTIONS WITHIN THE CLASS-
+        self.active_adb = None
+
+
+    def connect(self, event):
+        instance = adbc.adb_connect(
+            self.app,
+            on_finish=lambda inst: self.app.active_adb_list.remove(inst) if inst in self.app.active_adb_list else None
+        )
+        self.app.active_adb_list.append(instance)
+
+    def stop_adb_event(self, event):
+        if self.app.active_adb_list:
+            self.app.active_adb_list[0].stop_adb()
+
+
+class NmapRouter:
+    def __init__(self, app):
+        self.app = app
+        self.active_nmap = None
+        self.active_nmap_list = []
+
+    def scan(self, event=None):
+        instance = nmaps.nmap_scan(
+            self.app,
+            on_finish=lambda inst: self.active_nmap_list.remove(inst)
+                      if inst in self.active_nmap_list else None
+        )
+        self.active_nmap_list.append(instance)
+
+
+    def stop_nmap_event(self, event):
+        if self.active_nmap_list:
+            self.active_nmap_list[0].stop_nmap()
+
+
+if __name__ == "__main__":
+    app = MainApp()
+    app.root.mainloop()
