@@ -592,6 +592,8 @@ class MainApp:
             self.get_text
         )
 
+
+
         self.all_menu = [self.menu_frame, self.menu_frame_found, self.menu_frame_lang, menu_frame_category]
         some_keywords = [self._tab_canvas, self._tabs, self.all_menu, self.btn_instance,
                          self.canvas2, tab2_scroll_button_frame, self._content_frame]
