@@ -168,7 +168,7 @@ class adb_connect:
             self.root.after(0, lambda l=line: self.update_ui(l))
         self.current_process_adb.stdout.close()
         self.current_process_adb.wait()
-        connected_label_text = self.connected_devicesips.cget("text")
+        connected_label_text = self.connected_devices_ips.cget("text")
         connected_label_list = connected_label_text.split()
         new_writing = self.writing
         for word in full_output.lower().split():  # I can change this method to re.finditer
@@ -224,24 +224,24 @@ class adb_connect:
                 )
                 if connected_label_text == "":
                     self.root.after(
-                        0, lambda: self.connected_devicesips.configure(
+                        0, lambda: self.connected_devices_ips.configure(
                             background="lightblue"
                         )
                     )
                     self.root.after(
-                        0, lambda: self.connected_devicesips.config(
+                        0, lambda: self.connected_devices_ips.config(
                             text=new_writing
                         )
                     )
                 elif new_writing not in connected_label_list:
                     new_writing = f"{connected_label_text}\n{self.writing}"
                     self.root.after(
-                        0, lambda: self.connected_devicesips.configure(
+                        0, lambda: self.connected_devices_ips.configure(
                             background="lightblue"
                         )
                     )
                     self.root.after(
-                        0, lambda: self.connected_devicesips.config(
+                        0, lambda: self.connected_devices_ips.config(
                             text=new_writing
                         )
                     )
