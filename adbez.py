@@ -163,10 +163,12 @@ class MainApp:
         self.root.bind("<Configure>", self.catch_size)
 
         self._build_main_window()
-        grip_canvas = Canvas(self.root, width=14, height=15, bg="#ffffff",
-                     highlightthickness=0, cursor="size_nw_se")
-        grip_canvas.create_text(10, 10, text="◤", fill="#666666", font=("Arial", 20))
-        grip_canvas.place(relx=0.0, rely=0.02, anchor="sw", x=1, y=-1)
+        # print("SA BU BİR BİLGİ", self.tit)
+        self.root.update_idletasks()
+        grip_canvas = Canvas(self.root, width=self.root.winfo_width(), height=2, bg="#ffffff",
+                     highlightthickness=0, cursor="size_ns")
+        grip_canvas.create_text(1, 1, text="", fill="#666666", font=("Arial", 20))
+        grip_canvas.place(relx=0.0, rely=0.01, anchor="sw", x=1, y=-1)
         grip_canvas.propagate(False)
         def start_resize(event):
             grip_canvas.start_x = self.root.winfo_x()
@@ -176,7 +178,39 @@ class MainApp:
             grip_canvas.press_x = event.x_root
             grip_canvas.press_y = event.y_root
 
-        def do_resize(event):
+        def do_resize_up(event):
+            dx = event.x_root - grip_canvas.press_x
+            dy = event.y_root - grip_canvas.press_y
+
+            new_y = grip_canvas.start_y + dy
+            new_h = grip_canvas.start_h - dy
+
+            if new_h > 180:
+                self.root.update_idletasks()
+                self.root.geometry(f"{self.root.winfo_width()}x{new_h}+{self.root.winfo_x()}+{new_y}")
+        def do_resize_down(event):
+            dx = event.x_root - grip_canvas.press_x
+            dy = event.y_root - grip_canvas.press_y
+
+            new_x = grip_canvas.start_x + dx
+            new_y = grip_canvas.start_y + dy
+            new_w = grip_canvas.start_w - dx
+            new_h = grip_canvas.start_h - dy
+
+            if new_w > 250 and new_h > 180:
+                self.root.geometry(f"{new_w}x{new_h}+{new_x}+{new_y}")
+        def do_resize_left(event):
+            dx = event.x_root - grip_canvas.press_x
+            dy = event.y_root - grip_canvas.press_y
+
+            new_x = grip_canvas.start_x + dx
+            new_y = grip_canvas.start_y + dy
+            new_w = grip_canvas.start_w - dx
+            new_h = grip_canvas.start_h - dy
+
+            if new_w > 250 and new_h > 180:
+                self.root.geometry(f"{new_w}x{new_h}+{new_x}+{new_y}")
+        def do_resize_right(event):
             dx = event.x_root - grip_canvas.press_x
             dy = event.y_root - grip_canvas.press_y
 
@@ -189,7 +223,7 @@ class MainApp:
                 self.root.geometry(f"{new_w}x{new_h}+{new_x}+{new_y}")
 
         grip_canvas.bind("<Button-1>", start_resize)
-        grip_canvas.bind("<B1-Motion>", do_resize)
+        grip_canvas.bind("<B1-Motion>", do_resize_up)
 
         style = ttk.Style()
         style.configure("Grip.TLabel", font=("Arial", 22), foreground="#666666")
@@ -261,6 +295,7 @@ class MainApp:
         title_bar.bind("<ButtonPress-1>", self.start_move)
         title_bar.bind("<ButtonRelease-1>", self.stop_move)
         title_bar.bind("<B1-Motion>", self.on_move)
+       
         frm = ttk.Frame(main_area, style="Siyah.TFrame", padding=10)
         frm.pack(fill="both", expand=True) 
         # FOR SIZABLE
@@ -592,8 +627,6 @@ class MainApp:
             self.get_text
         )
 
-
-
         self.all_menu = [self.menu_frame, self.menu_frame_found, self.menu_frame_lang, menu_frame_category]
         some_keywords = [self._tab_canvas, self._tabs, self.all_menu, self.btn_instance,
                          self.canvas2, tab2_scroll_button_frame, self._content_frame]
@@ -627,6 +660,7 @@ class MainApp:
         if event.widget == self.root:
             geo = self.root.winfo_geometry()
             match = re.search(r'(\d+)x(\d+)', geo)
+
             if match:
                 x, y = int(match.group(1)), int(match.group(2))
                 print(f"x: {x}, y: {y}")
@@ -743,8 +777,13 @@ class MainApp:
     def on_move(self, event):
         deltax = event.x - self.root.x
         deltay = event.y - self.root.y
-        x = self.root.winfo_x() + deltax
-        y = self.root.winfo_y() + deltay
+        min_x = 0
+        max_x = self.root.winfo_screenwidth() - self.root.winfo_width()
+        max_y = self.root.winfo_screenheight() - self.root.winfo_height()
+        new_x = self.root.winfo_x() + deltax
+        new_y = self.root.winfo_y() + deltay
+        x = max(min_x, min(new_x, max_x))
+        y = max(min_x, min(new_y, max_x))
         self.root.geometry(f"+{x}+{y}")
 
 
