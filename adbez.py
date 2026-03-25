@@ -163,7 +163,6 @@ class MainApp:
         self.root.bind("<Configure>", self.catch_size)
 
         self._build_main_window()
-        # print("SA BU BİR BİLGİ", self.tit)
         self.root.update_idletasks()
         grip_canvas = Canvas(self.root, width=self.root.winfo_width(), height=2, bg="#ffffff",
                      highlightthickness=0, cursor="size_ns")
