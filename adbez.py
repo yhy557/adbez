@@ -164,65 +164,69 @@ class MainApp:
 
         self._build_main_window()
         self.root.update_idletasks()
-        grip_canvas = Canvas(self.root, width=self.root.winfo_width(), height=2, bg="#ffffff",
+        grip_canvas_up = Canvas(self.root, width=self.root.winfo_width(), height=2, bg="#ffffff",
                      highlightthickness=0, cursor="size_ns")
-        grip_canvas.create_text(1, 1, text="", fill="#666666", font=("Arial", 20))
-        grip_canvas.place(relx=0.0, rely=0.01, anchor="sw", x=1, y=-1)
-        grip_canvas.propagate(False)
-        def start_resize(event):
-            grip_canvas.start_x = self.root.winfo_x()
-            grip_canvas.start_y = self.root.winfo_y()
-            grip_canvas.start_w = self.root.winfo_width()
-            grip_canvas.start_h = self.root.winfo_height()
-            grip_canvas.press_x = event.x_root
-            grip_canvas.press_y = event.y_root
+        grip_canvas_left = Canvas(self.root, width=2, height=self.root.winfo_height(), bg="#ffffff",
+                     highlightthickness=0, cursor="size_we")
+        grip_canvas_up.place(relx=0.0, rely=0.01, anchor="sw", x=1, y=-1)
+        grip_canvas_left.place(relx=0.0, rely=0.01, anchor="w", x=1, y=(self.root.winfo_height()/2))
+        grip_canvas_up.propagate(False)
+        grip_canvas_left.propagate(False)
+        def start_resize(event, direction):
+            direction.start_x = self.root.winfo_x()
+            direction.start_y = self.root.winfo_y()
+            direction.start_w = self.root.winfo_width()
+            direction.start_h = self.root.winfo_height()
+            direction.press_x = event.x_root
+            direction.press_y = event.y_root
 
         def do_resize_up(event):
-            dx = event.x_root - grip_canvas.press_x
-            dy = event.y_root - grip_canvas.press_y
+            dx = event.x_root - grip_canvas_up.press_x
+            dy = event.y_root - grip_canvas_up.press_y
 
-            new_y = grip_canvas.start_y + dy
-            new_h = grip_canvas.start_h - dy
+            new_y = grip_canvas_up.start_y + dy
+            new_h = grip_canvas_up.start_h - dy
 
             if new_h > 180:
                 self.root.update_idletasks()
                 self.root.geometry(f"{self.root.winfo_width()}x{new_h}+{self.root.winfo_x()}+{new_y}")
         def do_resize_down(event):
-            dx = event.x_root - grip_canvas.press_x
-            dy = event.y_root - grip_canvas.press_y
+            dx = event.x_root - grip_canvas_left.press_x
+            dy = event.y_root - grip_canvas_left.press_y
 
-            new_x = grip_canvas.start_x + dx
-            new_y = grip_canvas.start_y + dy
-            new_w = grip_canvas.start_w - dx
-            new_h = grip_canvas.start_h - dy
+            new_x = grip_canvas_left.start_x + dx
+            new_y = grip_canvas_left.start_y + dy
+            new_w = grip_canvas_left.start_w - dx
+            new_h = grip_canvas_left.start_h - dy
 
             if new_w > 250 and new_h > 180:
                 self.root.geometry(f"{new_w}x{new_h}+{new_x}+{new_y}")
         def do_resize_left(event):
-            dx = event.x_root - grip_canvas.press_x
-            dy = event.y_root - grip_canvas.press_y
+            dx = event.x_root - grip_canvas_left.press_x
+            dy = event.y_root - grip_canvas_left.press_y
 
-            new_x = grip_canvas.start_x + dx
-            new_y = grip_canvas.start_y + dy
-            new_w = grip_canvas.start_w - dx
-            new_h = grip_canvas.start_h - dy
+            new_x = grip_canvas_left.start_x + dx
+            new_w = grip_canvas_left.start_w - dx
 
-            if new_w > 250 and new_h > 180:
-                self.root.geometry(f"{new_w}x{new_h}+{new_x}+{new_y}")
+            self.root.update_idletasks()
+            if new_w > 250:
+                self.root.geometry(f"{new_w}x{self.root.winfo_height()}+{new_x}+{self.root.winfo_y()}")
         def do_resize_right(event):
-            dx = event.x_root - grip_canvas.press_x
-            dy = event.y_root - grip_canvas.press_y
+            dx = event.x_root - grip_canvas_left.press_x
+            dy = event.y_root - grip_canvas_up.press_y
 
-            new_x = grip_canvas.start_x + dx
-            new_y = grip_canvas.start_y + dy
-            new_w = grip_canvas.start_w - dx
-            new_h = grip_canvas.start_h - dy
+            new_x = grip_canvas_up.start_x + dx
+            new_y = grip_canvas_up.start_y + dy
+            new_w = grip_canvas_up.start_w - dx
+            new_h = grip_canvas_up.start_h - dy
 
             if new_w > 250 and new_h > 180:
                 self.root.geometry(f"{new_w}x{new_h}+{new_x}+{new_y}")
 
-        grip_canvas.bind("<Button-1>", start_resize)
-        grip_canvas.bind("<B1-Motion>", do_resize_up)
+        grip_canvas_up.bind("<Button-1>", lambda event: start_resize(event, grip_canvas_up))
+        grip_canvas_left.bind("<Button-1>", lambda event: start_resize(event, grip_canvas_left))
+        grip_canvas_up.bind("<B1-Motion>", do_resize_up)
+        grip_canvas_left.bind("<B1-Motion>", do_resize_left)
 
         style = ttk.Style()
         style.configure("Grip.TLabel", font=("Arial", 22), foreground="#666666")
