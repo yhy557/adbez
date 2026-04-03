@@ -11,7 +11,7 @@ class buttons:
     def __init__(self, tab2_seperate_scroll_BTN, root, tab2_load_more_btn,
                  tab2_seperate_scroll_LOAD, keyevents_buttons,
                  keyevents_labels, data, current_lang, background_color,
-                 canvas2, up_bar, get_text):
+                 canvas2, up_bar, get_text, search):
         self.tab2_seperate_scroll_BTN = tab2_seperate_scroll_BTN
         self.root = root
         self.tab2_load_more_btn = tab2_load_more_btn
@@ -22,6 +22,7 @@ class buttons:
         self.canvas2 = canvas2
         self.up_bar = up_bar
         self.get_text = get_text
+        self.search = search
  
         self.keyevents_buttons = []
         self.keyevents_labels = []
@@ -29,10 +30,14 @@ class buttons:
         self.keyevents_labels_3 = []
         self.keyevents_labels_4 = []
         self.back_btn_list = []
+
+        self.now_btn = []
  
         self.load_clicked = 0
         self.load_first()
- 
+
+        self.search.bind("<KeyRelease>", self.search_categorize)
+
     def back_all(self):
         print("Clicked back button")
         for widgets in self.tab2_seperate_scroll_BTN.winfo_children()[:60]:
@@ -329,14 +334,82 @@ class buttons:
  
     def change_bg_leave(self, event, color):
         event.widget.configure(background=color)
- 
+
+    def search_categorize(self, event):
+        for widget in self.tab2_seperate_scroll_BTN.winfo_children():
+            widget.destroy()
+        self.keyevents_labels.clear()
+        self.keyevents_buttons.clear()
+        self.tab2_load_more_btn.pack_forget()
+        search_term = self.search.get().lower()
+
+        if not search_term:
+            self.load_first()
+            return
+
+        for key, content in self.data[self.current_lang].items():
+            if key.startswith("l") and key[1:].isdigit():
+                key_number = int(key[1:])
+
+                if 21 <= key_number <= 308:
+
+                    if any( search_term in str(v).lower() for v in content.values()):
+                        print("EVET VAR= ",  {key})
+                        row_frame = Frame(self.tab2_seperate_scroll_BTN, bg="#292423")
+                        row_frame.grid(sticky="ew")
+                        row_frame.columnconfigure(1, weight=1)
+                        new_label = Label(
+                            row_frame,
+                            text=self.get_text(key),
+                            fg="#aaaaaa", bg="#1a1a1a",
+                            justify="left", wraplength=350
+                        )
+                        new_label.grid(row=0, column=1, sticky="ew")
+
+                        new_button = Button(
+                            row_frame,
+                            text=f"Input Keyevent {key}",
+                            font=("Consolas", 10),
+                            fg="white",
+                            bg="#2d2d2d",
+                            activeforeground="white",
+                            activebackground="#3d3d3d",
+                            bd=0,
+                            relief="flat",
+                            padx=15,
+                            pady=4,
+                            cursor="hand2"
+                        )
+                        self.now_btn.append(new_label)
+                        new_button.grid(row=0, column=0, sticky="w")
+                        new_button.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
+                        new_button.bind(
+                            "<Leave>",
+                            lambda event: self.change_bg_leave(
+                                event, "#2d2d2d"
+                            )
+                        )
+                        new_button.bind(
+                            "<Button-1>",
+                            lambda event, b=new_button: self.test_buton_event(
+                                event, b.cget("text")
+                            )
+                        )
+                        self.keyevents_buttons.append(new_button)
+                        self.keyevents_labels.append(new_label)
+
+                    else:
+                        print("YOK= ", {key})
+                        pass
+
+
     def load_first(self):
         self.tab2_seperate_scroll_BTN.columnconfigure(0, weight=1)
         for i in range(60):
             row_frame = Frame(self.tab2_seperate_scroll_BTN, bg="#292423")
             row_frame.grid(sticky="ew")
             row_frame.columnconfigure(1, weight=1)
-            test_label = Label(
+            self.test_label = Label(
                 row_frame,
                 text="> STATUS: ONLINE",
                 fg="#aaaaaa", bg="#1a1a1a",
@@ -349,9 +422,9 @@ class buttons:
             test_label.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
             test_label.bind("<Leave>", lambda event: self.change_bg_leave(event, "#121212"))
             """
-            test_label.grid(row=0, column=1, sticky="ew")
+            self.test_label.grid(row=0, column=1, sticky="ew")
             name = f"Input keyevent {i+1}"
-            button = Button(
+            self.button = Button(
                 row_frame,
                 text=name,
                 font=("Consolas", 10),
@@ -365,23 +438,25 @@ class buttons:
                 pady=4,
                 cursor="hand2"
             )
-            button.grid(row=0, column=0, sticky="w")
-            button.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
-            button.bind(
+            self.button.grid(row=0, column=0, sticky="w")
+            self.button.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
+            self.button.bind(
                 "<Leave>", lambda event: self.change_bg_leave(event, "#2d2d2d")
             )
-            button.bind(
+            self.button.bind(
                 "<Button-1>",
-                lambda event, b=button: self.test_buton_event(
+                lambda event, b=self.button: self.test_buton_event(
                     event, b.cget("text")
                 )
             )
-            self.keyevents_buttons.append(button)
-            self.keyevents_labels.append(test_label)
+            self.keyevents_buttons.append(self.button)
+            self.keyevents_labels.append(self.test_label)
  
             key = f"l{i+21}"
             self.keyevents_labels[i].configure(
                 text=self.get_text(key))
+            if not self.tab2_load_more_btn.winfo_viewable():
+                self.root.after(101, lambda: self.tab2_load_more_btn.pack())
  
     def restart_number(self):
         self.load_clicked = 0
