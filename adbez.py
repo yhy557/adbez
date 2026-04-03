@@ -268,7 +268,6 @@ class MainApp:
         self.canvas2.bind_all("<Button-4>", self._on_scroll_up)
         self.canvas2.bind_all("<Button-5>", self._on_scroll_down)
         # ------------------------------
-        # ---------------------------------------------------
         # -----------------------------------------------------
 
         self.canvas2.bind("<Configure>", self.on_canvas_resize)
@@ -627,7 +626,8 @@ class MainApp:
             self.background_color,
             self.canvas2,
             up_bar,
-            self.get_text
+            self.get_text,
+            search
         )
 
         self.all_menu = [self.menu_frame, self.menu_frame_found, self.menu_frame_lang, menu_frame_category]
@@ -640,6 +640,7 @@ class MainApp:
             self.tabcontrol.make_tab(self._tab_canvas, _x, _key, _text, _frame, _lk)
             _x += TAB_W + TAB_GAP
         self._tab_canvas.config(scrollregion=(0, 0, _x, TAB_H))
+
 
     def _bind_events(self):
         pass
