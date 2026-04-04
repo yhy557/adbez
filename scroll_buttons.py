@@ -32,14 +32,18 @@ class buttons:
         self.back_btn_list = []
 
         self.now_btn = []
+        self.search_widgets = {}
  
         self.load_clicked = 0
+
+        self._timer = None
+        self.searc_only_keys = set()
         self.load_first()
 
-        self.search.bind("<KeyRelease>", self.search_categorize)
+        self.root.after(200, lambda: self.search.bind("<KeyRelease>", self.timer_func))
 
     def back_all(self):
-        print("Clicked back button")
+        logging.debug("Clicked back button")
         for widgets in self.tab2_seperate_scroll_BTN.winfo_children()[:60]:
             widgets.destroy()
         self.keyevents_labels.clear()
@@ -335,72 +339,84 @@ class buttons:
     def change_bg_leave(self, event, color):
         event.widget.configure(background=color)
 
-    def search_categorize(self, event):
-        for widget in self.tab2_seperate_scroll_BTN.winfo_children():
-            widget.destroy()
+    def timer_func(self, event):
+        if self._timer:
+            self.root.after_cancel(self._timer)
+        self._timer = self.root.after(800, self.search_categorize)
+
+    def search_categorize(self):
         self.keyevents_labels.clear()
         self.keyevents_buttons.clear()
         self.tab2_load_more_btn.pack_forget()
         search_term = self.search.get().lower()
 
         if not search_term:
-            self.load_first()
+            for key, (row_frame, button, label) in self.search_widgets.items():
+                if key in self.searc_only_keys:
+                    row_frame.grid_remove()
+                else:
+                    row_frame.grid()
+                    if not self.tab2_load_more_btn.winfo_viewable():
+                        self.tab2_load_more_btn.pack()
             return
 
+        for key, (row_frame, button, label) in self.search_widgets.items():
+            row_frame.grid_remove()
+
         for key, content in self.data[self.current_lang].items():
-            if key.startswith("l") and key[1:].isdigit():
-                key_number = int(key[1:])
+            key_number = int(key[1:]) if key[1:].isdigit() else 0
+            if not (21 <= key_number <= 308):
+                continue
+            if not any(search_term.lower() in str(v).lower() for v in content.values()):
+                continue
+            if key in self.search_widgets:
+                self.search_widgets[key][0].grid()
+            else:
+                row_frame = Frame(self.tab2_seperate_scroll_BTN, bg="#292423")
+                row_frame.grid(sticky="ew")
+                row_frame.columnconfigure(1, weight=1)
+                test_label = Label(
+                    row_frame,
+                    text=self.get_text(key),
+                    fg="#aaaaaa", bg="#1a1a1a",
+                    justify="left", wraplength=350
+                )
+                test_label.grid(row=0, column=1, sticky="ew")
+                button = Button(
+                    row_frame,
+                    text=f"Input Keyevent {key}",
+                    font=("Consolas", 10),
+                    fg="white",
+                    bg="#2d2d2d",
+                    activeforeground="white",
+                    activebackground="#3d3d3d",
+                    bd=0,
+                    relief="flat",
+                    padx=15,
+                    pady=4,
+                    cursor="hand2"
+                )
+                self.now_btn.append(test_label)
+                button.grid(row=0, column=0, sticky="w")
+                button.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
+                button.bind(
+                    "<Leave>",
+                    lambda event: self.change_bg_leave(
+                        event, "#2d2d2d"
+                    )
+                )
+                button.bind(
+                    "<Button-1>",
+                    lambda event, b=button: self.test_buton_event(
+                        event, b.cget("text")
+                    )
+                )
+                self.keyevents_buttons.append(button)
+                self.keyevents_labels.append(test_label)
 
-                if 21 <= key_number <= 308:
-
-                    if any( search_term in str(v).lower() for v in content.values()):
-                        print("EVET VAR= ",  {key})
-                        row_frame = Frame(self.tab2_seperate_scroll_BTN, bg="#292423")
-                        row_frame.grid(sticky="ew")
-                        row_frame.columnconfigure(1, weight=1)
-                        new_label = Label(
-                            row_frame,
-                            text=self.get_text(key),
-                            fg="#aaaaaa", bg="#1a1a1a",
-                            justify="left", wraplength=350
-                        )
-                        new_label.grid(row=0, column=1, sticky="ew")
-
-                        new_button = Button(
-                            row_frame,
-                            text=f"Input Keyevent {key}",
-                            font=("Consolas", 10),
-                            fg="white",
-                            bg="#2d2d2d",
-                            activeforeground="white",
-                            activebackground="#3d3d3d",
-                            bd=0,
-                            relief="flat",
-                            padx=15,
-                            pady=4,
-                            cursor="hand2"
-                        )
-                        self.now_btn.append(new_label)
-                        new_button.grid(row=0, column=0, sticky="w")
-                        new_button.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
-                        new_button.bind(
-                            "<Leave>",
-                            lambda event: self.change_bg_leave(
-                                event, "#2d2d2d"
-                            )
-                        )
-                        new_button.bind(
-                            "<Button-1>",
-                            lambda event, b=new_button: self.test_buton_event(
-                                event, b.cget("text")
-                            )
-                        )
-                        self.keyevents_buttons.append(new_button)
-                        self.keyevents_labels.append(new_label)
-
-                    else:
-                        print("YOK= ", {key})
-                        pass
+                self.search_widgets[key] = (row_frame, button, test_label)
+                self.searc_only_keys.add(key)
+                
 
 
     def load_first(self):
@@ -453,6 +469,8 @@ class buttons:
             self.keyevents_labels.append(self.test_label)
  
             key = f"l{i+21}"
+            self.search_widgets[key] = (row_frame, self.button, self.test_label)
+            self.searc_only_keys.discard(key)
             self.keyevents_labels[i].configure(
                 text=self.get_text(key))
             if not self.tab2_load_more_btn.winfo_viewable():
