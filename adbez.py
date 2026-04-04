@@ -547,7 +547,7 @@ class MainApp:
 
 
         # TAB_KEYEVENTS--------------------------------------
-        self.canvas2 = Canvas(self.upper_frame2, bg="red", highlightthickness=0)
+        self.canvas2 = Canvas(self.upper_frame2, bg="gray", highlightthickness=0)
         self.canvas2.pack(side="left", fill="both", expand=True)
         scrollable_bar = Scrollbar(self.upper_frame2, orient="vertical",
                                 command=self.canvas2.yview, background="yellow")
@@ -558,7 +558,7 @@ class MainApp:
                                             anchor="nw")
         self.scrollable_content.bind("<Configure>", self.on_frame_configure)
         tab2_scroll_button_frame = Frame(self.scrollable_content)
-        tab2_scroll_load_frame = Frame(self.scrollable_content)
+        tab2_scroll_load_frame = Frame(self.scrollable_content, bg="gray")
         up_bar = Frame(self.scrollable_content)
         up_bar.pack(expand=True)
         tab2_scroll_button_frame.pack(fill="x", expand=True)
