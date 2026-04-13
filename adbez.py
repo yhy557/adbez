@@ -566,7 +566,7 @@ class MainApp:
         up_bar.columnconfigure(0, weight=1)
         up_bar.columnconfigure(3, weight=1)
 
-        connected_container2 = ttk.Frame(lower_frame2)
+        connected_container2 = Frame(lower_frame2)
         connected_container2.grid(row=0, column=0, sticky="n")
 
         connected_devices2 = Label(
