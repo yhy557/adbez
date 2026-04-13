@@ -1,11 +1,14 @@
 from tkinter import Button, Frame, Label
 import logging
+import subprocess
+import json
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - [%(levelname)s] - %(message)s',
     datefmt='%H:%M:%S'
 )
- 
+with open("check.json", "r", encoding="utf-8") as f:
+    check_data=json.load(f)
  
 class buttons:
     def __init__(self, tab2_seperate_scroll_BTN, root, tab2_load_more_btn,
@@ -98,6 +101,7 @@ class buttons:
         count = category_sizes[text]
  
         for z in range(0, count):
+            json_key=f"l{z+21}"
             row_frame = Frame(self.tab2_seperate_scroll_BTN, bg="#292423")
             row_frame.grid(sticky="ew")
             row_frame.columnconfigure(1, weight=1)
@@ -134,8 +138,8 @@ class buttons:
             )
             button.bind(
                 "<Button-1>",
-                lambda event, b=button: self.test_buton_event(
-                    event, b.cget("text")
+                lambda event, key=json_key: self.test_buton_event(
+                    event, key
                 )
             )
             self.keyevents_buttons.append(button)
@@ -407,8 +411,8 @@ class buttons:
                 )
                 button.bind(
                     "<Button-1>",
-                    lambda event, b=button: self.test_buton_event(
-                        event, b.cget("text")
+                    lambda event, k=key: self.test_buton_event(
+                        event, k
                     )
                 )
                 self.keyevents_buttons.append(button)
@@ -422,6 +426,7 @@ class buttons:
     def load_first(self):
         self.tab2_seperate_scroll_BTN.columnconfigure(0, weight=1)
         for i in range(60):
+            json_key=f"l{i+21}"
             row_frame = Frame(self.tab2_seperate_scroll_BTN, bg="#292423")
             row_frame.grid(sticky="ew")
             row_frame.columnconfigure(1, weight=1)
@@ -461,8 +466,8 @@ class buttons:
             )
             self.button.bind(
                 "<Button-1>",
-                lambda event, b=self.button: self.test_buton_event(
-                    event, b.cget("text")
+                lambda event, key=json_key: self.test_buton_event(
+                    event, key
                 )
             )
             self.keyevents_buttons.append(self.button)
@@ -504,8 +509,23 @@ class buttons:
         self.keyevents_labels.clear()
         self.root.after(10, lambda: self.load_first())
  
-    def test_buton_event(self, event, info):
-        print(f"Clicked buttttonnn {info}")
+    def test_buton_event(self, event, json_key):
+        try:
+            for ip in check_data["choosen_ips"]:
+                command = [check_data["choosen_path_for_adb"], "-s", ip, "shell", "input", "keyevent", str(int(str(json_key).lstrip("l"))-20)]
+                logging.debug("CURRENT COMMAND: \n",command)
+                keyevent_process=subprocess.Popen(
+                    command,stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True    
+                )
+                stdout,stderr= keyevent_process.communicate()
+                if keyevent_process.returncode == 0:
+                    logging.debug(f"SUCCES: {stdout}")
+                else:
+                    logging.error(f"ERROR: {stderr}")
+        except Exception as e:
+            logging.error(f"FAILED: ADB KEYEVENT {e}")
+        
+        print("CHOOSEN IPS: ",check_data["choosen_ips"])
  
     # SEPERATE
     def load_all(self, range_x, range_y, is_last=False):
@@ -515,6 +535,7 @@ class buttons:
         self.tab2_seperate_scroll_LOAD.pack_forget()
         self.tab2_seperate_scroll_BTN.columnconfigure(0, weight=1)
         for i in range(range_x, range_y):
+            json_key=f"l{i+21}"
             row_frame = Frame(self.tab2_seperate_scroll_BTN, bg="#292423")
             row_frame.grid(sticky="ew")
             row_frame.columnconfigure(1, weight=1)
@@ -554,8 +575,8 @@ class buttons:
             button.bind("<Enter>", lambda event: self.change_bg(event, "gray"))
             button.bind(
                 "<Button-1>",
-                lambda event, b=button: self.test_buton_event(
-                    event, b.cget("text")
+                lambda event, key=json_key: self.test_buton_event(
+                    event,key
                 )
             )
             button.bind(
