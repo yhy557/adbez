@@ -32,6 +32,7 @@ class startup_check:
             "connected_ips": {},
             "theme": {},
             "choosen_ips": [],
+            "choosen_port": "5555",
             "choosen_path_for_adb": {},
             "did_adb_work": False,
             "choosen_language": "en",
