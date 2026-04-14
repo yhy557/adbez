@@ -328,7 +328,9 @@
         "l326": {"text": "ADB path is: "},
         "l327": {"text": "Auto-finder"},
         "l328": {"text": "Choose path"},
-        "l329": {"text": "Live Helper"}
+        "l329": {"text": "Live Helper"},
+        "l330": {"text": "ADB Configurations"},
+        "l331": {"text": "Change the default port for ADB Connect"}
     },
     "tr": {
         "l1": {"text": "Bazı gerekli ayarlar kontrol ediliyor..."},
@@ -659,7 +661,9 @@
         "l326": {"text": "ADB yolu: "},
         "l327": {"text": "Otomatik-bulucu"},
         "l328": {"text": "Yol seç"},
-        "l329": {"text": "Canlı yardımcı"}
+        "l329": {"text": "Canlı yardımcı"},
+        "l330": {"text": "ADB Yapılandırmaları"},
+        "l331": {"text": "ADB bağlanma için varsayılan portu değiştirin"}
     },
     "pt": {
         "l1": {"text": "Algumas verificações estão sendo processadas..."},
@@ -990,6 +994,8 @@
         "l326": {"text": "ADB path is: "},
         "l327": {"text": "Auto-finder"},
         "l328": {"text": "Choose path"},
-        "l329": {"text": "Live Helper"}
+        "l329": {"text": "Live Helper"},
+        "l330": {"text": "ADB Configurations"},
+        "l331": {"text": "Change the default port for ADB Connect"}
     }
 }
