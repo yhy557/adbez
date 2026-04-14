@@ -627,7 +627,8 @@ class MainApp:
             self.canvas2,
             up_bar,
             self.get_text,
-            search
+            search,
+            check_data
         )
 
         self.all_menu = [self.menu_frame, self.menu_frame_found, self.menu_frame_lang, menu_frame_category]
@@ -691,7 +692,11 @@ class MainApp:
 
     def update_all_widgets(self, lang_code):
         logging.debug("UPDATE_ALL_WIDGETS")
+        default_path = os.path.dirname(os.path.abspath(__file__))
+        self.file_path = os.path.join(default_path, "check.json")
         self.current_lang = lang_code
+        with open(self.file_path, "r", encoding="utf-8") as d:
+            check_data=json.load(d)
         check_data["choosen_language"] = lang_code
         with open("check.json", "w", encoding="utf-8") as f:
             json.dump(check_data, f, indent=4, ensure_ascii=False)
