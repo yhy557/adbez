@@ -7,6 +7,7 @@ from tkinter import ttk
 import json
 import platform
 import logging
+import os
 
 FONT = ("Segoe UI", 10)
 FONT_BOLD = ("Segoe UI", 10, "bold")
@@ -58,6 +59,9 @@ class settings_style:
         self.update_func = update_func
         self.auto_finder_func = auto_finder_func
         self.get_text = get_text
+
+        default_path = os.path.dirname(os.path.abspath(__file__))
+        self.file_path = os.path.join(default_path, "check.json")
 
         self.var = IntVar()
         self.live_helper_var = IntVar()
@@ -122,7 +126,7 @@ class settings_style:
             bg=CARD, fg=FG, width=20, anchor="w", name="l325"
         )
         self.row_label2 = Label(
-            self.row2, text=(self.get_text("l326") + " " + self.found_path),
+            self.row2, text=(self.get_text("l326") + " " + str(self.found_path)),
             font=FONT_SMALL, bg=CARD, fg=FG_MUTED, wraplength=300,
             name="l326"
         )
@@ -196,7 +200,27 @@ class settings_style:
             ]
         )
         self.live_helper_button.pack(side="right")
-        
+
+        self.adb_configurations = self.make_card(
+            self.settings_main_frame,
+            self.get_text("l330"), "l330"
+        )
+        self.row4 = Frame(self.adb_configurations, bg=CARD)
+        self.row4.pack(fill="x", pady=4)
+        self.row_label4 = Label(
+            self.row4, text="Change the default port for ADB Connect",
+            font=FONT_SMALL, bg=CARD, fg=FG_MUTED, wraplength=300,
+            name="l331"
+        )
+        self.row_label4.pack(side="left")
+        self.change_port_input = Entry(
+            self.row4,
+        )
+        self.change_port_input.pack(side="right")
+        self.change_port_input.delete(0, "end")
+        self.change_port_input.insert(0, str(check_data["choosen_port"]))
+        self.change_port_input.bind('<Return>', self.change_port_func)
+
 
     @property
     def is_dark(self):
@@ -205,6 +229,11 @@ class settings_style:
     @property
     def is_white(self):
         return self.check_data["theme"] == "white"
+    
+    def change_port_func(self, event):
+        self.check_data["choosen_port"] = self.change_port_input.get()
+        with open(self.file_path, "w") as f:
+            json.dump(self.check_data, f, indent=4, ensure_ascii=False)
 
     def make_card(self, parent, title, name):
         outer = Frame(parent, bg=BORDER, padx=1, pady=1)
