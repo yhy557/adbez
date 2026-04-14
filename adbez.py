@@ -45,6 +45,7 @@ json_default_data = {
     "connected_ips": {},
     "theme": {},
     "choosen_ips": [],
+    "choosen_port": "5555",
     "choosen_path_for_adb": {},
     "did_adb_work": False,
     "choosen_language": "en",
@@ -898,7 +899,7 @@ class MainApp:
         logging.info(f"Pressed {ip}")
         if self.menu_frame_found.winfo_exists() and self.menu_frame_found.winfo_viewable():
             self.tab1_input2.delete(0, "end")
-            self.tab1_input2.insert(0, ip)
+            self.tab1_input2.insert(0, ip + ":" + check_data["choosen_port"])
     
 
 
