@@ -20,15 +20,10 @@ class startup_check:
         choose_theme = style.choose_theme
         choose_themeW = style.choose_themeW
         self.update_lang_func = update_lang_func
-        self.check_data = check_data
-        self.update_lang_func(self.check_data["choosen_language"])
         choose_theme_special = style.choose_theme_special
         logging.debug("%s", data[current_lang]['l1'])
         default_path = os.path.dirname(os.path.abspath(__file__))
-        file_path = os.path.join(default_path, "check.json")
-
-        with open("check.json", "r", encoding="utf-8") as f:
-            check_data = json.load(f)
+        self.file_path = os.path.join(default_path, "check.json")
 
         now = datetime.now()
         json_default_data = {
@@ -42,15 +37,19 @@ class startup_check:
             "choosen_language": "en",
             "is_live_helper_on": False
         }
-
-        if not os.path.exists(file_path):
-            with open(file_path, "w") as f:
+        if not os.path.exists(self.file_path):
+            with open(self.file_path, "w") as f:
                 json.dump(json_default_data, f, indent=4, ensure_ascii=False)
                 pass
             check_data = json_default_data
         else:
-            with open(file_path, "r", encoding="utf-8") as f:
-                check_data = json.load(f)
+            with open(self.file_path, "r", encoding="utf-8") as d:
+                check_data=json.load(d)
+            check_data["last_entered"] = f"{now}"
+            with open(self.file_path, "w") as d:
+                json.dump(check_data, d, indent=4, ensure_ascii=False)
+        self.check_data = check_data
+        self.update_lang_func(self.check_data["choosen_language"])
 
         if check_data["theme"] == "dark":
             choose_theme("#292423", "white")
