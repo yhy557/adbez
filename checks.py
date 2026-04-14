@@ -43,11 +43,14 @@ class startup_check:
                 pass
             check_data = json_default_data
         else:
+            logging.debug("LAST_ENTERED UPDATING")
             with open(self.file_path, "r", encoding="utf-8") as d:
                 check_data=json.load(d)
             check_data["last_entered"] = f"{now}"
             with open(self.file_path, "w") as d:
                 json.dump(check_data, d, indent=4, ensure_ascii=False)
+            logging.debug("---LAST_ENTERED UPDATED---")
+            logging.debug("Yazan dosya: %s", self.file_path)
         self.check_data = check_data
         self.update_lang_func(self.check_data["choosen_language"])
 
@@ -93,7 +96,7 @@ class startup_check:
             logging.debug("Found: %s", self.found_path)
             self.check_data["did_adb_work"] = True
             self.check_data["choosen_path_for_adb"] = self.found_path
-            with open("check.json", "w", encoding="utf-8") as f:
+            with open(self.file_path, "w", encoding="utf-8") as f:
                 json.dump(self.check_data, f, indent=4, ensure_ascii=False)
         else:
             logging.warning("Not found")
