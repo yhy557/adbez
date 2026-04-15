@@ -7,14 +7,12 @@ logging.basicConfig(
     format='%(asctime)s - [%(levelname)s] - %(message)s',
     datefmt='%H:%M:%S'
 )
-with open("check.json", "r", encoding="utf-8") as f:
-    check_data=json.load(f)
  
 class buttons:
     def __init__(self, tab2_seperate_scroll_BTN, root, tab2_load_more_btn,
                  tab2_seperate_scroll_LOAD, keyevents_buttons,
                  keyevents_labels, data, current_lang, background_color,
-                 canvas2, up_bar, get_text, search):
+                 canvas2, up_bar, get_text, search, check_data):
         self.tab2_seperate_scroll_BTN = tab2_seperate_scroll_BTN
         self.root = root
         self.tab2_load_more_btn = tab2_load_more_btn
@@ -26,6 +24,7 @@ class buttons:
         self.up_bar = up_bar
         self.get_text = get_text
         self.search = search
+        self.check_data = check_data
  
         self.keyevents_buttons = []
         self.keyevents_labels = []
@@ -511,8 +510,8 @@ class buttons:
  
     def test_buton_event(self, event, json_key):
         try:
-            for ip in check_data["choosen_ips"]:
-                command = [check_data["choosen_path_for_adb"], "-s", ip, "shell", "input", "keyevent", str(int(str(json_key).lstrip("l"))-20)]
+            for ip in self.check_data["choosen_ips"]:
+                command = [self.check_data["choosen_path_for_adb"], "-s", ip, "shell", "input", "keyevent", str(int(str(json_key).lstrip("l"))-20)]
                 logging.debug("CURRENT COMMAND: \n",command)
                 keyevent_process=subprocess.Popen(
                     command,stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True    
@@ -525,7 +524,7 @@ class buttons:
         except Exception as e:
             logging.error(f"FAILED: ADB KEYEVENT {e}")
         
-        print("CHOOSEN IPS: ",check_data["choosen_ips"])
+        print("CHOOSEN IPS: ",self.check_data["choosen_ips"])
  
     # SEPERATE
     def load_all(self, range_x, range_y, is_last=False):
