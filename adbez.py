@@ -714,25 +714,33 @@ class MainApp:
                 self._tab_canvas.itemconfig(info["text_id"], text=new_texts[lk]["text"])
 
         try:
-            with open("lang.json", "r", encoding="utf-8") as f:
+            default_path = os.path.dirname(os.path.abspath(__file__))
+            file_path2 = os.path.join(default_path, "lang.json")
+            print("AŞAMA 1 TAMAMLANDI")
+            with open(file_path2, "r", encoding="utf-8") as f:
                 full_data = json.load(f)
-            selected_texts = full_data[lang_code]["text"]
+            print("AŞAMA 2 TAMAMLANDI")
+            print(f"LANG: {lang_code} {type(lang_code)} ")
+            # selected_texts = full_data[lang_code]["text"]
+            print("AŞAMA 3 TAMAMLANDI")
             
 
             def recursive_update(container):
                 for widget in container.winfo_children():
                     w_name = str(widget).split('.')[-1]
-                    if w_name in selected_texts:
+                    if w_name in full_data.get(lang_code, {}):
+                        selected_texts = full_data[lang_code][w_name]["text"]
                         try:
-                            widget.config(text=selected_texts[w_name])
+                            widget.config(text=selected_texts)
                         except Exception as e:
-                            logging.error("An error occurred while updating and finding widgets: %s", e)
-                            pass
+                            logging.error("An error occurred while updating widget: %s", e)
+                    
                     if widget.winfo_children():
                         recursive_update(widget)
+                    
                     if widget == self.my_settings.row_label2:
-                        widget.config(
-                            text=self.get_text("l326") + " " + self.found_path)
+                        widget.config(text=self.get_text("l326") + " " + self.found_path)
+                    
 
             recursive_update(self.root)
             self.root.update_idletasks()
