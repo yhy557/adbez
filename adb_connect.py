@@ -27,6 +27,7 @@ class adb_connect:
         self.check_data = app.check_data
         self.tab_keyevents = app.tab_keyevents
         self.upper_frame = app.upper_frame
+        self.checkbutton_map = app.checkbutton_map
 
         self.test_counter_check = []
         self.check_ips = []
@@ -34,11 +35,11 @@ class adb_connect:
         self.ongoing_processes_adb_list = []
         self.checkbutton_ips = []
         self.check_vars = {}
-        self.checkbutton_map = {}
         self.current_process_adb = None
         self.stopla2 = False
         self.is_process_running = False
         self.process_counter = 0
+
         print("Clicked ADB")
         t = threading.Thread(target=self.try_connect)
         t.start()
@@ -55,7 +56,10 @@ class adb_connect:
     def disconnect_ip(tab1_input2, found_path, check_data, connected_devices_ips, upper_frame, root,
                       check_btn_ip, checkbutton_map):
         root.update_idletasks()
-        label_text = tab1_input2.get().strip()
+        label_text = tab1_input2.get().strip().partition(":")[0]
+
+        print(f"For nowww: {checkbutton_map}")
+             
         if label_text in checkbutton_map:
             checkbutton_map[label_text].destroy()
             del checkbutton_map[label_text]
@@ -265,8 +269,9 @@ class adb_connect:
             print(f"[test_show_status]-Can't deleting stop button: {e}")
 
     def try_connect(self):
-        self.writing = self.tab1_input2.get().strip()
-        print("[try_connect-]", self.writing)
+        self.writing = self.tab1_input2.get().strip().partition(":")[0]
+        print(self.writing)
+        logging.debug(f"[try_connect-] {self.writing}")
         si = subprocess.STARTUPINFO()
         si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         if not self.writing:
