@@ -21,7 +21,7 @@ class startup_check:
         choose_themeW = style.choose_themeW
         self.update_lang_func = update_lang_func
         choose_theme_special = style.choose_theme_special
-        logging.debug("%s", data[current_lang]['l1'])
+        logging.debug("%s", data[current_lang]['l1']["text"])
         default_path = os.path.dirname(os.path.abspath(__file__))
         self.file_path = os.path.join(default_path, "check.json")
 
@@ -64,7 +64,7 @@ class startup_check:
 
         json_ip = check_data["connected_ips"]
         connected_devicesips.configure(text="\n".join(json_ip.keys()))
-        logging.debug("%s", data[current_lang]["l2"])
+        logging.debug("%s", data[current_lang]["l2"]["text"])
 
         if check_data["did_adb_work"] is not True:
             self.try_find_adb()
