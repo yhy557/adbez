@@ -536,23 +536,29 @@ class MainApp:
         self.paned_window2.add(self.upper_frame2, minsize=700)
         self.paned_window2.pack(fill="both", expand=True, anchor="w", side="left")
         lower_frame2 = Frame(self.paned_window2)
+        lower_frame2.grid_columnconfigure(0, weight=1)
+        lower_frame2.grid_rowconfigure(0, weight=1)
+        lower_frame2.grid_rowconfigure(1, weight=1)
         self.paned_window2.add(lower_frame2, minsize=50)
+
         lower_frame2_connected_devices = Frame(lower_frame2, bg="red")
-        lower_frame2_connected_devices_f = Frame(lower_frame2_connected_devices, bg="white")
-        lower_frame2_log_label = Frame(lower_frame2, bg="black")
+        lower_frame2_connected_devices_f = Frame(lower_frame2_connected_devices, bg="blue")
+        keyevents_checkframe = Frame(lower_frame2_connected_devices_f, bg="pink")
         lower_frame2_connected_ips = Frame(lower_frame2_connected_devices_f)
 
         lower_frame2_connected_devices.grid(row=0, column=0)
-        lower_frame2_connected_devices_f.grid(row=0, column=0)
-        lower_frame2_connected_ips.grid(row=0, column=0)
-        lower_frame2_log_label.grid(row=1, column=0)
+        lower_frame2_connected_devices_f.grid(row=0, column=0, sticky="nsew", padx=4, pady=4)
+        keyevents_checkframe.grid(row=0, column=0, sticky="ew")
+        lower_frame2_connected_ips.grid(row=1, column=0, sticky="nsew")
 
+        # lower_frame2_connected_devices.configure(0, weight=1)
         lower_frame2_connected_devices.rowconfigure(0,minsize=100)
-        lower_frame2_connected_devices_f.columnconfigure(0, minsize=200)
+        lower_frame2_connected_devices_f.rowconfigure(0, weight=1)
+        lower_frame2_connected_devices_f.columnconfigure(0, weight=1)
         lower_frame2_connected_ips.configure(bg="yellow")
         lower_frame2.config(bg="lightblue")
-        lower_frame2.rowconfigure(2, weight=1)
-        lower_frame2.grid_columnconfigure(0, weight=1)
+        """lower_frame2.rowconfigure(2, weight=1)
+        lower_frame2.grid_columnconfigure(0, weight=1)"""
         self.paned_window2.paneconfigure(lower_frame2, minsize=1)
 
 
@@ -582,7 +588,7 @@ class MainApp:
         connected_devices2 = Label(
             connected_container2, text=self.get_text("l20"), name="l20"
         )
-        self.check_btn_ip = Checkbutton(lower_frame2_connected_devices_f)
+        self.check_btn_ip = Checkbutton(keyevents_checkframe, bg="black")
         connected_devices2.grid(row=0, column=0, sticky="nsew")
 
         # CATEGORY MENU
@@ -611,11 +617,12 @@ class MainApp:
         tab2_category_button.grid(row=0, column=2)
 
         tab2_log_label = Label(
-            lower_frame2_log_label, text="Logs", background="lightblue"
+            lower_frame2, text="Logs", background="lightblue"
         )
-        tab2_log_label.grid(row=0, column=0)
+        tab2_log_label.grid(row=1, column=0)
         tab2_log_box = Text(lower_frame2)
-        tab2_log_box.grid(row=1, column=0, rowspan=2, sticky="w", padx=(5, 5))
+        tab2_log_box.rowconfigure(2, weight=1)
+        tab2_log_box.grid(row=2, column=0, rowspan=2, sticky="w", padx=(5, 5))
         tab2_load_more_btn = Button(tab2_scroll_load_frame, text="Load more...")
         tab2_load_more_btn.pack()
         tab2_load_more_btn.bind(
@@ -638,7 +645,8 @@ class MainApp:
             up_bar,
             self.get_text,
             search,
-            check_data
+            check_data,
+            tab2_log_box
         )
 
         self.all_menu = [self.menu_frame, self.menu_frame_found, self.menu_frame_lang, menu_frame_category]
