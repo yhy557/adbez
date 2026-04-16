@@ -5,6 +5,8 @@ import logging
 import platform
 import shutil
 from settings import settings_style
+
+from adb_connect import adb_connect
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - [%(levelname)s] - %(message)s',
@@ -15,15 +17,20 @@ logging.basicConfig(
 class startup_check:
     def app_startup(
         self, connected_devicesips, current_lang, data, check_data,
+        check_btn_ip, app,
         style: settings_style, update_lang_func
     ):
+        
         choose_theme = style.choose_theme
         choose_themeW = style.choose_themeW
         self.update_lang_func = update_lang_func
+        self.check_btn_ip = check_btn_ip
         choose_theme_special = style.choose_theme_special
         logging.debug("%s", data[current_lang]['l1']["text"])
         default_path = os.path.dirname(os.path.abspath(__file__))
         self.file_path = os.path.join(default_path, "check.json")
+
+        self.check_vars = {}
 
         now = datetime.now()
         json_default_data = {
@@ -68,6 +75,14 @@ class startup_check:
 
         if check_data["did_adb_work"] is not True:
             self.try_find_adb()
+            
+        if len(check_data["choosen_ips"]) > 0:
+            for writing in check_data["choosen_ips"]:
+                adb_connect.create_checkbutton(
+                    writing, app.root, app.check_btn_ip,
+                    app.checkbutton_map, app.check_vars,
+                    check_data, app.check_event
+                )
 
     # -----------------------------------------
     def try_find_adb(self):
