@@ -130,6 +130,7 @@ class MainApp:
         self.current_lang = "en"
         self.current_theme = ""
         self.checkbutton_map = {}
+        self.check_vars = {}
         self.shared_adb_processes = []
         self.shared_nmap_processes = []
         self.active_adb_list = []
@@ -646,7 +647,7 @@ class MainApp:
             self.get_text,
             search,
             check_data,
-            tab2_log_box
+            tab2_log_box,
         )
 
         self.all_menu = [self.menu_frame, self.menu_frame_found, self.menu_frame_lang, menu_frame_category]
@@ -782,7 +783,7 @@ class MainApp:
             update_func=self.update_path,
             auto_finder_func=checker.try_find_adb
         )
-        checker.app_startup(self.connected_devices_ips, self.current_lang, data, check_data, self.my_settings, update_lang_func=self.update_all_widgets)
+        checker.app_startup(self.connected_devices_ips, self.current_lang, data, check_data, self.check_btn_ip, self, self.my_settings, update_lang_func=self.update_all_widgets)
 
 
     def update_path(self, new_path):
@@ -920,7 +921,25 @@ class MainApp:
         if self.menu_frame_found.winfo_exists() and self.menu_frame_found.winfo_viewable():
             self.tab1_input2.delete(0, "end")
             self.tab1_input2.insert(0, ip + ":" + check_data["choosen_port"])
+
     
+    def check_event(self, text):
+        var = self._get_var_for_ip(text)
+        if var.get() == 1:
+            print(f"Choosen {text}")
+            if text not in self.check_data["choosen_ips"]:
+                self.check_data["choosen_ips"].append(text)
+            with open("check.json", "w", encoding="utf-8") as f:
+                json.dump(self.check_data, f, indent=4, ensure_ascii=False)
+        else:
+            for ip in self.check_data["choosen_ips"]:
+                if text == ip:
+                    self.check_data["choosen_ips"].remove(ip)
+            with open("check.json", "w", encoding="utf-8") as f:
+                json.dump(self.check_data, f, indent=4, ensure_ascii=False)
+            print("Not choosen")
+
+        
 
 
 class AdbRouter:
