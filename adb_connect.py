@@ -56,7 +56,10 @@ class adb_connect:
     def disconnect_ip(tab1_input2, found_path, check_data, connected_devices_ips, upper_frame, root,
                       check_btn_ip, checkbutton_map):
         root.update_idletasks()
-        label_text = tab1_input2.get().strip().partition(":")[0]
+        if ":" in tab1_input2.get().strip():
+            label_text = tab1_input2.get().strip()
+        else:
+            label_text = tab1_input2.get().strip().partition(":")[0]
 
         print(f"For nowww: {checkbutton_map}")
              
@@ -209,7 +212,7 @@ class adb_connect:
                 if not already_exists:
                     self.root.after(
                         0, lambda b=btn, r=row: btn.grid(
-                            row=r, column=0
+                            row=r, column=0, sticky="ew"
                         )
                     )
                     self.root.after(
@@ -269,7 +272,10 @@ class adb_connect:
             print(f"[test_show_status]-Can't deleting stop button: {e}")
 
     def try_connect(self):
-        self.writing = self.tab1_input2.get().strip().partition(":")[0]
+        if ":" in self.tab1_input2.get().strip():
+            self.writing = self.tab1_input2.get().strip()
+        else:
+            self.writing = self.tab1_input2.get().strip().partition(":")[0]
         print(self.writing)
         logging.debug(f"[try_connect-] {self.writing}")
         si = subprocess.STARTUPINFO()
