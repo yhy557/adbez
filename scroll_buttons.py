@@ -12,7 +12,7 @@ class buttons:
     def __init__(self, tab2_seperate_scroll_BTN, root, tab2_load_more_btn,
                  tab2_seperate_scroll_LOAD, keyevents_buttons,
                  keyevents_labels, data, current_lang, background_color,
-                 canvas2, up_bar, get_text, search, check_data):
+                 canvas2, up_bar, get_text, search, check_data, tab2_log_box):
         self.tab2_seperate_scroll_BTN = tab2_seperate_scroll_BTN
         self.root = root
         self.tab2_load_more_btn = tab2_load_more_btn
@@ -25,6 +25,7 @@ class buttons:
         self.get_text = get_text
         self.search = search
         self.check_data = check_data
+        self.tab2_log_box = tab2_log_box
  
         self.keyevents_buttons = []
         self.keyevents_labels = []
@@ -512,15 +513,30 @@ class buttons:
         try:
             for ip in self.check_data["choosen_ips"]:
                 command = [self.check_data["choosen_path_for_adb"], "-s", ip, "shell", "input", "keyevent", str(int(str(json_key).lstrip("l"))-20)]
-                logging.debug("CURRENT COMMAND: \n",command)
+                logging.debug(f"CURRENT COMMAND: \n {command}")
                 keyevent_process=subprocess.Popen(
                     command,stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True    
                 )
                 stdout,stderr= keyevent_process.communicate()
+                print(f"stdout: {stdout} \n stderr: {stderr}")
                 if keyevent_process.returncode == 0:
                     logging.debug(f"SUCCES: {stdout}")
+                    self.root.update_idletasks()
+                    self.tab2_log_box.config(state="normal")
+                    self.tab2_log_box.insert("end", f"Success {ip} --> {str(int(str(json_key).lstrip("l"))-20)} \n")
+                    self.tab2_log_box.see("end")
+                    self.tab2_log_box.config(state="disabled")
+                    self.root.update_idletasks()
+                    self.tab2_log_box.update()
                 else:
                     logging.error(f"ERROR: {stderr}")
+                    self.root.update_idletasks()
+                    self.tab2_log_box.config(state="normal")
+                    self.tab2_log_box.insert("end", stderr)
+                    self.tab2_log_box.see("end")
+                    self.tab2_log_box.config(state="disabled")
+                    self.root.update_idletasks()
+                    self.tab2_log_box.update()
         except Exception as e:
             logging.error(f"FAILED: ADB KEYEVENT {e}")
         
