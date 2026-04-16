@@ -29,6 +29,9 @@ class adb_connect:
         self.upper_frame = app.upper_frame
         self.checkbutton_map = app.checkbutton_map
 
+        self.check_event = app.check_event
+        self.check_vars = app.check_vars
+
         self.test_counter_check = []
         self.check_ips = []
         self.ongoing_processes_list = []
@@ -122,21 +125,20 @@ class adb_connect:
             text="Failed.Please write an IP address"
         ))
 
-    def check_event(self, text):
-        var = self._get_var_for_ip(text)
-        if var.get() == 1:
-            print(f"Choosen {text}")
-            if text not in self.check_data["choosen_ips"]:
-                self.check_data["choosen_ips"].append(text)
-            with open("check.json", "w", encoding="utf-8") as f:
-                json.dump(self.check_data, f, indent=4, ensure_ascii=False)
-        else:
-            for ip in self.check_data["choosen_ips"]:
-                if text == ip:
-                    self.check_data["choosen_ips"].remove(ip)
-            with open("check.json", "w", encoding="utf-8") as f:
-                json.dump(self.check_data, f, indent=4, ensure_ascii=False)
-            print("Not choosen")
+    @staticmethod
+    def create_checkbutton(writing, root, check_btn_ip, checkbutton_map, check_vars, check_data, check_event_func):
+        var = check_vars.setdefault(writing, IntVar())
+        master_frame = check_btn_ip.master
+        already_exists = any(
+            isinstance(w, Checkbutton) and w.cget("text") == writing
+            for w in master_frame.winfo_children()
+        )
+        if not already_exists:
+            btn = Checkbutton(master_frame, text=writing, variable=var,
+                            command=lambda e=writing: check_event_func(e))
+            checkbutton_map[writing] = btn
+            row = len(master_frame.winfo_children())
+            root.after(0, lambda: btn.grid(row=row, column=0, sticky="ew"))
 
     def test_show_status(self):
         self.processes_list = []
@@ -178,6 +180,7 @@ class adb_connect:
         connected_label_text = self.connected_devices_ips.cget("text")
         connected_label_list = connected_label_text.split()
         new_writing = self.writing
+
         for word in full_output.lower().split():  # I can change this method to re.finditer
             if word == "connected" and "failed" not in full_output.lower():
                 self.stopla2 = True
@@ -192,32 +195,12 @@ class adb_connect:
                 with open("check.json", "w", encoding="utf-8") as fi:
                     json.dump(check_data, fi, indent=4)
                 self.test_counter += 1
-                self.current_text = self.writing
-                self.var = self._get_var_for_ip(self.writing)
-                self.check_ips.append(self.check_btn_ip)
-                self.master_frame = self.check_btn_ip.master
-                already_exists = any(
-                    isinstance(widget, Checkbutton) and widget.cget("text") == self.current_text
-                    for widget in self.master_frame.winfo_children()
+                adb_connect.create_checkbutton(
+                    self.writing, self.root, self.check_btn_ip,
+                    self.checkbutton_map, self.check_vars,
+                    self.check_data, self.check_event
                 )
-                self.new_btn = Checkbutton(self.master_frame,
-                                           text=self.current_text,
-                                           variable=self.var,
-                                           command=lambda e=self.current_text: self.check_event(e)
-                                           )
-                btn = self.new_btn
-                row = len(self.master_frame.winfo_children())
-                self.checkbutton_map[self.writing] = self.new_btn
 
-                if not already_exists:
-                    self.root.after(
-                        0, lambda b=btn, r=row: btn.grid(
-                            row=r, column=0, sticky="ew"
-                        )
-                    )
-                    self.root.after(
-                        0, lambda b=btn: b.configure(text=new_writing)
-                    )
                 """
                 self.root.after(
                     0, lambda b=btn: b.configure(
