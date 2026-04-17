@@ -24,6 +24,5 @@
 
 ### Settings tab
 <img width="600" alt="Image" src="https://github.com/user-attachments/assets/f8d716cb-ba8c-4d99-b9a9-26677354b3a3" />
-<img width="600" alt="Image" src="https://github.com/user-attachments/assets/921aa145-a01b-494e-abe9-68ab22a0f005" />
 
 *Portugese translation by:* **[@FetoyuDev](https://github.com/FetoyuDev)**
