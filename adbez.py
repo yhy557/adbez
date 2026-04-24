@@ -6,7 +6,7 @@ import re
 from datetime import datetime
 from tkinter import (Toplevel, Label, Button, Tk, PanedWindow,
                      Frame, Canvas, Scrollbar, Y, Entry,
-                     Text, Checkbutton)
+                     Text, Checkbutton, IntVar)
 from tkinter import font
 from tkinter import ttk
 import tkinter as tk
@@ -242,7 +242,7 @@ class MainApp:
         tab_learn = ttk.Frame(self._content_frame)
         tab_terminal = ttk.Frame(self._content_frame)
         self.tab_settings = Frame(self._content_frame)
-        tab_connected = ttk.Frame(self._content_frame)
+        self.tab_connected = Frame(self._content_frame)
 
         self._tab_defs = [
             ("connect",    data[self.current_lang]["l7"],  self.tab_connect,    "l7"),
@@ -253,11 +253,12 @@ class MainApp:
             ("learn",      data[self.current_lang]["l12"], tab_learn,      "l12"),
             ("terminal",   data[self.current_lang]["l16"], tab_terminal,   "l16"),
             ("settings",   data[self.current_lang]["l17"], self.tab_settings,   "l17"),
-            ("connected",  data[self.current_lang]["l18"], tab_connected,  "l18"),
+            ("connected",  data[self.current_lang]["l18"], self.tab_connected,  "l18"),
         ]
         self.background_color = bg_color
         self._build_tab_connect()
         self._build_tab_keyevents()
+        self._build_tab_connected()
         self._bind_events()
 
         # BLOCKS-----------------------------------------------
@@ -356,6 +357,42 @@ class MainApp:
                             command=lambda: self._tab_canvas.xview_scroll(2, "units"))
         _scroll_right.pack(side="left")
 
+    def create_rounded_rect(self, canvas, x1, y1, x2, y2, radius=20, **kwargs):
+        points = [
+            x1+radius, y1,
+            x2-radius, y1,
+            x2, y1,
+            x2, y1+radius,
+            x2, y2-radius,
+            x2, y2,
+            x2-radius, y2,
+            x1+radius, y2,
+            x1, y2,
+            x1, y2-radius,
+            x1, y1+radius,
+            x1, y1,
+        ]
+        return canvas.create_polygon(points, smooth=True, **kwargs)
+    
+    def draw_rounded(self,event=None):
+        self.canvas_rounded_window.delete("rounded_bg")
+        w = self.canvas_rounded_window.winfo_width()
+        h = self.canvas_rounded_window.winfo_height()
+        self.create_rounded_rect(
+            self.canvas_rounded_window,
+            2, 2, w-2, h-2,
+            radius=20,
+            fill="#292423",   # iç renk
+            outline="#aaaaaa", # kenar rengi
+            width=1.5,
+            tags="rounded_bg"
+        )
+        self.canvas_rounded_window.tag_lower("rounded_bg")
+    def resize_inner(self, event=None):
+        w = self.canvas_rounded_window.winfo_width()
+        h = self.canvas_rounded_window.winfo_height()
+        self.canvas_rounded_window.itemconfig("inner", width=w-40, height=h-40)
+
     def _build_tab_connect(self):
         # -TAB_CONNECT LAYOUTS
         self.paned_window = PanedWindow(self.tab_connect, orient="vertical", bd=1,
@@ -366,25 +403,43 @@ class MainApp:
         self.paned_window.add(self.upper_frame, minsize=300)
         lower_frame = Frame(self.paned_window, background="black")
         self.paned_window.add(lower_frame, minsize=50)
+
+        self.canvas_rounded_window = Canvas(
+            self.upper_frame,
+            bg=self.upper_frame.cget("bg"),
+            highlightthickness=0
+        )
+        self.canvas_rounded_window.grid(row=1, column=1, sticky="nsew", pady=10)
+        self.canvas_rounded_window.bind("<Configure>", self.draw_rounded)
+        self.inner_frame = Frame(self.canvas_rounded_window, bg="#292423")
+        self.canvas_rounded_window.create_window(
+            20, 20,
+            anchor="nw",
+            window=self.inner_frame,
+            tags="inner"
+        )
+
+        self.canvas_rounded_window.bind("<Configure>", lambda e: (self.draw_rounded(e), self.resize_inner(e)))
+
         # -NMAP INPUT ROW
-        self.nmap_input_row = Frame(self.upper_frame)
-        self.nmap_input_row.grid(row=2, column=1, sticky="ew", padx=(10))
+        self.nmap_input_row = Frame(self.inner_frame)
+        self.nmap_input_row.grid(row=0, column=0, sticky="ew", padx=(10))
         self.nmap_input_row.columnconfigure(1, minsize=300)
         self.nmap_input_row.columnconfigure(0, weight=0)
         self.nmap_input_row.columnconfigure(1, weight=1)
         self.nmap_input_row.columnconfigure(2, weight=0)
         # -ADB INPUT ROW
-        self.adb_input_row = Frame(self.upper_frame)
-        self.adb_btn_container = Frame(self.upper_frame)
-        self.adb_btn_container.grid(row=7, column=1, sticky="n")
-        self.adb_input_row.grid(row=6, column=1, sticky="ew", padx=(10))
+        self.adb_input_row = Frame(self.inner_frame)
+        self.adb_btn_container = Frame(self.inner_frame)
+        self.adb_btn_container.grid(row=3, column=0, sticky="n")
+        self.adb_input_row.grid(row=2, column=0, sticky="ew", padx=(10))
 
         self.adb_input_row.columnconfigure(0, weight=0)
         self.adb_input_row.columnconfigure(1, weight=1)
         self.adb_input_row.columnconfigure(2, weight=0)
         # -NMAP BUTTON ROW
-        self.nmap_btn_container = Frame(self.upper_frame)
-        self.nmap_btn_container.grid(row=3, column=1, sticky="n")
+        self.nmap_btn_container = Frame(self.inner_frame)
+        self.nmap_btn_container.grid(row=1, column=0, sticky="n")
         self.nmap_btn_container.columnconfigure(0, weight=0)
         self.nmap_btn_container.columnconfigure(1, weight=0)
         # -LANGUAGE BUTTON ROW
@@ -409,12 +464,12 @@ class MainApp:
         menu_frame_lang3 = Button(self.menu_frame_lang, text="Português")
 
         # DEFINITION
-        self.tab1_label = Label(self.upper_frame, text=self.get_text("l3"), name="l3")
+        self.tab1_label = Label(self.inner_frame, text=self.get_text("l3"), name="l3")
         self.tab1_input = Entry(self.nmap_input_row, font="bold")
         self.tab1_nmap_button = Button(
             self.nmap_btn_container, text=self.get_text("l4"), name="l4"
         )
-        self.tab1_label2 = Label(self.upper_frame, text=self.get_text("l5"), name="l5")
+        self.tab1_label2 = Label(self.inner_frame, text=self.get_text("l5"), name="l5")
         self.tab1_input2 = Entry(self.adb_input_row, font="bold")
         self.tab1_connect_button = Button(
             self.adb_btn_container, text=self.get_text("l6"), name="l6"
@@ -464,13 +519,13 @@ class MainApp:
             cursor="hand2"
         )
 
-        self.tab1_label.grid(row=1, column=1, sticky="n", pady=(0, 5), padx=(0, 285))
+        self.tab1_label.grid(row=0, column=0, sticky="n", pady=(0, 72), padx=(0, 285))
         self.tab1_input.grid(row=0, column=1, sticky="ew", pady=(0, 10))
         tab1_choose_ip.grid(row=0, column=2, sticky="we", padx=(15, 0), pady=(0, 10))
         self.tab1_nmap_button.grid(row=0, column=0, sticky="ew")
         # nmap_btn_container.columnconfigure(0, minsize=100)
 
-        self.tab1_label2.grid(row=4, column=1, sticky="n", padx=(0, 295))
+        self.tab1_label2.grid(row=2, column=0, sticky="n", pady=(0,62), padx=(0, 295))
         self.tab1_input2.grid(row=0, column=1, sticky="ew")
         tab1_found_ip.grid(row=0, column=2, sticky="ew", padx=(15, 0))
         self.tab1_connect_button.grid(row=0, column=0, sticky="ew", padx=(5, 0))
@@ -522,6 +577,9 @@ class MainApp:
 
         # CATCHING PANED WINDOW EVENT
         self.paned_window.bind("<B1-Motion>", self.changed_paned)
+
+        self.canvas_rounded_window.after(50, self.resize_inner)
+
 
     def _build_tab_keyevents(self):
         # FONT STYLE DEFINITION
@@ -661,6 +719,44 @@ class MainApp:
             _x += TAB_W + TAB_GAP
         self._tab_canvas.config(scrollregion=(0, 0, _x, TAB_H))
 
+    def _build_tab_connected(self):
+
+        self.main_paned = PanedWindow(self.tab_connected, orient="horizontal", bd=1,
+                                    relief="sunken", sashwidth=4,
+                                    sashrelief="sunken", bg="black")  # OK
+        self.main_paned.pack(fill="both", expand=True)
+        self.left_paned = PanedWindow(self.main_paned, orient="vertical", bd=1,
+                                    relief="sunken", sashwidth=4,
+                                    sashrelief="sunken", bg="black")  # OK
+        self.right_paned = PanedWindow(self.main_paned, orient="vertical", bd=1,
+                                    relief="sunken", sashwidth=4,
+                                    sashrelief="sunken", bg="black")  # OK
+        self.phone_screen_pnd = PanedWindow(self.main_paned, orient="vertical", bd=1,
+                                    relief="sunken", sashwidth=4,
+                                    sashrelief="sunken", bg="black")  # OK
+
+        self.files_frm = Frame(self.left_paned, bg="red")
+        self.terminal_frm = Frame(self.left_paned, bg="green")
+
+        self.shortcut_frm = Frame(self.main_paned, bg="lightgreen", )
+        self.phone_screen_frm = Frame(self.main_paned, bg="black")
+
+        self.device_infos_frm = Frame(self.right_paned, bg="lightgray")
+        self.aichat_frm = Frame(self.right_paned, bg="gray")
+        
+        self.left_paned.add(self.files_frm, minsize=150)
+        self.left_paned.add(self.terminal_frm, minsize=150)
+
+        self.phone_screen_pnd.add(self.shortcut_frm)
+        self.phone_screen_pnd.add(self.phone_screen_frm)
+
+        
+        self.main_paned.add(self.left_paned,minsize=250)
+        self.main_paned.add(self.right_paned,minsize=250)
+
+        self.right_paned.add(self.device_infos_frm,minsize=150)
+        self.right_paned.add(self.aichat_frm,minsize=150)
+
 
     def _bind_events(self):
         pass
@@ -722,7 +818,7 @@ class MainApp:
         if self.my_settings is not None:
             self.my_settings.current_lang = lang_code
         new_texts = data[lang_code]
-        self.btn_instance.current_lang = lang_code
+        self.btn_instance.current_lang = lang_code 
         self.btn_instance.load_again()
 
         # Update canvas tab texts
@@ -923,8 +1019,12 @@ class MainApp:
             self.tab1_input2.insert(0, ip + ":" + check_data["choosen_port"])
 
     
+
+    
     def check_event(self, text):
-        var = self._get_var_for_ip(text)
+        var = self.check_vars.get(text)
+        if var is None:
+            return
         if var.get() == 1:
             print(f"Choosen {text}")
             if text not in self.check_data["choosen_ips"]:
