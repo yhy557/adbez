@@ -50,6 +50,9 @@ class buttons:
         for widgets in self.tab2_seperate_scroll_BTN.winfo_children()[:60]:
             widgets.destroy()
         self.keyevents_labels.clear()
+        self.search_widgets.clear()
+        self.searc_only_keys.clear()
+        self.keyevents_buttons.clear()
         if hasattr(self, "new_back_btn") and self.new_back_btn.winfo_exists():
             for b in self.back_btn_list:
                 self.root.after(0, lambda b=b: b.grid_forget())
@@ -80,6 +83,9 @@ class buttons:
         for widgets in self.tab2_seperate_scroll_BTN.winfo_children()[:288]:
             widgets.destroy()
         self.keyevents_labels.clear()
+        self.search_widgets.clear()
+        self.searc_only_keys.clear()
+        self.keyevents_buttons.clear()
         self.tab2_load_more_btn.pack_forget()
         logging.debug("[categorize]-Widgets are deleting")
  
@@ -346,7 +352,14 @@ class buttons:
     def timer_func(self, event):
         if self._timer:
             self.root.after_cancel(self._timer)
-        self._timer = self.root.after(800, self.search_categorize)
+        self._timer = self.root.after(800, self.test_search_func)
+
+    def test_search_func(self):
+        if hasattr(self, "new_back_btn") and self.new_back_btn.winfo_exists():
+            for b in self.back_btn_list:
+                self.root.after(0, lambda b=b: b.grid_forget())
+        self.load_again()
+        self.root.after(100, self.search_categorize)
 
     def search_categorize(self):
         self.keyevents_labels.clear()
@@ -356,6 +369,9 @@ class buttons:
 
         if not search_term:
             for key, (row_frame, button, label) in self.search_widgets.items():
+                if not row_frame.winfo_exists():
+                    self.search_widgets.pop(key, None)
+                    continue
                 if key in self.searc_only_keys:
                     row_frame.grid_remove()
                 else:
@@ -501,12 +517,14 @@ class buttons:
  
     # IF LANGUAGES CHANGED, LOAD AGAIN
     def load_again(self):
-        for widgets in self.tab2_seperate_scroll_BTN.winfo_children()[:60]:
+        for widgets in self.tab2_seperate_scroll_BTN.winfo_children():
             widgets.destroy()
-            self.keyevents_labels.clear()
             logging.debug("[load_again]-Widgets are deleting")
         self.keyevents_buttons.clear()
         self.keyevents_labels.clear()
+        self.search_widgets.clear()
+        self.searc_only_keys.clear()
+        self.restart_number()
         self.root.after(10, lambda: self.load_first())
  
     def test_buton_event(self, event, json_key):
