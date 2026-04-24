@@ -37,7 +37,6 @@ class adb_connect:
         self.ongoing_processes_list = []
         self.ongoing_processes_adb_list = []
         self.checkbutton_ips = []
-        self.check_vars = {}
         self.current_process_adb = None
         self.stopla2 = False
         self.is_process_running = False
