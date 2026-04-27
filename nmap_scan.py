@@ -98,6 +98,8 @@ class nmap_scan:
     def try_find(self):
         default_path = os.path.dirname(os.path.abspath(__file__))
         main_path_py = os.path.join(default_path, "now_logs.txt")
+        if not os.path.exists(main_path_py):
+            open(main_path_py,"w").close()
         self.is_process_running = True
         self.show_ui_things()
 
