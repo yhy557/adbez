@@ -914,7 +914,7 @@ class MainApp:
             self.root.unbind("<Configure>")
             ctypes.windll.user32.ReleaseCapture()
             id_of_window = ctypes.windll.user32.GetParent(self.root.winfo_id())
-            ctypes.windll.user32.SendMessageW(id_of_window,0xA1,2,0)
+            ctypes.windll.user32.PostMessageW(id_of_window,0xA1,2,0)
             self.root.bind("<Configure>", self.catch_size)
             self.root.update()
         else:
