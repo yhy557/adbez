@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import ctypes
 import platform
 import re
 from datetime import datetime
@@ -49,7 +50,8 @@ json_default_data = {
     "choosen_path_for_adb": {},
     "did_adb_work": False,
     "choosen_language": "en",
-    "is_live_helper_on": False
+    "is_live_helper_on": False,
+    "is_auto_nmap_on": False
 }    
 
 
@@ -144,6 +146,9 @@ class MainApp:
         self._tabs = {}   # key -> {frame, text_id, bg_tag, lang_key}
         self.load_clicked = 0
         self.test_counter = 0
+
+        self._last_width = 1000
+        self._last_height = 700
 
         # MAIN PANEL
         self.root = Tk()
@@ -288,7 +293,6 @@ class MainApp:
 
 
     def _build_main_window(self):
-
         # OUTER FRAME
         external_frame = tk.Frame(self.root, bg=border_color, bd=0)
         external_frame.pack(fill="both", expand=True)
@@ -298,9 +302,12 @@ class MainApp:
         # TITLE BAR
         title_bar = tk.Frame(main_area, bg="#2d2d2d", height=30)
         title_bar.pack(fill="x")
-        title_bar.bind("<ButtonPress-1>", self.start_move)
-        title_bar.bind("<ButtonRelease-1>", self.stop_move)
-        title_bar.bind("<B1-Motion>", self.on_move)
+        if platform.system() == "Windows":
+            title_bar.bind("<Button-1>", self.on_move)
+        else:
+            title_bar.bind("<ButtonPress-1>", self.start_move)
+            title_bar.bind("<ButtonRelease-1>", self.stop_move)
+            title_bar.bind("<B1-Motion>", self.on_move)
        
         frm = ttk.Frame(main_area, style="Siyah.TFrame", padding=10)
         frm.pack(fill="both", expand=True) 
@@ -744,14 +751,15 @@ class MainApp:
         self.device_infos_frm = Frame(self.right_paned, bg="lightgray")
         self.aichat_frm = Frame(self.right_paned, bg="gray")
         
-        self.left_paned.add(self.files_frm, minsize=150)
-        self.left_paned.add(self.terminal_frm, minsize=150)
+        self.left_paned.add(self.files_frm, minsize=250)
+        self.left_paned.add(self.terminal_frm, minsize=250)
 
-        self.phone_screen_pnd.add(self.shortcut_frm)
-        self.phone_screen_pnd.add(self.phone_screen_frm)
+        self.phone_screen_pnd.add(self.shortcut_frm, minsize=50)
+        self.phone_screen_pnd.add(self.phone_screen_frm, minsize=500)
 
         
         self.main_paned.add(self.left_paned,minsize=250)
+        self.main_paned.add(self.phone_screen_pnd, minsize=250)
         self.main_paned.add(self.right_paned,minsize=250)
 
         self.right_paned.add(self.device_infos_frm,minsize=150)
@@ -778,26 +786,27 @@ class MainApp:
 
     def catch_size(self, event):
         if event.widget == self.root:
-            geo = self.root.winfo_geometry()
-            match = re.search(r'(\d+)x(\d+)', geo)
+            if self.root.winfo_width() != self._last_width or self.root.winfo_height() != self._last_height:
+                geo = self.root.winfo_geometry()
+                match = re.search(r'(\d+)x(\d+)', geo)
 
-            if match:
-                x, y = int(match.group(1)), int(match.group(2))
-                print(f"x: {x}, y: {y}")
-            for m in self.all_menu:
-                if m.winfo_viewable() and m.winfo_exists():
-                    m.place_forget()
-                    logging.debug(f"{m} is deleted")
+                if match:
+                    x, y = int(match.group(1)), int(match.group(2))
+                    print(f"x: {x}, y: {y}")
+                for m in self.all_menu:
+                    if m.winfo_viewable() and m.winfo_exists():
+                        m.place_forget()
+                        logging.debug(f"{m} is deleted")
+                    else:
+                        logging.debug(f"{m} is null")
+                if event.height > 600:
+                    logging.info(event.height)
+                    self.paned_window.paneconfigure(self.upper_frame, minsize=350, height=550)
+                    logging.info("Minsize updated")
+                if x > 1300:
+                    self.paned_window2.paneconfigure(self.upper_frame2, minsize=900)
                 else:
-                    logging.debug(f"{m} is null")
-            if event.height > 600:
-                logging.info(event.height)
-                self.paned_window.paneconfigure(self.upper_frame, minsize=350, height=550)
-                logging.info("Minsize updated")
-            if x > 1300:
-                self.paned_window2.paneconfigure(self.upper_frame2, minsize=900)
-            else:
-                self.paned_window2.paneconfigure(self.upper_frame2, minsize=700)
+                    self.paned_window2.paneconfigure(self.upper_frame2, minsize=700)
 
     # FOR EXPAND WINDOW
     def on_canvas_resize(self, event):
@@ -821,7 +830,6 @@ class MainApp:
         self.btn_instance.current_lang = lang_code 
         self.btn_instance.load_again()
 
-        # Update canvas tab texts
         for info in self._tabs.values():
             lk = info["lang_key"]
             if lk in new_texts:
@@ -848,14 +856,14 @@ class MainApp:
                         recursive_update(widget)
 
                     if widget == self.my_settings.row_label2:
-                        widget.config(text=self.get_text("l326") + " " + self.found_path)
+                        widget.config(text=f"{self.get_text("l326")} {self.found_path}")
 
 
             recursive_update(self.root)
             self.root.update_idletasks()
             logging.info(f"Language changed to: {lang_code}")
         except Exception as e:
-            logging.error("Language update error: %s", e)
+            logging.exception("Language update error: %s", e)
 
 
     def update_ui(self, output):
@@ -902,16 +910,24 @@ class MainApp:
 
 
     def on_move(self, event):
-        deltax = event.x - self.root.x
-        deltay = event.y - self.root.y
-        min_x = 0
-        max_x = self.root.winfo_screenwidth() - self.root.winfo_width()
-        max_y = self.root.winfo_screenheight() - self.root.winfo_height()
-        new_x = self.root.winfo_x() + deltax
-        new_y = self.root.winfo_y() + deltay
-        x = max(min_x, min(new_x, max_x))
-        y = max(min_x, min(new_y, max_x))
-        self.root.geometry(f"+{x}+{y}")
+        if platform.system() == "Windows":
+            self.root.unbind("<Configure>")
+            ctypes.windll.user32.ReleaseCapture()
+            id_of_window = ctypes.windll.user32.GetParent(self.root.winfo_id())
+            ctypes.windll.user32.SendMessageW(id_of_window,0xA1,2,0)
+            self.root.bind("<Configure>", self.catch_size)
+            self.root.update()
+        else:
+            deltax = event.x - self.root.x
+            deltay = event.y - self.root.y
+            min_x = 0
+            max_x = self.root.winfo_screenwidth() - self.root.winfo_width()
+            max_y = self.root.winfo_screenheight() - self.root.winfo_height()
+            new_x = self.root.winfo_x() + deltax
+            new_y = self.root.winfo_y() + deltay
+            x = max(min_x, min(new_x, max_x))
+            y = max(min_x, min(new_y, max_x))
+            self.root.geometry(f"+{x}+{y}")
 
 
     def changed_paned(self, event):
