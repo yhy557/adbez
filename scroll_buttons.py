@@ -43,6 +43,7 @@ class buttons:
         self.searc_only_keys = set()
         self.load_first()
 
+
         self.root.after(200, lambda: self.search.bind("<KeyRelease>", self.timer_func))
 
     def back_all(self):
@@ -60,7 +61,7 @@ class buttons:
         self.root.after(101, lambda: self.tab2_load_more_btn.pack())
         self.load_again()
  
-    def categorize(self, text):
+    def categorize(self, text: str):
         if hasattr(self, "new_back_btn") and self.new_back_btn.winfo_exists():
             self.new_back_btn.destroy()
         self.back_btn_list.clear()
@@ -519,7 +520,7 @@ class buttons:
     def load_again(self):
         for widgets in self.tab2_seperate_scroll_BTN.winfo_children():
             widgets.destroy()
-            logging.debug("[load_again]-Widgets are deleting")
+        logging.debug("[load_again]-Widgets are deleting")
         self.keyevents_buttons.clear()
         self.keyevents_labels.clear()
         self.search_widgets.clear()
@@ -527,7 +528,7 @@ class buttons:
         self.restart_number()
         self.root.after(10, lambda: self.load_first())
  
-    def test_buton_event(self, event, json_key):
+    def test_buton_event(self, event, json_key: str):
         try:
             for ip in self.check_data["choosen_ips"]:
                 command = [self.check_data["choosen_path_for_adb"], "-s", ip, "shell", "input", "keyevent", str(int(str(json_key).lstrip("l"))-20)]
