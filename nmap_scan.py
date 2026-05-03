@@ -3,12 +3,8 @@ import subprocess
 import os
 import re
 import platform
-import tkinter
 from tkinter import Button
 import logging
-import json
-from dataclasses import dataclass
-from settings import settings_style
 from utils.file_utils import open_file, write_file
 logging.basicConfig(
     level=logging.INFO,
@@ -236,7 +232,7 @@ class nmap_brain:
         logging.debug(f"LOGS==== \n {logs}")
         full_output = logs
         with open(fr"{main_path_py}", "r+", encoding="utf-8") as file:
-            content = file.read()
+            # content = file.read()
             file.seek(0)
             file.write(full_output)
             file.truncate()
