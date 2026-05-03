@@ -16,6 +16,18 @@
 * The ip adresses from the results when you search with nmap are automatically added into the "Founded ips" option located next to the adb connection box, so you can easily connect to ip adresses.
 * You can apply input key events to the selected IP addresses
 
+### Requirements
+- Python 3.x
+- [nmap](https://nmap.org/download.html) installed on your system
+- ADB (adbez will try to find it automatically)
+
+### Installation
+```bash
+git clone https://github.com/yhy557/adbez.git
+cd adbez
+python adbez.py
+```
+
 <img width="600" alt="Image" src="https://github.com/user-attachments/assets/a2348db8-e1c7-41e1-a8a5-64cfbe47af73" />
 
 ### Input keyevents tab
