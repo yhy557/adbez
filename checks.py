@@ -27,22 +27,24 @@ class startup_check:
     ):
 
         self.app = app
-        choose_theme = style.choose_theme
-        choose_themeW = style.choose_themeW
+        self.connected_devicesips = connected_devicesips
+        self.current_lang = current_lang
+        self.data = data
+        self.check_data = check_data
+        self.choose_theme = style.choose_theme
+        self.choose_themeW = style.choose_themeW
         self.choose_auto_nmap_btn = style.choose_auto_nmap_btn
         self.get_text = style.get_text
         self.update_lang_func = update_lang_func
         self.check_btn_ip = check_btn_ip
-        choose_theme_special = style.choose_theme_special
+        self.choose_theme_special = style.choose_theme_special
 
-        default_path = os.path.dirname(os.path.abspath(__file__))
-        self.file_path = os.path.join(default_path, "check.json")
+        self.default_path = os.path.dirname(os.path.abspath(__file__))
+        self.file_path = os.path.join(self.default_path, "check.json")
 
-        self.check_vars = {}
-
-        now = datetime.now()
-        json_default_data = {
-            "last_entered": f"{now}",
+        self.now = datetime.now()
+        self.json_default_data = {
+            "last_entered": f"{self.now}",
             "last_commands": {},
             "connected_ips": {},
             "theme": {},
@@ -57,68 +59,75 @@ class startup_check:
             "is_live_helper_on": False,
             "is_auto_nmap_on": False
         }
+        self.check_vars = {}
+        if self.check_data["did_adb_work"] is not True:
+            self.try_find_adb()
+        self._init_data_file()
+        self._init_language()
+        self._init_auto_nmap()
+        self._load_connected_ips()
+        self._apply_theme()
 
-        logging.debug("%s", data[current_lang]['l1']["text"])
-
+    def _init_data_file(self):
         """In here,we are updating last_entered time"""
         if not os.path.exists(self.file_path):
             with open(self.file_path, "w") as f:
-                json.dump(json_default_data, f, indent=4, ensure_ascii=False)
+                json.dump(self.json_default_data, f, indent=4, ensure_ascii=False)
                 pass
-            check_data = json_default_data
+            self.check_data = self.json_default_data
         else:
             logging.debug("LAST_ENTERED UPDATING")
             with open(self.file_path, "r", encoding="utf-8") as d:
                 loaded = json.load(d)
-                logging.debug(f"TRY IT {check_data}")
-            check_data.update(loaded)
-            check_data["last_entered"] = f"{now}"
+                logging.debug(f"TRY IT {self.check_data}")
+            self.check_data.update(loaded)
+            self.check_data["last_entered"] = f"{self.now}"
             with open(self.file_path, "w") as d:
-                json.dump(check_data, d, indent=4, ensure_ascii=False)
+                json.dump(self.check_data, d, indent=4, ensure_ascii=False)
             logging.debug("---LAST_ENTERED UPDATED---")
             logging.debug("Written file: %s", self.file_path)
 
+    def _init_language(self):
+        logging.debug("%s", self.data[self.current_lang]['l1']["text"])
         """In here, we are updating the language"""
-        self.check_data = check_data
-        self.update_lang_func(self.check_data["choosen_language"])
-        logging.debug("%s", data[current_lang]["l2"]["text"])
+        self.update_lang_func(self.check_data["choosen_language"]) 
+        logging.debug("%s", self.data[self.current_lang]["l2"]["text"])
 
+
+    def _init_auto_nmap(self):
         """In here,we are checking auto nmap.The nmap_scan is starts If auto nmap is on"""
-        if check_data["is_auto_nmap_on"] == True:
+        if self.check_data["is_auto_nmap_on"] == True:
             # self.nmap_scan_instance = nmap_ui(app=app)
             self.nmap_brain = nmap_brain(
                 on_line=None,
-                on_ip_found= lambda ip: self.app.root.after(0, lambda i=ip: self._add_ip_to_menu(i, app)),
+                on_ip_found= lambda ip: self.app.root.after(0, lambda i=ip: self._add_ip_to_menu(i, self.app)),
                 on_finish=None
             )
-            t = threading.Thread(target=self.nmap_brain.try_find, args=(check_data["choosen_nmap_ip"],), daemon=True)
+            t = threading.Thread(target=self.nmap_brain.try_find, args=(self.check_data["choosen_nmap_ip"],), daemon=True)
             t.start()
             self.choose_auto_nmap_btn.config(text=self.get_text("l324"), bg="#2563EB", fg="white", relief="flat")
         else:
             self.choose_auto_nmap_btn.config(text=self.get_text("l323"), bg="#2D2D2D", fg="white", relief="flat")
 
-        """In here,we are setting the theme"""
-        if check_data["theme"] == "dark":
-            choose_theme("#292423", "white")
-            choose_theme_special()
-        else:
-            choose_theme("SystemButtonFace", "black")
-            choose_themeW("SystemButtonFace")
-
-        json_ip = check_data["connected_ips"]
-        connected_devicesips.configure(text="\n".join(json_ip.keys()))
-
-        if check_data["did_adb_work"] is not True:
-            self.try_find_adb()
-            
-        if len(check_data["connected_ips"]) > 0:
-            for writing in check_data["connected_ips"]:
+    def _load_connected_ips(self):
+        json_ip = self.check_data["connected_ips"]
+        self.connected_devicesips.configure(text="\n".join(json_ip.keys()))
+        if len(self.check_data["connected_ips"]) > 0:
+            for writing in self.check_data["connected_ips"]:
                 adb_connect.create_checkbutton(
-                    writing, app.root, app.check_btn_ip,
-                    app.checkbutton_map, app.check_vars,
-                    check_data, app.check_event
+                    writing, self.app.root, self.app.check_btn_ip,
+                    self.app.checkbutton_map, self.app.check_vars,
+                    self.check_data, self.app.check_event
                 )
 
+    def _apply_theme(self):
+        """In here,we are setting the theme"""
+        if self.check_data["theme"] == "dark":
+            self.choose_theme("#292423", "white")
+            self.choose_theme_special()
+        else:
+            self.choose_theme("SystemButtonFace", "black")
+            self.choose_themeW("SystemButtonFace")
 
     def _add_ip_to_menu(self, ip: str, app):
         from tkinter import Button
@@ -171,3 +180,4 @@ class startup_check:
             logging.warning("Not found")
 
         print("Found path = ", self.found_path)
+
