@@ -1,15 +1,12 @@
 import ctypes
-import json
 import logging
 import os
 import platform
 import re
 from datetime import datetime
-from typing import TYPE_CHECKING
-from pathlib import Path
 from tkinter import (Toplevel, Label, Button, Tk, PanedWindow,
                      Frame, Canvas, Scrollbar, Y, Entry,
-                     Text, Checkbutton, IntVar)
+                     Text, Checkbutton)
 from tkinter import font
 from tkinter import ttk
 import tkinter as tk
@@ -17,7 +14,6 @@ import tkinter as tk
 import adb_connect as adbc
 import checks as appchecks
 import nmap_scan as nmaps
-from nmap_scan import nmap_ui,nmap_brain
 from scroll_buttons import buttons
 from settings import settings_style
 from tab_control import TabControl
@@ -66,17 +62,8 @@ json_default_data = {
 if not os.path.exists(file_path):
     write_file(file_path, json_default_data)
     check_data = json_default_data
-    """
-    with open(file_path, "w") as f:
-        json.dump(json_default_data, f, indent=4, ensure_ascii=False)
-        pass
-    """
 else:
     check_data = open_file(file_path)
-    """
-    with open(file_path, "r", encoding="utf-8") as f:
-        check_data = json.load(f)
-    """
 
 
 if platform.system() == "Windows":
@@ -204,7 +191,7 @@ class MainApp:
             direction.press_y = event.y_root
 
         def do_resize_up(event):
-            dx = event.x_root - grip_canvas_up.press_x
+            # dx = event.x_root - grip_canvas_up.press_x
             dy = event.y_root - grip_canvas_up.press_y
 
             new_y = grip_canvas_up.start_y + dy
@@ -226,7 +213,7 @@ class MainApp:
                 self.root.geometry(f"{new_w}x{new_h}+{new_x}+{new_y}")
         def do_resize_left(event):
             dx = event.x_root - grip_canvas_left.press_x
-            dy = event.y_root - grip_canvas_left.press_y
+            # dy = event.y_root - grip_canvas_left.press_y
 
             new_x = grip_canvas_left.start_x + dx
             new_w = grip_canvas_left.start_w - dx
@@ -523,7 +510,7 @@ class MainApp:
         )
 
         self.connected_devices_ips = Label(connected_container)
-        is_text_empty = self.connected_devices_ips.cget("text")
+        # is_text_empty = self.connected_devices_ips.cget("text")
         connected_devices.grid(row=0, column=0, sticky="nsew")
         self.connected_devices_ips.grid(row=1, column=0, sticky="nsew")
 
@@ -795,13 +782,9 @@ class MainApp:
 
     def close_window(self, event):
         check_data = open_file(file_path)
-        """with open(file_path, "r", encoding="utf-8") as f:
-            check_data = json.load(f)"""
         check_data["founded_ips"] = []
         logging.debug(check_data)
         write_file(self.file_path, check_data)
-        """with open(self.file_path, "w") as f:
-            json.dump(check_data, f, indent=4, ensure_ascii=False)"""
         self.root.destroy()
 
 
@@ -819,7 +802,7 @@ class MainApp:
 
                 if match:
                     x, y = int(match.group(1)), int(match.group(2))
-                    print(f"x: {x}, y: {y}")
+                    logging.debug(f"x: {x}, y: {y}")
                 for m in self.all_menu:
                     if m.winfo_viewable() and m.winfo_exists():
                         m.place_forget()
@@ -848,13 +831,8 @@ class MainApp:
         self.current_lang = lang_code
         check_data = open_file(self.file_path)
 
-        """with open(self.file_path, "r", encoding="utf-8") as d:
-            check_data=json.load(d)"""
         check_data["choosen_language"] = lang_code
         write_file(file_path, check_data)
-
-        """with open("check.json", "w", encoding="utf-8") as f:
-            json.dump(check_data, f, indent=4, ensure_ascii=False)"""
 
         if self.my_settings is not None:
             self.my_settings.current_lang = lang_code
@@ -871,9 +849,6 @@ class MainApp:
             default_path = os.path.dirname(os.path.abspath(__file__))
             file_path2 = os.path.join(default_path, "lang.json")
             full_data = open_file(file_path2)
-
-            """with open(file_path2, "r", encoding="utf-8") as f:
-                full_data = json.load(f)"""
 
             logging.debug(f"LANG: {lang_code} {type(lang_code)} ")
 
@@ -929,9 +904,6 @@ class MainApp:
         check_data["choosen_path_for_adb"] = self.found_path
         write_file(file_path, check_data)
 
-        """with open("check.json", "w", encoding="utf-8") as f:
-            json.dump(check_data, f, indent=4, ensure_ascii=False)"""
-
 
     def start_move(self, event):
         logging.debug("START_MOVE")
@@ -958,7 +930,7 @@ class MainApp:
             deltay = event.y - self.root.y
             min_x = 0
             max_x = self.root.winfo_screenwidth() - self.root.winfo_width()
-            max_y = self.root.winfo_screenheight() - self.root.winfo_height()
+            # max_y = self.root.winfo_screenheight() - self.root.winfo_height()
             new_x = self.root.winfo_x() + deltax
             new_y = self.root.winfo_y() + deltay
             x = max(min_x, min(new_x, max_x))
@@ -1074,25 +1046,18 @@ class MainApp:
         if var is None:
             return
         if var.get() == 1:
-            print(f"Choosen {text}")
+            logging.debug(f"Choosen {text}")
             if text not in self.check_data["choosen_ips"]:
                 self.check_data["choosen_ips"].append(text)
 
             write_file(file_path, self.check_data)
-
-            """with open("check.json", "w", encoding="utf-8") as f:
-                json.dump(self.check_data, f, indent=4, ensure_ascii=False)"""
         else:
             for ip in self.check_data["choosen_ips"]:
                 if text == ip:
                     self.check_data["choosen_ips"].remove(ip)
 
             write_file(file_path, self.check_data)
-
-            """with open("check.json", "w", encoding="utf-8") as f:
-                json.dump(self.check_data, f, indent=4, ensure_ascii=False)"""
-
-            print("Not choosen")
+            logging.debug("Not choosen")
 
         
 
