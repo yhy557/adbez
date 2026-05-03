@@ -4,7 +4,12 @@ import json
 import logging
 import platform
 import shutil
+import threading
+from nmap_scan import nmap_brain,nmap_ui
 from settings import settings_style
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from bcopy import MainApp
 
 from adb_connect import adb_connect
 logging.basicConfig(
@@ -17,16 +22,19 @@ logging.basicConfig(
 class startup_check:
     def app_startup(
         self, connected_devicesips, current_lang, data, check_data,
-        check_btn_ip, app,
+        check_btn_ip, app:'MainApp',
         style: settings_style, update_lang_func
     ):
-        
+
+        self.app = app
         choose_theme = style.choose_theme
         choose_themeW = style.choose_themeW
+        self.choose_auto_nmap_btn = style.choose_auto_nmap_btn
+        self.get_text = style.get_text
         self.update_lang_func = update_lang_func
         self.check_btn_ip = check_btn_ip
         choose_theme_special = style.choose_theme_special
-        logging.debug("%s", data[current_lang]['l1']["text"])
+
         default_path = os.path.dirname(os.path.abspath(__file__))
         self.file_path = os.path.join(default_path, "check.json")
 
@@ -39,12 +47,20 @@ class startup_check:
             "connected_ips": {},
             "theme": {},
             "choosen_ips": [],
+            "choosen_nmap_ip": [],
+            "founded_ips": [],
             "choosen_port": "5555",
             "choosen_path_for_adb": {},
             "did_adb_work": False,
+            "did_nmap_work": False,
             "choosen_language": "en",
-            "is_live_helper_on": False
+            "is_live_helper_on": False,
+            "is_auto_nmap_on": False
         }
+
+        logging.debug("%s", data[current_lang]['l1']["text"])
+
+        """In here,we are updating last_entered time"""
         if not os.path.exists(self.file_path):
             with open(self.file_path, "w") as f:
                 json.dump(json_default_data, f, indent=4, ensure_ascii=False)
@@ -53,15 +69,35 @@ class startup_check:
         else:
             logging.debug("LAST_ENTERED UPDATING")
             with open(self.file_path, "r", encoding="utf-8") as d:
-                check_data=json.load(d)
+                loaded = json.load(d)
+                logging.debug(f"TRY IT {check_data}")
+            check_data.update(loaded)
             check_data["last_entered"] = f"{now}"
             with open(self.file_path, "w") as d:
                 json.dump(check_data, d, indent=4, ensure_ascii=False)
             logging.debug("---LAST_ENTERED UPDATED---")
-            logging.debug("Yazan dosya: %s", self.file_path)
+            logging.debug("Written file: %s", self.file_path)
+
+        """In here, we are updating the language"""
         self.check_data = check_data
         self.update_lang_func(self.check_data["choosen_language"])
+        logging.debug("%s", data[current_lang]["l2"]["text"])
 
+        """In here,we are checking auto nmap.The nmap_scan is starts If auto nmap is on"""
+        if check_data["is_auto_nmap_on"] == True:
+            # self.nmap_scan_instance = nmap_ui(app=app)
+            self.nmap_brain = nmap_brain(
+                on_line=None,
+                on_ip_found= lambda ip: self.app.root.after(0, lambda i=ip: self._add_ip_to_menu(i, app)),
+                on_finish=None
+            )
+            t = threading.Thread(target=self.nmap_brain.try_find, args=(check_data["choosen_nmap_ip"],), daemon=True)
+            t.start()
+            self.choose_auto_nmap_btn.config(text=self.get_text("l324"), bg="#2563EB", fg="white", relief="flat")
+        else:
+            self.choose_auto_nmap_btn.config(text=self.get_text("l323"), bg="#2D2D2D", fg="white", relief="flat")
+
+        """In here,we are setting the theme"""
         if check_data["theme"] == "dark":
             choose_theme("#292423", "white")
             choose_theme_special()
@@ -71,18 +107,31 @@ class startup_check:
 
         json_ip = check_data["connected_ips"]
         connected_devicesips.configure(text="\n".join(json_ip.keys()))
-        logging.debug("%s", data[current_lang]["l2"]["text"])
 
         if check_data["did_adb_work"] is not True:
             self.try_find_adb()
             
-        if len(check_data["choosen_ips"]) > 0:
-            for writing in check_data["choosen_ips"]:
+        if len(check_data["connected_ips"]) > 0:
+            for writing in check_data["connected_ips"]:
                 adb_connect.create_checkbutton(
                     writing, app.root, app.check_btn_ip,
                     app.checkbutton_map, app.check_vars,
                     check_data, app.check_event
                 )
+
+
+    def _add_ip_to_menu(self, ip: str, app):
+        from tkinter import Button
+        """self.app.log_text.config(state="normal")
+        self.app.log_text.insert("end", f"Nmap scan is started in background: {ip}")
+        self.app.log_text.config(state="disabled")"""
+        new_button = Button(app.menu_frame_found, text=ip)
+        new_button.pack(fill="x")
+        new_button.bind(
+            "<Button-1>",
+            lambda event, i=ip: app.found_enter_choosen_ip(event, i)
+        )
+        app.button_references.append(new_button)
 
     # -----------------------------------------
     def try_find_adb(self):
@@ -90,6 +139,7 @@ class startup_check:
             path_for_now = "/AppData/Local/Android/Sdk/platform-tools/adb.exe"
             tries = [
                 "C:/platform-tools/adb.exe",
+                "C:/adb.exe",
                 os.path.expanduser("~") + path_for_now
             ]
         else:
@@ -103,6 +153,9 @@ class startup_check:
             tries = [t for t in tries if t is not None]
 
         self.found_path = None
+        system_adb = shutil.which("adb")
+        if system_adb:
+            tries.append(system_adb)
 
         for path in tries:
             if os.path.exists(path):
@@ -118,4 +171,3 @@ class startup_check:
             logging.warning("Not found")
 
         print("Found path = ", self.found_path)
-
