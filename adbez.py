@@ -1,10 +1,12 @@
+import ctypes
 import json
 import logging
 import os
-import ctypes
 import platform
 import re
 from datetime import datetime
+from typing import TYPE_CHECKING
+from pathlib import Path
 from tkinter import (Toplevel, Label, Button, Tk, PanedWindow,
                      Frame, Canvas, Scrollbar, Y, Entry,
                      Text, Checkbutton, IntVar)
@@ -13,11 +15,14 @@ from tkinter import ttk
 import tkinter as tk
 # MY FILES
 import adb_connect as adbc
-import nmap_scan as nmaps
-from tab_control import TabControl
 import checks as appchecks
+import nmap_scan as nmaps
+from nmap_scan import nmap_ui,nmap_brain
 from scroll_buttons import buttons
 from settings import settings_style
+from tab_control import TabControl
+from utils.file_utils import open_file, write_file
+
 
 # SOME CONFIGURE FOR LOGGING
 logging.basicConfig(
@@ -28,6 +33,7 @@ logging.basicConfig(
 )
 default_path = os.path.dirname(os.path.abspath(__file__))
 file_path = os.path.join(default_path, "check.json")
+lang_path = os.path.join(default_path, "lang.json")
 
 if platform.system() == "Windows":
     import ctypes
@@ -36,8 +42,7 @@ if platform.system() == "Windows":
     except Exception:
         ctypes.windll.user32.SetProcessDPIAware()
 
-with open("lang.json", "r", encoding="utf-8") as e:
-    data = json.load(e)
+data = open_file(lang_path)
 
 now = datetime.now()
 json_default_data = {
@@ -46,9 +51,12 @@ json_default_data = {
     "connected_ips": {},
     "theme": {},
     "choosen_ips": [],
+    "choosen_nmap_ip": [],
+    "founded_ips": [],
     "choosen_port": "5555",
     "choosen_path_for_adb": {},
     "did_adb_work": False,
+    "did_nmap_work": False,
     "choosen_language": "en",
     "is_live_helper_on": False,
     "is_auto_nmap_on": False
@@ -56,13 +64,19 @@ json_default_data = {
 
 
 if not os.path.exists(file_path):
+    write_file(file_path, json_default_data)
+    check_data = json_default_data
+    """
     with open(file_path, "w") as f:
         json.dump(json_default_data, f, indent=4, ensure_ascii=False)
         pass
-    check_data = json_default_data
+    """
 else:
+    check_data = open_file(file_path)
+    """
     with open(file_path, "r", encoding="utf-8") as f:
         check_data = json.load(f)
+    """
 
 
 if platform.system() == "Windows":
@@ -113,6 +127,7 @@ class Tooltip:
         if self.tooltip_window:
             self.tooltip_window.destroy()
             self.tooltip_window = None
+#--------------------------------------------------------
 
 TAB_W = 110
 TAB_H = 32
@@ -335,8 +350,9 @@ class MainApp:
         self.max_btn.bind("<Leave>", self.leave_enter)
 
         self.close_btn = Button(title_bar, text="✕", bg="#2d2d2d", fg="white", bd=0,
-                        activebackground="red", command=self.root.destroy, width=4)
+                        activebackground="red", width=4)
         self.close_btn.pack(side="right", fill="y")
+        self.close_btn.bind("<Button-1>", self.close_window)
         self.close_btn.bind("<Enter>", self.on_enter)
         self.close_btn.bind("<Leave>", self.leave_enter)
         _tab_bar = Frame(frm, bg="#1e1e1e")
@@ -530,7 +546,6 @@ class MainApp:
         self.tab1_input.grid(row=0, column=1, sticky="ew", pady=(0, 10))
         tab1_choose_ip.grid(row=0, column=2, sticky="we", padx=(15, 0), pady=(0, 10))
         self.tab1_nmap_button.grid(row=0, column=0, sticky="ew")
-        # nmap_btn_container.columnconfigure(0, minsize=100)
 
         self.tab1_label2.grid(row=2, column=0, sticky="n", pady=(0,62), padx=(0, 295))
         self.tab1_input2.grid(row=0, column=1, sticky="ew")
@@ -648,14 +663,14 @@ class MainApp:
         up_bar.columnconfigure(0, weight=1)
         up_bar.columnconfigure(3, weight=1)
 
-        connected_container2 = Frame(lower_frame2_connected_devices)
-        connected_container2.grid(row=0, column=0, sticky="n")
+        self.connected_container2 = Frame(lower_frame2_connected_devices)
+        self.connected_container2.grid(row=0, column=0, sticky="n")
 
-        connected_devices2 = Label(
-            connected_container2, text=self.get_text("l20"), name="l20"
+        self.connected_devices2 = Label(
+            self.connected_container2, text=self.get_text("l20"), name="l20"
         )
         self.check_btn_ip = Checkbutton(keyevents_checkframe, bg="black")
-        connected_devices2.grid(row=0, column=0, sticky="nsew")
+        self.connected_devices2.grid(row=0, column=0, sticky="nsew")
 
         # CATEGORY MENU
         menu_frame_category = Frame(self.upper_frame2, background="blue")
@@ -769,13 +784,25 @@ class MainApp:
     def _bind_events(self):
         pass
 
-    def get_text(self, key, default=""):
+    def get_text(self, key: str, default: str = ""):
         lang_data = data.get(self.current_lang, {})
         item = lang_data.get(key, default)
         if isinstance(item, dict):
             return item.get("text", default)
         
         return item
+
+
+    def close_window(self, event):
+        check_data = open_file(file_path)
+        """with open(file_path, "r", encoding="utf-8") as f:
+            check_data = json.load(f)"""
+        check_data["founded_ips"] = []
+        logging.debug(check_data)
+        write_file(self.file_path, check_data)
+        """with open(self.file_path, "w") as f:
+            json.dump(check_data, f, indent=4, ensure_ascii=False)"""
+        self.root.destroy()
 
 
     def on_enter(self, event):
@@ -814,16 +841,21 @@ class MainApp:
         self.canvas2.itemconfig(self.canvas_window, width=event.width)
 
 
-    def update_all_widgets(self, lang_code):
+    def update_all_widgets(self, lang_code: str):
         logging.debug("UPDATE_ALL_WIDGETS")
         default_path = os.path.dirname(os.path.abspath(__file__))
         self.file_path = os.path.join(default_path, "check.json")
         self.current_lang = lang_code
-        with open(self.file_path, "r", encoding="utf-8") as d:
-            check_data=json.load(d)
+        check_data = open_file(self.file_path)
+
+        """with open(self.file_path, "r", encoding="utf-8") as d:
+            check_data=json.load(d)"""
         check_data["choosen_language"] = lang_code
-        with open("check.json", "w", encoding="utf-8") as f:
-            json.dump(check_data, f, indent=4, ensure_ascii=False)
+        write_file(file_path, check_data)
+
+        """with open("check.json", "w", encoding="utf-8") as f:
+            json.dump(check_data, f, indent=4, ensure_ascii=False)"""
+
         if self.my_settings is not None:
             self.my_settings.current_lang = lang_code
         new_texts = data[lang_code]
@@ -838,8 +870,11 @@ class MainApp:
         try:
             default_path = os.path.dirname(os.path.abspath(__file__))
             file_path2 = os.path.join(default_path, "lang.json")
-            with open(file_path2, "r", encoding="utf-8") as f:
-                full_data = json.load(f)
+            full_data = open_file(file_path2)
+
+            """with open(file_path2, "r", encoding="utf-8") as f:
+                full_data = json.load(f)"""
+
             logging.debug(f"LANG: {lang_code} {type(lang_code)} ")
 
             def recursive_update(container):
@@ -866,7 +901,7 @@ class MainApp:
             logging.exception("Language update error: %s", e)
 
 
-    def update_ui(self, output):
+    def update_ui(self, output: str):
         logging.debug("UPDATE UI")
         self.log_text.config(state="normal")
         self.log_text.insert("end", f"\n {output}")
@@ -877,24 +912,25 @@ class MainApp:
     def checks(self):
         checker = appchecks.startup_check()
         self.my_settings = settings_style(
-            check_data, self.tab_connect, self.tab_settings,
-            self.paned_window, self.upper_frame, self.nmap_input_row, self.adb_input_row,
-            self.adb_btn_container, self.tab1_label, self.tab1_label2, self.log_text, self.tab1_input,
-            self.tab1_input2, self.tab1_nmap_button, self.tab1_connect_button, self.root,
-            self.nmap_btn_container, data, self.current_lang,
-            self.min_btn, self.max_btn, self.close_btn, self.found_path, self.scrollable_content,
-            self.get_text,
+            app=self,
+            check_data=self.check_data,
+            data=data,
             update_func=self.update_path,
             auto_finder_func=checker.try_find_adb
         )
-        checker.app_startup(self.connected_devices_ips, self.current_lang, data, check_data, self.check_btn_ip, self, self.my_settings, update_lang_func=self.update_all_widgets)
+        checker.app_startup(
+            self.connected_devices_ips, self.current_lang, data, check_data,
+            self.check_btn_ip, self, self.my_settings,
+            update_lang_func=self.update_all_widgets)
 
 
-    def update_path(self, new_path):
+    def update_path(self, new_path: str):
         self.found_path = new_path
         check_data["choosen_path_for_adb"] = self.found_path
-        with open("check.json", "w", encoding="utf-8") as f:
-            json.dump(check_data, f, indent=4, ensure_ascii=False)
+        write_file(file_path, check_data)
+
+        """with open("check.json", "w", encoding="utf-8") as f:
+            json.dump(check_data, f, indent=4, ensure_ascii=False)"""
 
 
     def start_move(self, event):
@@ -914,7 +950,7 @@ class MainApp:
             self.root.unbind("<Configure>")
             ctypes.windll.user32.ReleaseCapture()
             id_of_window = ctypes.windll.user32.GetParent(self.root.winfo_id())
-            ctypes.windll.user32.PostMessageW(id_of_window,0xA1,2,0)
+            ctypes.windll.user32.PostMessageW(id_of_window, 0xA1, 2, 0)
             self.root.bind("<Configure>", self.catch_size)
             self.root.update()
         else:
@@ -935,7 +971,7 @@ class MainApp:
             self.menu_frame.place_forget()
             logging.debug("menu_frame is deleted")
         else:
-            logging.debug("menu_frame is null")
+            pass
         if self.menu_frame_found.winfo_viewable() and self.menu_frame_found.winfo_exists():
             self.menu_frame_found.place_forget()
             logging.debug("menu_frame_found is deleted")
@@ -1026,17 +1062,13 @@ class MainApp:
             self.tab1_input.delete(0, "end")
             self.tab1_input.insert(0, clicked_button_label)
 
-
     # ADB MENU EVENTS
-    def found_enter_choosen_ip(self, event, ip):
+    def found_enter_choosen_ip(self, event, ip: str):
         logging.info(f"Pressed {ip}")
         if self.menu_frame_found.winfo_exists() and self.menu_frame_found.winfo_viewable():
             self.tab1_input2.delete(0, "end")
             self.tab1_input2.insert(0, ip + ":" + check_data["choosen_port"])
 
-    
-
-    
     def check_event(self, text):
         var = self.check_vars.get(text)
         if var is None:
@@ -1045,14 +1077,21 @@ class MainApp:
             print(f"Choosen {text}")
             if text not in self.check_data["choosen_ips"]:
                 self.check_data["choosen_ips"].append(text)
-            with open("check.json", "w", encoding="utf-8") as f:
-                json.dump(self.check_data, f, indent=4, ensure_ascii=False)
+
+            write_file(file_path, self.check_data)
+
+            """with open("check.json", "w", encoding="utf-8") as f:
+                json.dump(self.check_data, f, indent=4, ensure_ascii=False)"""
         else:
             for ip in self.check_data["choosen_ips"]:
                 if text == ip:
                     self.check_data["choosen_ips"].remove(ip)
-            with open("check.json", "w", encoding="utf-8") as f:
-                json.dump(self.check_data, f, indent=4, ensure_ascii=False)
+
+            write_file(file_path, self.check_data)
+
+            """with open("check.json", "w", encoding="utf-8") as f:
+                json.dump(self.check_data, f, indent=4, ensure_ascii=False)"""
+
             print("Not choosen")
 
         
@@ -1084,7 +1123,7 @@ class NmapRouter:
         self.active_nmap_list = []
 
     def scan(self, event=None):
-        instance = nmaps.nmap_scan(
+        instance = nmaps.nmap_ui(
             self.app,
             on_finish=lambda inst: self.active_nmap_list.remove(inst)
                       if inst in self.active_nmap_list else None
@@ -1093,8 +1132,9 @@ class NmapRouter:
 
 
     def stop_nmap_event(self, event):
+        logging.debug(f"active_nmap_list= {self.active_nmap_list}")
         if self.active_nmap_list:
-            self.active_nmap_list[0].stop_nmap()
+            self.active_nmap_list[0].stop_nmap_ui()
 
 
 if __name__ == "__main__":
