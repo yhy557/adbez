@@ -1,4 +1,5 @@
 import logging
+from scroll_buttons import buttons
 
 class TabControl:
     def __init__(self, _tab_canvas, _tabs, all_menu, btn_instance, canvas2, tab2_seperate_scroll_BTN, _content_frame):
@@ -22,6 +23,8 @@ class TabControl:
         self.TAB_FONT = ("Segoe UI", 9)
 
         self._active_tab = None
+
+        
     
     def make_tab(self, canvas, x, key, text, frame, lang_key):
         r, w, h = self.TAB_R, self.TAB_W, self.TAB_H
@@ -79,7 +82,7 @@ class TabControl:
     def delete_widgets(self):
         for widgets in self.tab2_seperate_scroll_BTN.winfo_children()[60:]:
             widgets.destroy()
-            logging.debug("Widgets are deleting")
+        logging.debug("Widgets are deleting")
     
     def _on_tab_change(self, key):
         for m in self.all_menu:
@@ -92,4 +95,12 @@ class TabControl:
             self.canvas2.yview_moveto(0)
             self.delete_widgets()
             self.btn_instance.load_again()
+        if hasattr(self.btn_instance, "new_back_btn"):
+            logging.debug("BACK BUTON IS DELETING")
+            if self.btn_instance.new_back_btn is not None:
+                logging.debug(f"NEW_BACK_BTN IS NOT NONE {type(self.btn_instance.new_back_btn)}")
+                if self.btn_instance.new_back_btn.winfo_exists():
+                    logging.debug("NEW_BACK_BTN IS HERE")
+                    self.btn_instance.root.update_idletasks()
+                    self.btn_instance.new_back_btn.destroy()
         logging.debug(key)
