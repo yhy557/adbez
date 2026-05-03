@@ -1,13 +1,14 @@
+import logging
+import os
+import platform
 import subprocess
 import threading
-import platform
-import os
-import json
-import logging
-
-
 from tkinter import Checkbutton, Label, IntVar
+from utils.file_utils import open_file,write_file
 
+
+default_path = os.path.dirname(os.path.abspath(__file__))
+file_path = os.path.join(default_path, "check.json")
 
 class adb_connect:
     def __init__(self, app, on_finish=None):
@@ -42,7 +43,7 @@ class adb_connect:
         self.is_process_running = False
         self.process_counter = 0
 
-        print("Clicked ADB")
+        logging.debug("Clicked ADB")
         t = threading.Thread(target=self.try_connect)
         t.start()
 
@@ -52,7 +53,7 @@ class adb_connect:
         return self.check_vars[ip]
 
     def test_ip_keyevent(self, ip):
-        print(f"[test_ip_keyevent]-Clicked {ip}")
+        logging.debug(f"[test_ip_keyevent]-Clicked {ip}")
 
     @staticmethod
     def disconnect_ip(tab1_input2, found_path, check_data, connected_devices_ips, upper_frame, root,
@@ -63,8 +64,6 @@ class adb_connect:
         else:
             label_text = tab1_input2.get().strip().partition(":")[0]
 
-        print(f"For nowww: {checkbutton_map}")
-             
         if label_text in checkbutton_map:
             checkbutton_map[label_text].destroy()
             del checkbutton_map[label_text]
@@ -84,14 +83,12 @@ class adb_connect:
                 )
                 logging.debug(f"Disconnected to {label_text}")
                 check_btn_ip.grid_forget()
-                with open("check.json", "r", encoding="utf-8") as f:
-                    check_data = json.load(f)
+                check_data = open_file(file_path)
                 ip_to_remove = label_text.strip()
                 logging.debug(f"Deleting ip: {ip_to_remove}")
                 if ip_to_remove in check_data["connected_ips"]:
                     del check_data["connected_ips"][ip_to_remove]
-                with open("check.json", "w", encoding="utf-8") as fi:
-                    json.dump(check_data, fi, indent=4)
+                write_file(file_path, check_data)
                 for i in connected_ips_list:
                     if i == label_text:
                         connected_ips_list.remove(i)
@@ -155,18 +152,6 @@ class adb_connect:
         self.new_label.bind("<Button-3>", self.stop_adb)
         self.processes_list.append(self.new_label)
         self.root.after(0, lambda: self.new_label.configure(text="ADBprocess"))
-        """
-        now_text = self.processes_in.cget("text")
-        self.processes_in.grid(row=1, column=0)
-        if now_text == "":
-            print("[test_show_status]-Test1", now_text)
-            self.processes_in.configure(text="Adb process")
-        else:
-            print("[test_show_status]-Test2")
-            self.processes_in.configure(
-                text=f"{now_text}" + "\n" + "Adb process"
-            )
-        """
         full_output = ""
         while True:
             line = self.current_process_adb.stdout.readline()
@@ -187,30 +172,18 @@ class adb_connect:
                 self._finish_process()
 
                 self.root.after(0, lambda: self.update_ui("Connected"))
-                with open("check.json", "r", encoding="utf-8") as f:
-                    check_data = json.load(f)
+                check_data = open_file(file_path)
                 check_data["connected_ips"][self.writing] = "connected"
                 self.check_data["connected_ips"][self.writing] = "connected"
-                with open("check.json", "w", encoding="utf-8") as fi:
-                    json.dump(check_data, fi, indent=4)
+                write_file(file_path, check_data)
                 self.test_counter += 1
                 adb_connect.create_checkbutton(
                     self.writing, self.root, self.check_btn_ip,
                     self.checkbutton_map, self.check_vars,
                     self.check_data, self.check_event
                 )
-
-                """
-                self.root.after(
-                    0, lambda b=btn: b.configure(
-                        command=lambda: self.test_ip_keyevent(new_writing)
-                    )
-                )
-                """
-                print(
-                    "[test_show_status]-List of check ips",
-                    self.test_counter_check
-                )
+                logging.debug(
+                    f"[test_show_status]-List of check ips \n {self.test_counter_check}")
                 if connected_label_text == "":
                     self.root.after(
                         0, lambda: self.connected_devices_ips.configure(
@@ -235,23 +208,23 @@ class adb_connect:
                         )
                     )
                 else:
-                    print(
+                    logging.debug(
                         f"[test_show_status]-Already connected {new_writing}"
                     )
                     pass
                 break
             elif word == "failed":
-                print("[test_show_status]-Stop button is deleted")
+                logging.debug("[test_show_status]-Stop button is deleted")
                 self.is_process_running = False
                 self._finish_process()
                 break
         try:
             self.is_process_running = False
             self._finish_process()
-            print("[test_show_status]-stop button is being deleted")
+            logging.debug("[test_show_status]-stop button is being deleted")
         except Exception as e:
             self._finish_process()
-            print(f"[test_show_status]-Can't deleting stop button: {e}")
+            logging.debug(f"[test_show_status]-Can't deleting stop button: {e}")
 
     def try_connect(self):
         if ":" in self.tab1_input2.get().strip():
@@ -276,7 +249,7 @@ class adb_connect:
             )
             self.test_show_status()
         except Exception as e:
-            print(f"[try_connect]-Can't start adb connect: {e}")
+            logging.debug(f"[try_connect]-Can't start adb connect: {e}")
 
     def stop_adb(self, event=None):
         system_os = platform.system()
@@ -301,11 +274,11 @@ class adb_connect:
                         )
                         self.current_process_adb.wait(1)
                     except subprocess.TimeoutExpired:
-                        print("[stop_adb]-The process is resisting, so it will be killed directly...")
+                        logging.debug("[stop_adb]-The process is resisting, so it will be killed directly...")
                         os.kill(
                             self.current_process_adb.pid, signal.SIGKILL
                         )
-                print("[stop_adb]-Adb being stopped")
+                logging.debug("[stop_adb]-Adb being stopped")
                 self.root.after(
                     20, lambda: self.update_ui(
                         "\n[!] ADB connect is terminated"
@@ -316,7 +289,7 @@ class adb_connect:
             except Exception as e:
                 import traceback
                 traceback.print_exc()
-                print(f"[stop_adb]-ADB connection couldn't terminate: {e}")
+                logging.debug(f"[stop_adb]-ADB connection couldn't terminate: {e}")
         else:
             if len(self.shared_adb_processes) == 0:
                 self.tab1_stop_adb.grid_forget()
