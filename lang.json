@@ -330,7 +330,12 @@
         "l328": {"text": "Choose path"},
         "l329": {"text": "Live Helper"},
         "l330": {"text": "ADB Configurations"},
-        "l331": {"text": "Change the default port for ADB Connect"}
+        "l331": {"text": "Change the default port for ADB Connect"},
+        "l332": {"text": "When the application starts, it automatically launches an Nmap scan"},
+        "l333": {"text": "NMAP settings"},
+        "l334": {"text": "Auto NMAP"},
+        "l335": {"text": "All processes"},
+        "l336": {"text": "View the logs for all operations running in the application"}
     },
     "tr": {
         "l1": {"text": "Bazı gerekli ayarlar kontrol ediliyor..."},
@@ -663,7 +668,12 @@
         "l328": {"text": "Yol seç"},
         "l329": {"text": "Canlı yardımcı"},
         "l330": {"text": "ADB Yapılandırmaları"},
-        "l331": {"text": "ADB bağlanma için varsayılan portu değiştirin"}
+        "l331": {"text": "ADB bağlanma için varsayılan portu değiştirin"},
+        "l332": {"text": "Uygulama başladığında otomatik olarak nmap taraması başlatır"},
+        "l333": {"text": "NMAP ayarları"},
+        "l334": {"text": "Otomatik NMAP"},
+        "l335": {"text": "Bütün işlemler"},
+        "l336": {"text": "Uygulamada çalışan bütün işlemlerin loglarını görün"}
     },
     "pt": {
         "l1": {"text": "Algumas verificações estão sendo processadas..."},
@@ -996,6 +1006,11 @@
         "l328": {"text": "Choose path"},
         "l329": {"text": "Live Helper"},
         "l330": {"text": "ADB Configurations"},
-        "l331": {"text": "Change the default port for ADB Connect"}
+        "l331": {"text": "Change the default port for ADB Connect"},
+        "l332": {"text": "When the application starts, it automatically launches an Nmap scan"},
+        "l333": {"text": "NMAP settings"},
+        "l334": {"text": "Auto NMAP"},
+        "l335": {"text": "All processes"},
+        "l336": {"text": "View the logs for all operations running in the application"}
     }
 }
