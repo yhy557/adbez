@@ -258,7 +258,7 @@ class adb_connect:
             self.writing = self.tab1_input2.get().strip()
         else:
             self.writing = self.tab1_input2.get().strip().partition(":")[0]
-        print(self.writing)
+        logging.debug(f"ADB CONNECT IP IS: {self.writing}")
         logging.debug(f"[try_connect-] {self.writing}")
         si = subprocess.STARTUPINFO()
         si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
