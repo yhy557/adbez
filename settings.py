@@ -1,11 +1,9 @@
-from tkinter import (Toplevel, Label, Button, Tk, PanedWindow,
-                     Frame, Canvas, Scrollbar, Y, Entry,
+from tkinter import (Label, Button, Frame, Canvas,
+                     Scrollbar, Entry,
                      Text, Checkbutton, IntVar, Variable,
                      filedialog, )
-from tkinter import font
 from tkinter import ttk
 import json
-import platform
 import logging
 import os
 from typing import TYPE_CHECKING
@@ -154,7 +152,7 @@ class settings_style:
         )
         self.root.update_idletasks()
         self.row_label2 = Label(
-            self.row2, text=f"{self.get_text("l326")} {str(self.found_path)}",
+            self.row2, text=f"{self.get_text('l326')} {str(self.found_path)}",
             font=FONT_SMALL, bg=CARD, fg=FG_MUTED, wraplength=300,
             name="l326"
         )
@@ -360,7 +358,7 @@ class settings_style:
         choosen_path = filedialog.askopenfilename()
         if choosen_path:
             self.update_func(choosen_path)
-            self.row_label2.configure(text=f"{self.get_text("l326")} {choosen_path}")
+            self.row_label2.configure(text=f"{self.get_text('l326')} {choosen_path}")
 
     def get_nmap_ip(self, event):
         self.choose_auto_nmap_ip.configure(bg="lightgreen")
@@ -379,12 +377,12 @@ class settings_style:
         self.auto_finder_func()
         adb_path = self.check_data["choosen_path_for_adb"]
         self.root.after(
-            1000, lambda: self.row_label2.configure(text=f"{self.get_text("l326")} {adb_path}")
+            1000, lambda: self.row_label2.configure(text=f"{self.get_text('l326')} ")
         )
 
     def check_dark_theme_btn(self, *args):
         if self.var.get() == 1:
-            print("[check_Dark_theme_btn]-Choosen")
+            logging.debug("[check_Dark_theme_btn]-Choosen")
             self.check_data["theme"] = "dark"
             self.choose_theme("#292423", "white")
             self.choose_theme_special()
@@ -392,13 +390,13 @@ class settings_style:
             self.check_data["theme"] = "white"
             self.choose_theme("SystemButtonFace", "black")
             self.choose_themeW("SystemButtonFace")
-            print("the election was canceled")
+            logging.debug("the election was canceled")
         with open(self.file_path, "w", encoding="utf-8") as fi:
             json.dump(self.check_data, fi, indent=4, ensure_ascii=False)
 
     def check_live_helper_is_on(self, *args):
         if self.live_helper_var.get() == 1:
-            print("[check_live_helper_is_on] - Choosen")
+            logging.debug("[check_live_helper_is_on] - Choosen")
             self.check["is_live_helper_on"] = True
         else:
             self.check["is_live_helper_on"] = False
