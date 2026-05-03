@@ -866,7 +866,7 @@ class MainApp:
                         recursive_update(widget)
 
                     if widget == self.my_settings.row_label2:
-                        widget.config(text=f"{self.get_text("l326")} {self.found_path}")
+                        widget.config(text=f"{self.get_text('326')} {self.found_path}")
 
 
             recursive_update(self.root)
