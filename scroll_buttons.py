@@ -537,12 +537,12 @@ class buttons:
                     command,stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True    
                 )
                 stdout,stderr= keyevent_process.communicate()
-                print(f"stdout: {stdout} \n stderr: {stderr}")
+                logging.debug(f"stdout: {stdout} \n stderr: {stderr}")
                 if keyevent_process.returncode == 0:
                     logging.debug(f"SUCCES: {stdout}")
                     self.root.update_idletasks()
                     self.tab2_log_box.config(state="normal")
-                    self.tab2_log_box.insert("end", f"Success {ip} --> {str(int(str(json_key).lstrip("l"))-20)} \n")
+                    self.tab2_log_box.insert("end", f"Success {ip} --> {str(int(str(json_key).lstrip('l'))-20)} \n")
                     self.tab2_log_box.see("end")
                     self.tab2_log_box.config(state="disabled")
                     self.root.update_idletasks()
@@ -559,7 +559,7 @@ class buttons:
         except Exception as e:
             logging.error(f"FAILED: ADB KEYEVENT {e}")
         
-        print("CHOOSEN IPS: ",self.check_data["choosen_ips"])
+        logging.debug(f"CHOOSEN IPS: \n {self.check_data["choosen_ips"]}")
  
     # SEPERATE
     def load_all(self, range_x, range_y, is_last=False):
