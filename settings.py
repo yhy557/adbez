@@ -8,6 +8,10 @@ import json
 import platform
 import logging
 import os
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from bcopy import MainApp
 
 FONT = ("Segoe UI", 10)
 FONT_BOLD = ("Segoe UI", 10, "bold")
@@ -26,56 +30,69 @@ BTN_ACT = "#1D4ED8"
 
 
 class settings_style:
-    def __init__(self, check_data, tab_connect, tab_settings,
-                 paned_window, upper_frame, nmap_input_row, adb_input_row,
-                 adb_btn_container, tab1_label, tab1_label2, log_text,
-                 tab1_input, tab1_input2, tab1_nmap_button,
-                 tab1_connect_button, root, nmap_btn_container, data,
-                 current_lang, min_btn, max_btn, close_btn, found_path,
-                 scrollable_content, get_text,
-                 update_func, auto_finder_func):
-        self.tab_connect = tab_connect
-        self.tab_settings = tab_settings
-        self.paned_window = paned_window
-        self.upper_frame = upper_frame
-        self.nmap_input_row = nmap_input_row
-        self.adb_input_row = adb_input_row
-        self.adb_btn_container = adb_btn_container
-        self.tab1_label = tab1_label
-        self.tab1_label2 = tab1_label2
+    def __init__(self, app: 'MainApp', check_data, data, update_func, auto_finder_func):
+        from nmap_scan import nmap_brain
+
+        self.app = app
         self.check_data = check_data
-        self.log_text = log_text
-        self.tab1_input = tab1_input
-        self.tab1_input2 = tab1_input2
-        self.tab1_nmap_button = tab1_nmap_button
-        self.tab1_connect_button = tab1_connect_button
-        self.root = root
-        self.nmap_btn_container = nmap_btn_container
         self.data = data
-        self.current_lang = current_lang
-        self.min_btn, self.max_btn, self.close_btn = min_btn, max_btn, close_btn
-        self.found_path = found_path
-        self.scrollable_content = scrollable_content
+
+        self.tab_connect = self.app.tab_connect
+        self.tab_settings = self.app.tab_settings
+        self.paned_window = self.app.paned_window
+        self.upper_frame = self.app.upper_frame
+        self.nmap_input_row = self.app.nmap_input_row
+        self.adb_input_row = self.app.adb_input_row
+        self.adb_btn_container = self.app.adb_btn_container
+        self.tab1_label = self.app.tab1_label
+        self.tab1_label2 = self.app.tab1_label2
+        self.log_text = self.app.log_text
+        self.tab1_input = self.app.tab1_input
+        self.tab1_input2 = self.app.tab1_input2
+        self.tab1_nmap_button = self.app.tab1_nmap_button
+        self.tab1_connect_button = self.app.tab1_connect_button
+        self.root = self.app.root
+        self.nmap_btn_container = self.app.nmap_btn_container
+        self.current_lang = self.app.current_lang
+        self.min_btn, self.max_btn, self.close_btn = self.app.min_btn, self.app.max_btn, self.app.close_btn
+        self.found_path = self.app.found_path
+        self.scrollable_content = self.app.scrollable_content
         self.update_func = update_func
         self.auto_finder_func = auto_finder_func
-        self.get_text = get_text
+        self.get_text = self.app.get_text
 
         default_path = os.path.dirname(os.path.abspath(__file__))
         self.file_path = os.path.join(default_path, "check.json")
 
         self.var = IntVar()
         self.live_helper_var = IntVar()
-        if check_data["theme"] == "dark":
-            self.var.set(1)
-        else:
-            self.var.set(0)
         self.var.trace_add("write", self.check_dark_theme_btn)
 
+        self.auto_nmap_var = IntVar()
+        self.auto_nmap_var.trace_add("write", self.start_auto_nmap)
+
         self.tab_settings.config(bg=S_BG)
-        self.settings_style_frame = Frame(self.tab_settings, bg=S_BG)
-        self.settings_main_frame = Frame(self.tab_settings, bg=S_BG)
+        self.canvas = Canvas(self.tab_settings, bg=S_BG, highlightthickness=0)
+        self.scrollbar = Scrollbar(self.tab_settings, orient="vertical", command=self.canvas.yview)
+
+        self.settings_container = Frame(self.canvas, bg=S_BG)
+
+        self.settings_style_frame = Frame(self.settings_container, bg=S_BG)
+        self.settings_main_frame = Frame(self.settings_container, bg=S_BG)
+
         self.settings_style_frame.pack(fill="both")
-        self.settings_main_frame.pack(fill="both", pady=(0, 0))
+        self.settings_main_frame.pack(fill="both")
+
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+        self.scrollbar.pack(side="right", fill="y")
+        self.canvas.pack(side="left", fill="both", expand=True)
+
+        self.canvas_window = self.canvas.create_window((0, 0), window=self.settings_container, anchor="nw")
+
+        self.settings_container.bind("<Configure>", self._on_frame_configure)
+        self.canvas.bind("<Configure>", self._on_canvas_configure)
+        self.canvas.bind("<MouseWheel>", self._on_mousewheel)
+        self.settings_container.bind("<MouseWheel>", self._on_mousewheel)
 
         # ── Card: body ───────────────────────────────────────────
         self.style_body = self.make_card(
@@ -118,20 +135,55 @@ class settings_style:
             self.settings_main_frame,
             self.get_text("l320"), "l320"
         )
+        self.auto_nmap_body = self.make_card(
+            self.settings_main_frame,
+            self.get_text("l333"), "l333"
+        )
 
         self.row2 = Frame(self.body, bg=CARD)
+        self.background_processF = Frame(self.body, bg=CARD)
+        self.auto_nmapF = Frame(self.auto_nmap_body, bg=CARD)
+
         self.row2.pack(fill="x", pady=4)
+        self.background_processF.pack(fill="x", pady=4)
+        self.auto_nmapF.pack(fill="x", pady=4)
+
         self.row_label1 = Label(
             self.row2, text=self.get_text("l325"), font=FONT_BOLD,
             bg=CARD, fg=FG, width=20, anchor="w", name="l325"
         )
+        self.root.update_idletasks()
         self.row_label2 = Label(
-            self.row2, text=(self.get_text("l326") + " " + str(self.found_path)),
+            self.row2, text=f"{self.get_text("l326")} {str(self.found_path)}",
             font=FONT_SMALL, bg=CARD, fg=FG_MUTED, wraplength=300,
             name="l326"
         )
+        self.background_processL_main = Label(
+            self.background_processF, text=self.get_text("l335"), font=FONT_BOLD, 
+            bg=CARD, fg=FG, width=20, anchor="w", name="l335"
+        )
+        self.background_processL_inner = Label(
+            self.background_processF, text=(self.get_text("l336")),
+            font=FONT_SMALL, bg=CARD, fg=FG_MUTED, wraplength=300,
+            name="l336"
+        )
+        self.auto_nmapL_main = Label(
+            self.auto_nmapF, text=self.get_text("l334"), font=FONT_BOLD, 
+            bg=CARD, fg=FG, width=20, anchor="w", name="l334"
+        )
+        self.auto_nmapL_inner = Label(
+            self.auto_nmapF, text=(self.get_text("l332")),
+            font=FONT_SMALL, bg=CARD, fg=FG_MUTED, wraplength=300,
+            name="l332"
+        )
+
         self.row_label1.pack(side="left")
         self.row_label2.pack(side="left", padx=(0, 20))
+        self.background_processL_main.pack(side="left")
+        self.background_processL_inner.pack(side="left", padx=(0, 20))
+        self.auto_nmapL_main.pack(side="left")
+        self.auto_nmapL_inner.pack(side="left", padx=(0,20))
+
         choose_path_btn = Button(
             self.row2,
             text=self.get_text("l328"),
@@ -162,8 +214,33 @@ class settings_style:
             pady=4,
             bd=0
         )
+        self.choose_auto_nmap_btn = Button(
+            self.auto_nmapF,
+            text=self.get_text("l324") if self.auto_nmap_var.get() == 1 else self.get_text("l323"),
+            name="l324" if self.auto_nmap_var.get() == 1 else "l323",
+            font=FONT_BOLD,
+            bg=ACCENT if self.auto_nmap_var.get() == 1 else "#D1D5DB",
+            fg="white" if self.auto_nmap_var.get() == 1 else FG,
+            activebackground=BTN_ACT,
+            activeforeground="white",
+            relief="flat",
+            cursor="hand2",
+            padx=16,
+            pady=5,
+            bd=0,
+            width=10,
+            command=lambda: [
+                self.auto_nmap_var.set(0 if self.auto_nmap_var.get() == 1 else 1),
+                self._toggle(self.choose_auto_nmap_btn, self.auto_nmap_var)
+            ]
+        )
+        self.choose_auto_nmap_ip = Entry(
+            self.auto_nmapF
+        )
+        self.choose_auto_nmap_ip.bind("<Return>", self.get_nmap_ip)
         choose_path_btn.pack(side="right")
         choose_path_auto_finder.pack(side="right")
+        self.choose_auto_nmap_btn.pack(side="right")
         choose_path_btn.bind("<Button-1>", self.choose_path)
         choose_path_auto_finder.bind("<Button-1>", self.auto_finder_adb)
 
@@ -221,6 +298,24 @@ class settings_style:
         self.change_port_input.insert(0, str(check_data["choosen_port"]))
         self.change_port_input.bind('<Return>', self.change_port_func)
 
+        if check_data["theme"] == "dark":
+            self.var.set(1)
+        else:
+            self.var.set(0)
+
+        if check_data["is_auto_nmap_on"] == False:
+            self.auto_nmap_var.set(0)
+            if self.choose_auto_nmap_ip.winfo_viewable():
+                self.choose_auto_nmap_ip.pack_forget()
+            else:
+                pass
+        else:
+            self.auto_nmap_var.set(1)
+            if self.choose_auto_nmap_ip.winfo_viewable():
+                pass
+            else:
+                self.choose_auto_nmap_ip.pack(side="right")
+
 
     @property
     def is_dark(self):
@@ -250,6 +345,14 @@ class settings_style:
         body = Frame(outer, bg=CARD, padx=14, pady=12)
         body.pack(fill="x")
         return body
+    def _on_frame_configure(self, event):
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+
+    def _on_canvas_configure(self, event):
+        self.canvas.itemconfig(self.canvas_window, width=event.width)
+
+    def _on_mousewheel(self, event):
+        self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
     def choose_path(self, event):
         self.root.update_idletasks()
@@ -257,13 +360,26 @@ class settings_style:
         choosen_path = filedialog.askopenfilename()
         if choosen_path:
             self.update_func(choosen_path)
-            self.row_label2.configure(text=self.get_text("l326") + " " + choosen_path)
+            self.row_label2.configure(text=f"{self.get_text("l326")} {choosen_path}")
+
+    def get_nmap_ip(self, event):
+        self.choose_auto_nmap_ip.configure(bg="lightgreen")
+        self.root.after(1000, lambda: self.choose_auto_nmap_ip.configure(bg="white"))
+        logging.debug(f"auto_nmap_ip: {self.choose_auto_nmap_ip.get()}")
+        self.check_data["choosen_nmap_ip"] = self.choose_auto_nmap_ip.get()
+        try:
+            logging.debug("")
+            with open(self.file_path, "w") as g:
+                json.dump(self.check_data, g, indent=4, ensure_ascii=False)
+        except Exception as e:
+            logging.debug(f"LOOK MTF {e}")
+
 
     def auto_finder_adb(self, event):
         self.auto_finder_func()
         adb_path = self.check_data["choosen_path_for_adb"]
         self.root.after(
-            1000, lambda: self.row_label2.configure(text=self.get_text("l326") + " " + adb_path)
+            1000, lambda: self.row_label2.configure(text=f"{self.get_text("l326")} {adb_path}")
         )
 
     def check_dark_theme_btn(self, *args):
@@ -277,7 +393,7 @@ class settings_style:
             self.choose_theme("SystemButtonFace", "black")
             self.choose_themeW("SystemButtonFace")
             print("the election was canceled")
-        with open("check.json", "w", encoding="utf-8") as fi:
+        with open(self.file_path, "w", encoding="utf-8") as fi:
             json.dump(self.check_data, fi, indent=4, ensure_ascii=False)
 
     def check_live_helper_is_on(self, *args):
@@ -288,6 +404,24 @@ class settings_style:
             self.check["is_live_helper_on"] = False
         with open("check.json", "w", encoding="utf-8") as le:
             json.dump(self.check_data, le, indent=4, ensure_ascii=False)
+
+    def start_auto_nmap(self, *args):
+        if self.auto_nmap_var.get() == 1:
+            self.check_data["is_auto_nmap_on"] = True
+            if self.choose_auto_nmap_ip.winfo_viewable():
+                pass
+            else:
+                self.choose_auto_nmap_ip.pack(side="right")
+            logging.debug("PRESSED AUTO NMAP BUTTON OPENED")
+        else:
+            self.check_data["is_auto_nmap_on"] = False
+            if self.choose_auto_nmap_ip.winfo_viewable():
+                self.choose_auto_nmap_ip.pack_forget()
+            else:
+                pass
+            logging.debug("PRESSED AUTO NMAP BUTTON CLOSED")
+        with open(self.file_path, "w") as v:
+            json.dump(self.check_data, v, indent=4, ensure_ascii=False)
 
     def _toggle(self, btn, var):
         if var.get() == 1:
