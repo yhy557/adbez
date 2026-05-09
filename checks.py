@@ -96,7 +96,7 @@ class startup_check:
 
     def _init_auto_nmap(self):
         """In here,we are checking auto nmap.The nmap_scan is starts If auto nmap is on"""
-        if self.check_data["is_auto_nmap_on"] == True:
+        if self.check_data["is_auto_nmap_on"]:
             # self.nmap_scan_instance = nmap_ui(app=app)
             self.nmap_brain = nmap_brain(
                 on_line=None,
@@ -110,6 +110,7 @@ class startup_check:
             self.choose_auto_nmap_btn.config(text=self.get_text("l323"), bg="#2D2D2D", fg="white", relief="flat")
 
     def _load_connected_ips(self):
+        """In here, we are loading last saved connected_ips"""
         json_ip = self.check_data["connected_ips"]
         self.connected_devicesips.configure(text="\n".join(json_ip.keys()))
         if len(self.check_data["connected_ips"]) > 0:
@@ -149,6 +150,8 @@ class startup_check:
             tries = [
                 "C:/platform-tools/adb.exe",
                 "C:/adb.exe",
+                "D:/adb.exe",
+                "E:/adb.exe",
                 os.path.expanduser("~") + path_for_now
             ]
         else:
@@ -179,5 +182,5 @@ class startup_check:
         else:
             logging.warning("Not found")
 
-        print("Found path = ", self.found_path)
+        logging.debug(f"Found path = \n {self.found_path}")
 
