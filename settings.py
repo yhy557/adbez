@@ -7,6 +7,7 @@ import json
 import logging
 import os
 from typing import TYPE_CHECKING
+from utils.file_utils import open_file, write_file
 
 if TYPE_CHECKING:
     from bcopy import MainApp
@@ -65,7 +66,6 @@ class settings_style:
         self.var = IntVar()
         self.live_helper_var = IntVar()
         self.var.trace_add("write", self.check_dark_theme_btn)
-
         self.auto_nmap_var = IntVar()
         self.auto_nmap_var.trace_add("write", self.start_auto_nmap)
 
@@ -77,7 +77,6 @@ class settings_style:
 
         self.settings_style_frame = Frame(self.settings_container, bg=S_BG)
         self.settings_main_frame = Frame(self.settings_container, bg=S_BG)
-
         self.settings_style_frame.pack(fill="both")
         self.settings_main_frame.pack(fill="both")
 
@@ -301,7 +300,7 @@ class settings_style:
         else:
             self.var.set(0)
 
-        if check_data["is_auto_nmap_on"] == False:
+        if not check_data["is_auto_nmap_on"]:
             self.auto_nmap_var.set(0)
             if self.choose_auto_nmap_ip.winfo_viewable():
                 self.choose_auto_nmap_ip.pack_forget()
@@ -314,7 +313,6 @@ class settings_style:
             else:
                 self.choose_auto_nmap_ip.pack(side="right")
 
-
     @property
     def is_dark(self):
         return self.check_data["theme"] == "dark"
@@ -325,8 +323,7 @@ class settings_style:
     
     def change_port_func(self, event):
         self.check_data["choosen_port"] = self.change_port_input.get()
-        with open(self.file_path, "w") as f:
-            json.dump(self.check_data, f, indent=4, ensure_ascii=False)
+        write_file(self.file_path, self.check_data)
 
     def make_card(self, parent, title, name):
         outer = Frame(parent, bg=BORDER, padx=1, pady=1)
@@ -361,16 +358,18 @@ class settings_style:
             self.row_label2.configure(text=f"{self.get_text('l326')} {choosen_path}")
 
     def get_nmap_ip(self, event):
-        self.choose_auto_nmap_ip.configure(bg="lightgreen")
-        self.root.after(1000, lambda: self.choose_auto_nmap_ip.configure(bg="white"))
         logging.debug(f"auto_nmap_ip: {self.choose_auto_nmap_ip.get()}")
-        self.check_data["choosen_nmap_ip"] = self.choose_auto_nmap_ip.get()
+        self.check_data["choosen_nmap_ip"].append(self.choose_auto_nmap_ip.get())
         try:
             logging.debug("")
-            with open(self.file_path, "w") as g:
-                json.dump(self.check_data, g, indent=4, ensure_ascii=False)
+            write_file(self.file_path, self.check_data)
         except Exception as e:
             logging.debug(f"LOOK MTF {e}")
+        self.choose_auto_nmap_ip.delete(0, 'end')
+        self.choose_auto_nmap_ip.insert(0, "Saved!")
+        self.choose_auto_nmap_ip.configure(bg="lightgreen")
+        self.root.after(1500, lambda: self.choose_auto_nmap_ip.configure(bg="white"))
+        self.root.after(1500, lambda: self.choose_auto_nmap_ip.delete(0, 'end'))
 
 
     def auto_finder_adb(self, event):
@@ -391,8 +390,7 @@ class settings_style:
             self.choose_theme("SystemButtonFace", "black")
             self.choose_themeW("SystemButtonFace")
             logging.debug("the election was canceled")
-        with open(self.file_path, "w", encoding="utf-8") as fi:
-            json.dump(self.check_data, fi, indent=4, ensure_ascii=False)
+        write_file(self.file_path, self.check_data)
 
     def check_live_helper_is_on(self, *args):
         if self.live_helper_var.get() == 1:
@@ -400,8 +398,7 @@ class settings_style:
             self.check["is_live_helper_on"] = True
         else:
             self.check["is_live_helper_on"] = False
-        with open("check.json", "w", encoding="utf-8") as le:
-            json.dump(self.check_data, le, indent=4, ensure_ascii=False)
+        write_file(self.file_path, self.check_data)  #check.json
 
     def start_auto_nmap(self, *args):
         if self.auto_nmap_var.get() == 1:
@@ -418,8 +415,7 @@ class settings_style:
             else:
                 pass
             logging.debug("PRESSED AUTO NMAP BUTTON CLOSED")
-        with open(self.file_path, "w") as v:
-            json.dump(self.check_data, v, indent=4, ensure_ascii=False)
+        write_file(self.file_path, self.check_data)
 
     def _toggle(self, btn, var):
         if var.get() == 1:
@@ -451,7 +447,7 @@ class settings_style:
                     )
             if widget.winfo_children():
                 self.apply_button_style(widget)
-            elif isinstance(widget, ttk.Button):
+            if isinstance(widget, ttk.Button):
                 style_name = str(widget) + ".TButton"
                 s = ttk.Style()
                 if self.check_data["theme"] == "dark":
