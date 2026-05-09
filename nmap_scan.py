@@ -5,7 +5,7 @@ import re
 import platform
 from tkinter import Button
 import logging
-from utils.file_utils import open_file, write_file
+from utils.file_utils import open_file, write_file, append_file
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - [%(levelname)s] - %(message)s',
@@ -206,11 +206,11 @@ class nmap_brain:
 
         self.found_ips = []
 
-    def try_find(self, ip: str):
+    def try_find(self, ip: str | list):
         logging.debug(f"NMAP IP IS: {ip}")
         self.is_process_running = True
         self.current_process = subprocess.Popen(
-            ["nmap", ip], shell=False, stdout=subprocess.PIPE, text=True
+            ["nmap"] + ip, shell=False, stdout=subprocess.PIPE, text=True
         )
 
         full_output = ""
