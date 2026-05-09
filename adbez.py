@@ -4,6 +4,7 @@ import os
 import platform
 import re
 from datetime import datetime
+from pathlib import Path
 from tkinter import (Toplevel, Label, Button, Tk, PanedWindow,
                      Frame, Canvas, Scrollbar, Y, Entry,
                      Text, Checkbutton)
@@ -27,6 +28,7 @@ logging.basicConfig(
     datefmt='%H:%M:%S',
     force=True
 )
+# default_pat = Path(__file__).resolve().parent
 default_path = os.path.dirname(os.path.abspath(__file__))
 file_path = os.path.join(default_path, "check.json")
 lang_path = os.path.join(default_path, "lang.json")
@@ -529,12 +531,14 @@ class MainApp:
             cursor="hand2"
         )
 
-        self.tab1_label.grid(row=0, column=0, sticky="n", pady=(0, 72), padx=(0, 285))
+        # self.tab1_label.grid(row=0, column=0, sticky="n", pady=(0, 72), padx=(0, 285))
+        self.tab1_label.grid(row=0, column=0, sticky="n", pady=(0, 72))
         self.tab1_input.grid(row=0, column=1, sticky="ew", pady=(0, 10))
         tab1_choose_ip.grid(row=0, column=2, sticky="we", padx=(15, 0), pady=(0, 10))
         self.tab1_nmap_button.grid(row=0, column=0, sticky="ew")
 
-        self.tab1_label2.grid(row=2, column=0, sticky="n", pady=(0,62), padx=(0, 295))
+        # self.tab1_label2.grid(row=2, column=0, sticky="n", pady=(0,62), padx=(0, 295))
+        self.tab1_label2.grid(row=2, column=0, sticky="n", pady=(0,62))
         self.tab1_input2.grid(row=0, column=1, sticky="ew")
         tab1_found_ip.grid(row=0, column=2, sticky="ew", padx=(15, 0))
         self.tab1_connect_button.grid(row=0, column=0, sticky="ew", padx=(5, 0))
@@ -601,7 +605,7 @@ class MainApp:
                                     relief="sunken", sashwidth=4,
                                     sashrelief="sunken", bg="black")
         self.upper_frame2 = Frame(self.paned_window2)
-        self.paned_window2.add(self.upper_frame2, minsize=700)
+        self.paned_window2.add(self.upper_frame2, minsize=500)
         self.paned_window2.pack(fill="both", expand=True, anchor="w", side="left")
         lower_frame2 = Frame(self.paned_window2)
         lower_frame2.grid_columnconfigure(0, weight=1)
@@ -776,7 +780,6 @@ class MainApp:
         item = lang_data.get(key, default)
         if isinstance(item, dict):
             return item.get("text", default)
-        
         return item
 
 
@@ -785,7 +788,9 @@ class MainApp:
         check_data["founded_ips"] = []
         logging.debug(check_data)
         write_file(self.file_path, check_data)
-        self.root.destroy()
+        if hasattr(self.checker, "nmap_brain"):
+            self.checker.nmap_brain.stop_nmap()
+        self.root.after(100, lambda: self.root.destroy())
 
 
     def on_enter(self, event):
@@ -885,15 +890,15 @@ class MainApp:
 
 
     def checks(self):
-        checker = appchecks.startup_check()
+        self.checker = appchecks.startup_check()
         self.my_settings = settings_style(
             app=self,
             check_data=self.check_data,
             data=data,
             update_func=self.update_path,
-            auto_finder_func=checker.try_find_adb
+            auto_finder_func=self.checker.try_find_adb
         )
-        checker.app_startup(
+        self.checker.app_startup(
             self.connected_devices_ips, self.current_lang, data, check_data,
             self.check_btn_ip, self, self.my_settings,
             update_lang_func=self.update_all_widgets)
