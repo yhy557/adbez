@@ -4,6 +4,7 @@ import json
 import logging
 import platform
 import shutil
+import socket
 import threading
 from nmap_scan import nmap_brain,nmap_ui
 from settings import settings_style
@@ -67,6 +68,42 @@ class startup_check:
         self._init_auto_nmap()
         self._load_connected_ips()
         self._apply_theme()
+
+        get_ip_thread = threading.Thread(target=self._get_local_ip, daemon=True)
+        get_ip_thread.start()
+
+    def _get_local_ip(self):
+        port = 80
+
+        try:
+            hostname = socket.gethostname()
+            all_ips = socket.getaddrinfo(hostname, None, socket.AF_INET)
+
+            for item in all_ips:
+                ip = item[4][0]
+                if ip.startswith("192.168."):
+                    ip1 = list(ip.split("."))
+                    ip2 = ip1[:3]
+                    self.ip = ".".join(ip2) + ".0/24"
+                    logging.debug(f"Local ip successfully found: {self.ip}")
+                    return
+                
+            for item in all_ips:
+                ip = item[4][0]
+                if ip.startswith("10."):
+                    self.ip = ip
+                    logging.debug(f"Local ip successfully found: {self.ip}")
+                    return
+            
+            port = 80
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", port))
+            self.ip = s.getsockname()[0]
+            s.close()
+
+        except Exception as e:
+            self.ip = "192.168.1.0/24"
+            logging.debug(f"Local ip found failed: {e}")
 
     def _init_data_file(self):
         """In here,we are updating last_entered time"""
