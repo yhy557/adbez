@@ -285,8 +285,9 @@ class MainApp:
 
         self.canvas2.bind("<Configure>", self.on_canvas_resize)
         # PLACEMENT CONFIGURATION
-        self.upper_frame.rowconfigure(0, weight=1)
-        self.upper_frame.rowconfigure(8, weight=1)
+        self.upper_frame.rowconfigure(0, weight=0)
+        self.upper_frame.rowconfigure(1, weight=1)
+        self.upper_frame.rowconfigure(8, weight=0)
         self.upper_frame.columnconfigure(0, weight=1)
         self.upper_frame.columnconfigure(1, weight=0)
         self.upper_frame.columnconfigure(2, weight=1)
@@ -464,7 +465,7 @@ class MainApp:
 
         # NMAP IP MENU
         self.menu_frame = Frame(self.upper_frame, background="red")
-        menu_frame_in1 = Button(self.menu_frame, text="192.168.1.0/24")
+        self.menu_frame_in1 = Button(self.menu_frame, text="")
         menu_frame_in2 = Button(self.menu_frame, text="127.0.0.0/24")
         # ADB IP MENU
         self.menu_frame_found = Frame(self.upper_frame, background="red")
@@ -577,7 +578,7 @@ class MainApp:
             )
         )
         # nmap ip menu events
-        menu_frame_in1.bind("<Button-1>", self.enter_choosed_ip)
+        self.menu_frame_in1.bind("<Button-1>", self.enter_choosed_ip)
         menu_frame_in2.bind("<Button-1>", self.enter_choosed_ip)
         # lang menu events
         menu_frame_lang1.bind("<Button-1>", lambda event: self.update_all_widgets("en"))
@@ -902,6 +903,14 @@ class MainApp:
             self.connected_devices_ips, self.current_lang, data, check_data,
             self.check_btn_ip, self, self.my_settings,
             update_lang_func=self.update_all_widgets)
+
+        self.root.after(2000, self._update_ip_label)
+
+    def _update_ip_label(self):
+        if hasattr(self.checker, "ip"):
+            self.menu_frame_in1.config(text=self.checker.ip)
+        else:
+            self.root.after(2000, self._update_ip_label)
 
 
     def update_path(self, new_path: str):
