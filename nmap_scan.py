@@ -55,6 +55,7 @@ class nmap_ui:
         self.check_data = open_file(check_path)
         self.show_ui_things(self.tab1_input.get())
 
+
     def show_ui_things(self, ip: str):
         logging.debug(f"ip of nmap {ip}")
         # WE ARE GETTING ENTRY COORDINATES TO THE FAILED_LABELS
@@ -209,8 +210,9 @@ class nmap_brain:
     def try_find(self, ip: str | list):
         logging.debug(f"NMAP IP IS: {ip}")
         self.is_process_running = True
+        full_command = ["nmap"] + (ip if isinstance(ip, list) else [ip])
         self.current_process = subprocess.Popen(
-            ["nmap"] + ip, shell=False, stdout=subprocess.PIPE, text=True
+            full_command, shell=False, stdout=subprocess.PIPE, text=True
         )
 
         full_output = ""
