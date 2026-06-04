@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from utils.file_utils import open_file, write_file
 
 if TYPE_CHECKING:
-    from bcopy import MainApp
+    from adbez import MainApp
 
 FONT = ("Segoe UI", 10)
 FONT_BOLD = ("Segoe UI", 10, "bold")
