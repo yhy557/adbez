@@ -1,0 +1,14 @@
+{
+    "last_entered": "2026-06-09 01:05:30.389054",
+    "last_commands": {},
+    "connected_ips": {},
+    "theme": "dark",
+    "choosen_nmap_ip": [
+        "192.168.1.0/24"
+    ],
+    "choosen_port": "5555",
+    "choosen_path_for_adb": "C:\\Users\\yahya\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Google.PlatformTools_Microsoft.Winget.Source_8wekyb3d8bbwe\\platform-tools\\adb.EXE",
+    "choosen_language": "en",
+    "is_live_helper_on": false,
+    "is_auto_nmap_on": true
+}
