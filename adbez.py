@@ -15,6 +15,7 @@ import tkinter as tk
 import adb_connect as adbc
 import checks as appchecks
 import nmap_scan as nmaps
+import config.constants as const
 from config.state import global_state
 from scroll_buttons import Buttons
 from settings import SettingsStyle
@@ -114,13 +115,7 @@ class Tooltip:
             self.tooltip_window = None
 #--------------------------------------------------------
 
-TAB_W = 110
-TAB_H = 32
-TAB_GAP = 2
-border_color = "#3d3d3d"
-bg_color = "#1e1e1e"
 
-CATEGORY_COUNT = 8
 
 class MainApp:
     def __init__(self):
@@ -131,11 +126,7 @@ class MainApp:
 
         self.checkbutton_map = {}
         self.check_vars = {}
-        self.shared_nmap_processes = []
-        self.active_adb_list = []
         self.category_btn = []
-        self.button_references = []
-        self.active_processes = []
         self.my_settings = None
         self._tab_canvas = None
         self._content_frame = None
@@ -257,7 +248,7 @@ class MainApp:
             ("settings",   data[global_state.current_lang]["l17"], self.tab_settings,   "l17"),
             ("connected",  data[global_state.current_lang]["l18"], self.tab_connected,  "l18"),
         ]
-        self.background_color = bg_color
+        self.background_color = const.BG_COLOR
         self._build_tab_connect()
         self._build_tab_keyevents()
         self._build_tab_connected()
@@ -292,13 +283,13 @@ class MainApp:
 
     def _build_main_window(self):
         # OUTER FRAME
-        external_frame = tk.Frame(self.root, bg=border_color, bd=0)
+        external_frame = tk.Frame(self.root, bg=const.BORDER_COLOR, bd=0)
         external_frame.pack(fill="both", expand=True)
         # INNER MAIN AREA
-        main_area = tk.Frame(external_frame, bg=bg_color, bd=0)
+        main_area = tk.Frame(external_frame, bg=const.BG_COLOR, bd=0)
         main_area.pack(fill="both", expand=True, padx=1, pady=1)
         # TITLE BAR
-        title_bar = tk.Frame(main_area, bg="#2d2d2d", height=30)
+        title_bar = tk.Frame(main_area, bg=const.HEADER_BAR_COLOR, height=30)
         title_bar.pack(fill="x")
         if platform.system() == "Windows":
             title_bar.bind("<Button-1>", self.on_move)
@@ -314,10 +305,10 @@ class MainApp:
         sizegrip.pack(side="right", anchor="se")
 
         title_label = Label(title_bar, text="ADBez",
-                            bg="#2d2d2d", fg="white",
+                            bg=const.HEADER_BAR_COLOR, fg="white",
                             font=("Arial", 9))
         title_label.pack(side="left", padx=10)
-        self.min_btn = Button(title_bar, text="—", bg="#2d2d2d", fg="white", bd=0,
+        self.min_btn = Button(title_bar, text="—", bg=const.HEADER_BAR_COLOR, fg="white", bd=0,
                         activebackground="#404040", activeforeground="white",
                         command=self.minimize_window, width=4, font=("Arial", 9))
         self.min_btn.pack(side="right", fill="y")
@@ -325,14 +316,14 @@ class MainApp:
         self.min_btn.bind("<Leave>", self.leave_enter)
 
         # FULL SCREEN(□)
-        self.max_btn = Button(title_bar, text="▢", bg="#2d2d2d", fg="white", bd=0,
+        self.max_btn = Button(title_bar, text="▢", bg=const.HEADER_BAR_COLOR, fg="white", bd=0,
                         activebackground="#404040", activeforeground="white",
                         command=self.maximize_window, width=4, font=("Arial", 10))
         self.max_btn.pack(side="right", fill="y")
         self.max_btn.bind("<Enter>", self.on_enter)
         self.max_btn.bind("<Leave>", self.leave_enter)
 
-        self.close_btn = Button(title_bar, text="✕", bg="#2d2d2d", fg="white", bd=0,
+        self.close_btn = Button(title_bar, text="✕", bg=const.HEADER_BAR_COLOR, fg="white", bd=0,
                         activebackground="red", width=4)
         self.close_btn.pack(side="right", fill="y")
         self.close_btn.bind("<Button-1>", self.close_window)
@@ -345,7 +336,7 @@ class MainApp:
         self._content_frame.pack(fill="both", expand=True)
 
         self._tab_canvas = Canvas(
-            _tab_bar, bg="#1e1e1e", height=TAB_H, highlightthickness=0)
+            _tab_bar, bg="#1e1e1e", height=const.TAB_H, highlightthickness=0)
 
         _scroll_left = Button(_tab_bar, text="◀", bg="#1e1e1e", fg="white", bd=0,
                             activebackground="#2a2a3a", width=2,
@@ -388,8 +379,8 @@ class MainApp:
             widget,
             2, 2, w-2, h-2,
             radius=20,
-            fill="#292423",   # iç renk
-            outline="#aaaaaa", # kenar rengi
+            fill=const.ROUNDED_PANELS_COLOR,
+            outline=const.ROUNDED_PANELS_BORDER_COLOR,
             width=1.5,
             tags="rounded_bg"
         )
@@ -417,7 +408,7 @@ class MainApp:
         )
         self.canvas_rounded_window.grid(row=1, column=1, sticky="nsew", pady=10)
         self.canvas_rounded_window.bind("<Configure>", self.draw_rounded(self.canvas_rounded_window))
-        self.inner_frame = Frame(self.canvas_rounded_window, bg="#292423")
+        self.inner_frame = Frame(self.canvas_rounded_window, bg=const.ROUNDED_PANELS_COLOR)
         self.canvas_rounded_window.create_window(
             20, 20,
             anchor="nw",
@@ -434,7 +425,7 @@ class MainApp:
         )
         self.connected_devices_ips_panel_borders.grid(row=1, column=2, sticky="nsew", pady=10)
         self.connected_devices_ips_panel_borders.bind("<Configure>", self.draw_rounded(self.connected_devices_ips_panel_borders))
-        self.ips_inner_frame = Frame(self.connected_devices_ips_panel_borders, bg="#292423")
+        self.ips_inner_frame = Frame(self.connected_devices_ips_panel_borders, bg=const.ROUNDED_PANELS_COLOR)
         self.connected_devices_ips_panel_borders.create_window(
             20, 20,
             anchor="nw",
@@ -475,7 +466,7 @@ class MainApp:
         menu_frame_in2 = Button(self.menu_frame, text="127.0.0.0/24")
         # ADB IP MENU
         self.menu_frame_found,self.menu_frame_found_inner = self.scrollable_menu(
-            self.upper_frame, max_height=200)
+            self.upper_frame, max_height=50)
         self.log_text = Text(lower_frame, height=1)
 
         # DEFINITION
@@ -654,7 +645,7 @@ class MainApp:
 
         # CATEGORY MENU
         menu_frame_category = Frame(self.upper_frame2, background="blue")
-        for b in range(CATEGORY_COUNT):
+        for b in range(const.CATEGORY_COUNT):
             btn_key = f"l{b+310}"
             menu_frame_category_in1 = Button(
                 menu_frame_category, text=self.get_text(btn_key),
@@ -718,8 +709,8 @@ class MainApp:
         _x = 0
         for _key, _text, _frame, _lk in self._tab_defs:
             self.tabcontrol.make_tab(self._tab_canvas, _x, _key, _text, _frame, _lk)
-            _x += TAB_W + TAB_GAP
-        self._tab_canvas.config(scrollregion=(0, 0, _x, TAB_H))
+            _x += const.TAB_W + const.TAB_GAP
+        self._tab_canvas.config(scrollregion=(0, 0, _x, const.TAB_H))
 
     def _build_tab_connected(self):
 
@@ -785,7 +776,7 @@ class MainApp:
         event.widget.configure(bg="lightblue")
 
     def leave_enter(self, event):
-        event.widget.configure(bg="#2d2d2d")
+        event.widget.configure(bg=const.HEADER_BAR_COLOR)
 
     def catch_size(self, event):
         if event.widget == self.root:
@@ -1005,20 +996,23 @@ class MainApp:
                 menus.place_forget()
 
     def scrollable_menu(self, parent, max_height=150):
-        max_width = 100
-        outer = Frame(parent, bg="#2a2a2a", bd=1, relief="solid")
-        self.scrollable_menu_canvas = Canvas(outer, bg="#2a2a2a", highlightthickness=0)
+        max_width = 150
+        outer = Frame(parent, bg=const.MENU_COLOR, bd=1, relief="solid")
+        self.scrollable_menu_canvas = Canvas(outer, bg=const.MENU_COLOR, highlightthickness=0, height=1)
         scrollbar = Scrollbar(outer, orient="vertical", command=self.scrollable_menu_canvas.yview, width=10)
-        inner = Frame(self.scrollable_menu_canvas, bg="#2a2a2a")
+        inner = Frame(self.scrollable_menu_canvas, bg=const.MENU_COLOR)
         
         inner.bind("<Configure>", lambda e: (
             self.scrollable_menu_canvas.configure(scrollregion=self.scrollable_menu_canvas.bbox("all")),
-            self.scrollable_menu_canvas.configure(height=min(inner.winfo_reqheight(), max_height), width=min(inner.winfo_reqwidth(), max_width))
-        ))
+            self.scrollable_menu_canvas.configure(
+                height=min(inner.winfo_reqheight(), max_height), 
+                width=min(inner.winfo_reqwidth(), max_width)
+            )
+        ) if e.widget == inner else None)
         self.scrollable_menu_canvas.create_window((0, 0), window=inner, anchor="nw")
         self.scrollable_menu_canvas.configure(yscrollcommand=scrollbar.set, width=inner.winfo_reqwidth())
 
-        self.scrollable_menu_canvas.pack(side="left", fill="y", expand=True)
+        self.scrollable_menu_canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         
         self.scrollable_menu_canvas.bind("<MouseWheel>", lambda e: self.scrollable_menu_canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
@@ -1104,13 +1098,13 @@ class AdbRouter:
     def connect(self, event):
         instance = adbc.adb_connect(
             self.app,
-            on_finish=lambda inst: self.app.active_adb_list.remove(inst) if inst in self.app.active_adb_list else None
+            on_finish=lambda inst: global_state.active_adb_list.remove(inst) if inst in global_state.active_adb_list else None
         )
-        self.app.active_adb_list.append(instance)
+        global_state.active_adb_list.append(instance)
 
     def stop_adb_event(self, event):
-        if self.app.active_adb_list:
-            self.app.active_adb_list[0].stop_adb()
+        if global_state.active_adb_list:
+            global_state.active_adb_list[0].stop_adb()
 
 
 class NmapRouter:

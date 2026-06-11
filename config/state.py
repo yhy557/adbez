@@ -9,6 +9,10 @@ class AppState:
     last_commands: dict = field(default_factory=dict)
 
     shared_adb_processes: list = field(default_factory=list)
+    shared_nmap_processes: list = field(default_factory=list)
+    active_processes: list = field(default_factory=list)
+    button_references: list = field(default_factory=list)
+    active_adb_list: list = field(default_factory=list)
     current_lang: str = "en"
     current_theme: str = ""
 

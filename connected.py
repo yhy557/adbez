@@ -1,5 +1,5 @@
 from tkinter import Button,Entry,Frame
 
-class connected:
+class Connected:
     def __init__(self):
         pass

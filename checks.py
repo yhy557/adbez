@@ -181,7 +181,7 @@ class StartupCheck:
             "<Button-1>",
             lambda event, i=ip: app.found_enter_choosen_ip(event, i)
         )
-        app.button_references.append(new_button)
+        global_state.button_references.append(new_button)
 
     # -----------------------------------------
     def try_find_adb(self):

@@ -37,10 +37,7 @@ class NmapUi:
         self.menu_frame_found       = app.menu_frame_found
         self.processes_in           = app.processes_in
         self.settings_instance      = app.my_settings
-        self.button_references      = app.button_references
-        self.shared_nmap_processes  = app.shared_nmap_processes
         self.ongoing_processes      = app.ongoing_processes
-        self.active_processes       = app.active_processes
         self.update_ui              = app.update_ui
         self.found_enter_choosed_ip = app.found_enter_choosen_ip
         self.on_finish = on_finish
@@ -50,7 +47,7 @@ class NmapUi:
 
 
         logging.debug(
-            f"button_references type: {type(self.button_references)}")
+            f"button_references type: {type(global_state.button_references)}")
 
         self.brain = NmapBrain(
             on_line = lambda line: self.root.after(0, lambda: self.update_ui(line)),
@@ -82,7 +79,7 @@ class NmapUi:
                             lambda: self.tab1_label_failed.place_forget())
             if self.on_finish:
                 self.on_finish(self)
-                self.founded_ips()
+                # self.founded_ips()
             return
         self.brain.stopla = False
         self.root.after(0, lambda: self.log_text.config(state="normal"))
@@ -117,7 +114,7 @@ class NmapUi:
             lambda event, ip=ip: self.found_enter_choosed_ip(event, ip)
         )
 
-        self.button_references.append(new_button)
+        global_state.button_references.append(new_button)
         logging.debug(f"[add_ips_in_menu]-found ips: {new_button}")
 
     def finished_nmap(self, test):
@@ -131,17 +128,17 @@ class NmapUi:
         if not hasattr(self, "my_process_btn"):
             return
         self.root.after(0, lambda: self.update_ui("Scan completed"))
-        if "nmap_process" in self.active_processes:
-            self.active_processes.remove("nmap_process")
+        if "nmap_process" in global_state.active_processes:
+            global_state.active_processes.remove("nmap_process")
         self.root.after(0, lambda: self.my_process_btn.destroy())
-        if self.my_process_btn in self.shared_nmap_processes:
-            self.shared_nmap_processes.remove(self.my_process_btn)
-        if len(self.active_processes) == 0:
+        if self.my_process_btn in global_state.shared_nmap_processes:
+            global_state.shared_nmap_processes.remove(self.my_process_btn)
+        if len(global_state.active_processes) == 0:
             self.root.after(0,
                             lambda: self.ongoing_processes.grid_forget())
-        if self.my_process_btn in self.shared_nmap_processes:
-            self.shared_nmap_processes.remove(self.my_process_btn)
-        if len(self.shared_nmap_processes) == 0:
+        if self.my_process_btn in global_state.shared_nmap_processes:
+            global_state.shared_nmap_processes.remove(self.my_process_btn)
+        if len(global_state.shared_nmap_processes) == 0:
             self.root.after(0, lambda: self.tab1_stop_nmap.grid_forget())
 
             logging.debug("[try_find]-stop button is being deleted")
@@ -173,19 +170,19 @@ class NmapUi:
     
     def stop_nmap_ui(self):
         self.brain.stop_nmap()
-        if len(self.active_processes) == 0:
+        if len(global_state.active_processes) == 0:
             self.root.after(0, lambda: self.ongoing_processes.grid_forget())
             logging.debug("[stop_nmap]-Nmap stopped")
             self.root.after(
                 20, lambda: self.update_ui("\n[!] NMAP scan is terminated")
             )
-            if "nmap_process" in self.active_processes:
-                self.active_processes.remove("nmap_process")
+            if "nmap_process" in global_state.active_processes:
+                global_state.active_processes.remove("nmap_process")
 
-            if len(self.shared_nmap_processes) == 0:
+            if len(global_state.shared_nmap_processes) == 0:
                 self.root.after(0,
                                 lambda: self.tab1_stop_nmap.destroy())
-            self.shared_nmap_processes.remove(self.my_process_btn)
+            global_state.shared_nmap_processes.remove(self.my_process_btn)
 
             self.root.after(0, lambda: self.my_process_btn.destroy())
     
@@ -193,10 +190,10 @@ class NmapUi:
         self.brain.stop_nmap()
 
     def show_processes(self):
-        self.active_processes.append("nmap_process")
+        global_state.active_processes.append("nmap_process")
         self.my_process_btn = Button(self.ongoing_processes,
                                      text=f"Nmap: {self.tab1_input.get()}")
-        self.shared_nmap_processes.append(self.my_process_btn)
+        global_state.shared_nmap_processes.append(self.my_process_btn)
         self.root.after(0, lambda: self.my_process_btn.pack(fill="x"))
         self.root.after(0, lambda: self.ongoing_processes.grid(
             row=8, column=0, sticky="sw")
@@ -218,7 +215,7 @@ class NmapBrain:
     def try_find(self, ip: str | list):
         logging.debug(f"NMAP IP IS: {ip}")
         self.is_process_running = True
-        full_command = ["nmap"] + (ip if isinstance(ip, list) else [ip])
+        full_command = ["nmap", "-sn", "-n"] + (ip if isinstance(ip, list) else [ip])
         self.current_process = subprocess.Popen(
             full_command, shell=False, stdout=subprocess.PIPE, text=True
         )
@@ -292,3 +289,11 @@ class NmapBrain:
                     f"[stop_nmap]-Nmap scan is can't terminated: {e}")
             if self.on_finish:
                 self.on_finish(self)
+
+
+#FOR FUTURE USE:
+"""NOTES"""
+
+"""for finding devices informations =
+full_command = ["nmap", "-F", "-O", "-n", "--script=upnp-info"]"""
+

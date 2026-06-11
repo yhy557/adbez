@@ -8,25 +8,11 @@ import logging
 import os
 from typing import TYPE_CHECKING
 from utils.file_utils import open_file, write_file
+import config.constants as const
 from config.state import global_state
 
 if TYPE_CHECKING:
     from adbez import MainApp
-
-FONT = ("Segoe UI", 10)
-FONT_BOLD = ("Segoe UI", 10, "bold")
-FONT_SMALL = ("Segoe UI", 9)
-
-S_BG = "#F0F2F5"
-CARD = "#FFFFFF"
-BORDER = "#D1D5DB"
-HEADER_BG = "#E8EAED"
-FG = "#111827"
-FG_MUTED = "#6B7280"
-ACCENT = "#2563EB"
-BTN_BG = "#2563EB"
-BTN_FG = "#FFFFFF"
-BTN_ACT = "#1D4ED8"
 
 
 
@@ -71,14 +57,14 @@ class SettingsStyle:
         self.auto_nmap_var = IntVar()
         self.auto_nmap_var.trace_add("write", self.start_auto_nmap)
 
-        self.tab_settings.config(bg=S_BG)
-        self.canvas = Canvas(self.tab_settings, bg=S_BG, highlightthickness=0)
+        self.tab_settings.config(bg=const.S_BG)
+        self.canvas = Canvas(self.tab_settings, bg=const.S_BG, highlightthickness=0)
         self.scrollbar = Scrollbar(self.tab_settings, orient="vertical", command=self.canvas.yview)
 
-        self.settings_container = Frame(self.canvas, bg=S_BG)
+        self.settings_container = Frame(self.canvas, bg=const.S_BG)
 
-        self.settings_style_frame = Frame(self.settings_container, bg=S_BG)
-        self.settings_main_frame = Frame(self.settings_container, bg=S_BG)
+        self.settings_style_frame = Frame(self.settings_container, bg=const.S_BG)
+        self.settings_main_frame = Frame(self.settings_container, bg=const.S_BG)
         self.settings_style_frame.pack(fill="both")
         self.settings_main_frame.pack(fill="both")
 
@@ -99,21 +85,21 @@ class SettingsStyle:
             self.get_text("l319"), "l319"
         )
 
-        row1 = Frame(self.style_body, bg=CARD)
+        row1 = Frame(self.style_body, bg=const.CARD)
         row1.pack(fill="x", pady=4)
-        Label(row1, text="Dark Mode", font=FONT_BOLD,
-              bg=CARD, fg=FG, width=20, anchor="w").pack(side="left")
+        Label(row1, text="Dark Mode", font=const.FONT_BOLD,
+              bg=const.CARD, fg=const.FG, width=20, anchor="w").pack(side="left")
         Label(
             row1, text=self.get_text("l322"),
-            font=FONT_SMALL, bg=CARD, fg=FG_MUTED, name="l322").pack(side="left", padx=(0, 20))
+            font=const.FONT_SMALL, bg=const.CARD, fg=const.FG_MUTED, name="l322").pack(side="left", padx=(0, 20))
         self.dark_theme_btn = Button(
             row1,
             text=self.get_text("l324") if self.var.get() == 1 else self.get_text("l323"),
             name="l324" if self.var.get() == 1 else "l323",
-            font=FONT_BOLD,
-            bg=ACCENT if self.var.get() == 1 else "#D1D5DB",
-            fg="white" if self.var.get() == 1 else FG,
-            activebackground=BTN_ACT,
+            font=const.FONT_BOLD,
+            bg=const.ACCENT if self.var.get() == 1 else "#D1D5DB",
+            fg="white" if self.var.get() == 1 else const.FG,
+            activebackground=const.BTN_ACT,
             activeforeground="white",
             relief="flat",
             cursor="hand2",
@@ -143,10 +129,10 @@ class SettingsStyle:
             self.get_text("l337"), "l337"
         )
 
-        self.row2 = Frame(self.body, bg=CARD)
-        self.background_processF = Frame(self.body, bg=CARD)
-        self.auto_nmapF = Frame(self.auto_nmap_body, bg=CARD)
-        self.langF = Frame(self.languages_body, bg=CARD)
+        self.row2 = Frame(self.body, bg=const.CARD)
+        self.background_processF = Frame(self.body, bg=const.CARD)
+        self.auto_nmapF = Frame(self.auto_nmap_body, bg=const.CARD)
+        self.langF = Frame(self.languages_body, bg=const.CARD)
 
         self.row2.pack(fill="x", pady=4)
         self.background_processF.pack(fill="x", pady=4)
@@ -154,40 +140,40 @@ class SettingsStyle:
         self.langF.pack(fill="x", pady=4)
 
         self.row_label1 = Label(
-            self.row2, text=self.get_text("l325"), font=FONT_BOLD,
-            bg=CARD, fg=FG, width=20, anchor="w", name="l325"
+            self.row2, text=self.get_text("l325"), font=const.FONT_BOLD,
+            bg=const.CARD, fg=const.FG, width=20, anchor="w", name="l325"
         )
         self.root.update_idletasks()
         self.row_label2 = Label(
             self.row2, text=f"{self.get_text('l326')} {str(self.found_path)}",
-            font=FONT_SMALL, bg=CARD, fg=FG_MUTED, wraplength=300,
+            font=const.FONT_SMALL, bg=const.CARD, fg=const.FG_MUTED, wraplength=300,
             name="l326"
         )
         self.background_processL_main = Label(
-            self.background_processF, text=self.get_text("l335"), font=FONT_BOLD, 
-            bg=CARD, fg=FG, width=20, anchor="w", name="l335"
+            self.background_processF, text=self.get_text("l335"), font=const.FONT_BOLD, 
+            bg=const.CARD, fg=const.FG, width=20, anchor="w", name="l335"
         )
         self.background_processL_inner = Label(
             self.background_processF, text=(self.get_text("l336")),
-            font=FONT_SMALL, bg=CARD, fg=FG_MUTED, wraplength=300,
+            font=const.FONT_SMALL, bg=const.CARD, fg=const.FG_MUTED, wraplength=300,
             name="l336"
         )
         self.auto_nmapL_main = Label(
-            self.auto_nmapF, text=self.get_text("l334"), font=FONT_BOLD, 
-            bg=CARD, fg=FG, width=20, anchor="w", name="l334"
+            self.auto_nmapF, text=self.get_text("l334"), font=const.FONT_BOLD,
+            bg=const.CARD, fg=const.FG, width=20, anchor="w", name="l334"
         )
         self.auto_nmapL_inner = Label(
             self.auto_nmapF, text=(self.get_text("l332")),
-            font=FONT_SMALL, bg=CARD, fg=FG_MUTED, wraplength=300,
+            font=const.FONT_SMALL, bg=const.CARD, fg=const.FG_MUTED, wraplength=300,
             name="l332"
         )
         self.languages_main = Label(
-            self.langF, text=self.get_text("7"), font=FONT_BOLD, 
-            bg=CARD, fg=FG, width=20, anchor="w", name="l337"
+            self.langF, text=self.get_text("7"), font=const.FONT_BOLD, 
+            bg=const.CARD, fg=const.FG, width=20, anchor="w", name="l337"
         )
         self.languages_inner = Label(
             self.langF, text=(self.get_text("l338")),
-            font=FONT_SMALL, bg=CARD, fg=FG_MUTED, wraplength=300,
+            font=const.FONT_SMALL, bg=const.CARD, fg=const.FG_MUTED, wraplength=300,
             name="l338"
         )
 
@@ -204,11 +190,11 @@ class SettingsStyle:
             self.row2,
             text=self.get_text("l328"),
             name="l328",
-            font=FONT,
-            bg=BTN_BG,
-            fg=BTN_FG,
-            activebackground=BTN_ACT,
-            activeforeground=BTN_FG,
+            font=const.FONT,
+            bg=const.BTN_BG,
+            fg=const.BTN_FG,
+            activebackground=const.BTN_ACT,
+            activeforeground=const.BTN_FG,
             relief="flat",
             cursor="hand2",
             padx=12,
@@ -219,11 +205,11 @@ class SettingsStyle:
             self.row2,
             text=self.get_text("l327"),
             name="l327",
-            font=FONT,
-            bg=BTN_BG,
-            fg=BTN_FG,
-            activebackground=BTN_ACT,
-            activeforeground=BTN_FG,
+            font=const.FONT,
+            bg=const.BTN_BG,
+            fg=const.BTN_FG,
+            activebackground=const.BTN_ACT,
+            activeforeground=const.BTN_FG,
             relief="flat",
             cursor="hand2",
             padx=12,
@@ -234,10 +220,10 @@ class SettingsStyle:
             self.auto_nmapF,
             text=self.get_text("l324") if self.auto_nmap_var.get() == 1 else self.get_text("l323"),
             name="l324" if self.auto_nmap_var.get() == 1 else "l323",
-            font=FONT_BOLD,
-            bg=ACCENT if self.auto_nmap_var.get() == 1 else "#D1D5DB",
-            fg="white" if self.auto_nmap_var.get() == 1 else FG,
-            activebackground=BTN_ACT,
+            font=const.FONT_BOLD,
+            bg=const.ACCENT if self.auto_nmap_var.get() == 1 else "#D1D5DB",
+            fg="white" if self.auto_nmap_var.get() == 1 else const.FG,
+            activebackground=const.BTN_ACT,
             activeforeground="white",
             relief="flat",
             cursor="hand2",
@@ -287,11 +273,11 @@ class SettingsStyle:
             self.settings_main_frame,
             self.get_text("l329"), "l329"
         )
-        self.row3 = Frame(self.live_helper, bg=CARD)
+        self.row3 = Frame(self.live_helper, bg=const.CARD)
         self.row3.pack(fill="x", pady=4)
         self.row_label3 = Label(
             self.row3, text="Live Helper",
-            font=FONT_SMALL, bg=CARD, fg=FG_MUTED, wraplength=300,
+            font=const.FONT_SMALL, bg=const.CARD, fg=const.FG_MUTED, wraplength=300,
             name="l329"
         )
         self.row_label3.pack(side="left")
@@ -299,10 +285,10 @@ class SettingsStyle:
             self.row3,
             text=self.get_text("l324") if self.live_helper_var.get() == 1 else self.get_text("l323"),
             name="l324" if self.live_helper_var.get() == 1 else "l323",
-            font=FONT_BOLD,
-            bg=ACCENT if self.live_helper_var.get() == 1 else "#CB2314",
-            fg="white" if self.live_helper_var.get() == 1 else FG,
-            activebackground=BTN_ACT,
+            font=const.FONT_BOLD,
+            bg=const.ACCENT if self.live_helper_var.get() == 1 else "#CB2314",
+            fg="white" if self.live_helper_var.get() == 1 else const.FG,
+            activebackground=const.BTN_ACT,
             activeforeground="white",
             relief="flat",
             cursor="hand2",
@@ -321,11 +307,11 @@ class SettingsStyle:
             self.settings_main_frame,
             self.get_text("l330"), "l330"
         )
-        self.row4 = Frame(self.adb_configurations, bg=CARD)
+        self.row4 = Frame(self.adb_configurations, bg=const.CARD)
         self.row4.pack(fill="x", pady=4)
         self.row_label4 = Label(
             self.row4, text="Change the default port for ADB Connect",
-            font=FONT_SMALL, bg=CARD, fg=FG_MUTED, wraplength=300,
+            font=const.FONT_SMALL, bg=const.CARD, fg=const.FG_MUTED, wraplength=300,
             name="l331"
         )
         self.row_label4.pack(side="left")
@@ -368,18 +354,18 @@ class SettingsStyle:
         write_file(self.file_path, self.check_data)
 
     def make_card(self, parent, title, name):
-        outer = Frame(parent, bg=BORDER, padx=1, pady=1)
+        outer = Frame(parent, bg=const.BORDER, padx=1, pady=1)
         outer.pack(fill="x", padx=16, pady=(0, 8))
 
         header = Frame(outer, bg="#1E1E2E", padx=14, pady=8)
         header.pack(fill="x")
         title_label = Label(
-            header, text=title, font=FONT_BOLD,
-            bg="#1E1E2E", fg=ACCENT, name=name
+            header, text=title, font=const.FONT_BOLD,
+            bg="#1E1E2E", fg=const.ACCENT, name=name
         )
         title_label.pack(side="left")
 
-        body = Frame(outer, bg=CARD, padx=14, pady=12)
+        body = Frame(outer, bg=const.CARD, padx=14, pady=12)
         body.pack(fill="x")
         return body
     def _on_frame_configure(self, event):
@@ -460,14 +446,14 @@ class SettingsStyle:
 
     def _toggle(self, btn, var):
         if var.get() == 1:
-            btn.config(text=self.get_text("l324"), bg=ACCENT, fg="white", relief="flat")
+            btn.config(text=self.get_text("l324"), bg=const.ACCENT, fg="white", relief="flat")
         else:
-            btn.config(text=self.get_text("l323"), bg="#D1D5DB", fg=FG, relief="flat")
+            btn.config(text=self.get_text("l323"), bg="#D1D5DB", fg=const.FG, relief="flat")
     def _toggle_live_helper(self, btn, var):
         if var.get() == 1:
             btn.config(text=self.get_text("l324"), bg="#31AD12", fg="white", relief="flat")
         else:
-            btn.config(text=self.get_text("l323"), bg="#CB2314", fg=FG, relief="flat")
+            btn.config(text=self.get_text("l323"), bg="#CB2314", fg=const.FG, relief="flat")
 
     def apply_button_style(self, container):
         for widget in container.winfo_children():
@@ -516,8 +502,8 @@ class SettingsStyle:
             self.style_body.configure(bg="gray")
             self.body.configure(bg="gray")
         else:
-            self.style_body.configure(bg=CARD)
-            self.body.configure(bg=CARD)
+            self.style_body.configure(bg=const.CARD)
+            self.body.configure(bg=const.CARD)
 
     def choose_theme(self, color, fg_color):
         self.tab_connect.config(bg=color)
