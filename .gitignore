@@ -3,10 +3,6 @@ __pycache__/
 *.py[codz]
 *$py.class
 
-check.json
-now_logs.txt
-*.log
-
 # C extensions
 *.so
 
