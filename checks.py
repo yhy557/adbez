@@ -6,6 +6,7 @@ import platform
 import shutil
 import socket
 import threading
+import config.paths as paths
 from nmap_scan import NmapBrain,NmapUi
 from settings import SettingsStyle
 from typing import TYPE_CHECKING
@@ -42,9 +43,6 @@ class StartupCheck:
         self.update_lang_func = update_lang_func
         self.check_btn_ip = check_btn_ip
         self.choose_theme_special = style.choose_theme_special
-
-        self.default_path = os.path.dirname(os.path.abspath(__file__))
-        self.file_path = os.path.join(self.default_path, "check.json")
 
         self.now = datetime.now()
         self.json_default_data = {
@@ -105,22 +103,22 @@ class StartupCheck:
 
     def _init_data_file(self):
         """In here,we are updating last_entered time"""
-        if not os.path.exists(self.file_path):
-            with open(self.file_path, "w") as f:
+        if not os.path.exists(paths.CONFIG_FILE_PATH):
+            with open(paths.CONFIG_FILE_PATH, "w") as f:
                 json.dump(self.json_default_data, f, indent=4, ensure_ascii=False)
                 pass
             self.check_data = self.json_default_data
         else:
             logging.debug("LAST_ENTERED UPDATING")
-            with open(self.file_path, "r", encoding="utf-8") as d:
+            with open(paths.CONFIG_FILE_PATH, "r", encoding="utf-8") as d:
                 loaded = json.load(d)
                 logging.debug(f"TRY IT {self.check_data}")
             self.check_data.update(loaded)
             self.check_data["last_entered"] = f"{self.now}"
-            with open(self.file_path, "w") as d:
+            with open(paths.CONFIG_FILE_PATH, "w") as d:
                 json.dump(self.check_data, d, indent=4, ensure_ascii=False)
             logging.debug("---LAST_ENTERED UPDATED---")
-            logging.debug("Written file: %s", self.file_path)
+            logging.debug("Written file: %s", paths.CONFIG_FILE_PATH)
 
     def _init_language(self):
         logging.debug("%s", self.data[self.current_lang]['l1']["text"])
@@ -131,6 +129,12 @@ class StartupCheck:
 
     def _init_auto_nmap(self):
         """In here,we are checking auto nmap.The nmap_scan is starts If auto nmap is on"""
+        target_ips = self.check_data.get("choosen_nmap_ip", [])
+
+        if not target_ips:
+            self.app.root.after(0, lambda: auto_insert(self.app.log_text, "end", "[Auto Nmap is terminated]- Choosen IPs are none"))
+            self.choose_auto_nmap_btn.config(text=self.get_text("l323"), bg="#2D2D2D", fg="white", relief="flat")
+            return
         if self.check_data["is_auto_nmap_on"]:
             # self.nmap_scan_instance = nmap_ui(app=app)
             self.nmap_brain = NmapBrain(
@@ -138,7 +142,7 @@ class StartupCheck:
                 on_ip_found= lambda ip: self.app.root.after(0, lambda i=ip: self._add_ip_to_menu(i, self.app)),
                 on_finish= lambda inst: self._update_log_label()
             )
-            t = threading.Thread(target=self.nmap_brain.try_find, args=(self.check_data["choosen_nmap_ip"],), daemon=True)
+            t = threading.Thread(target=self.nmap_brain.try_find, args=(target_ips,), daemon=True)
             logging.debug("[auto_nmap]-Threading is successfully created")
             self.app.root.after(0, lambda: auto_insert(self.app.log_text, "end", "[Auto Nmap is started]"))
             t.start()
@@ -217,7 +221,7 @@ class StartupCheck:
             logging.debug("Found: %s", self.found_path)
             global_state.did_adb_work = True
             self.check_data["choosen_path_for_adb"] = self.found_path
-            with open(self.file_path, "w", encoding="utf-8") as f:
+            with open(paths.CONFIG_FILE_PATH, "w", encoding="utf-8") as f:
                 json.dump(self.check_data, f, indent=4, ensure_ascii=False)
         else:
             logging.warning("Not found")

@@ -1,4 +1,5 @@
 import logging
+import config.constants as const
 from scroll_buttons import Buttons
 
 class TabControl:
@@ -12,26 +13,15 @@ class TabControl:
         self.tab2_seperate_scroll_BTN = tab2_seperate_scroll_BTN
         self._content_frame = _content_frame
 
-        self.TAB_W = 110
-        self.TAB_H = 32
-        self.TAB_R = 8
-        self.TAB_GAP = 2
-        self.TAB_BG = "#2a2a3a"
-        self.TAB_ACTIVE = "#6ec9a4"
-        self.TAB_HOVER = "#3a3a4a"
-        self.TAB_FG = "#ffffff"
-        self.TAB_FONT = ("Segoe UI", 9)
-
         self._active_tab = None
-
         
     
     def make_tab(self, canvas, x, key, text, frame, lang_key):
-        r, w, h = self.TAB_R, self.TAB_W, self.TAB_H
+        r, w, h = const.TAB_R, const.TAB_W, const.TAB_H
         bg_tag = f"bg_{key}"
         txt_tag = f"txt_{key}"
         line_tag = f"line_{key}"
-        color = self.TAB_BG
+        color = const.TAB_BG
 
         canvas.create_arc(x, 0, x+2*r, 2*r, start=90, extent=90, fill=color,
                         outline="", tags=bg_tag)
@@ -42,10 +32,10 @@ class TabControl:
         canvas.create_rectangle(x, r, x+w, h, fill=color, outline="", tags=bg_tag)
 
         txt_id = canvas.create_text(x + w//2, h//2, text=text,
-                                    fill=self.TAB_FG, font=self.TAB_FONT, tags=txt_tag)
+                                    fill=const.TAB_FG, font=const.TAB_FONT, tags=txt_tag)
 
         canvas.create_rectangle(x+2, h-3, x+w-2, h,
-                                fill=self.TAB_BG, outline="", tags=line_tag)
+                                fill=const.TAB_BG, outline="", tags=line_tag)
 
         self._tabs[key] = {"frame": frame, "text_id": txt_id,
                     "bg_tag": bg_tag, "line_tag": line_tag, "lang_key": lang_key}
@@ -61,7 +51,7 @@ class TabControl:
     def _tab_hover(self, key, entering):
         if key == self._active_tab:
             return
-        color = self.TAB_HOVER if entering else self.TAB_BG
+        color = const.TAB_HOVER if entering else const.TAB_BG
         self._tab_canvas.itemconfig(self._tabs[key]["bg_tag"], fill=color)
 
     def switch_tab(self, key):
@@ -70,11 +60,11 @@ class TabControl:
         for k, v in self._tabs.items():
             v["frame"].place_forget()
             if k != key:
-                self._tab_canvas.itemconfig(v["bg_tag"], fill=self.TAB_BG)
-                self._tab_canvas.itemconfig(v["line_tag"], fill=self.TAB_BG)
+                self._tab_canvas.itemconfig(v["bg_tag"], fill=const.TAB_BG)
+                self._tab_canvas.itemconfig(v["line_tag"], fill=const.TAB_BG)
         self._tabs[key]["frame"].place(in_=self._content_frame, x=0, y=0,
                                 relwidth=1, relheight=1)
-        self._tab_canvas.itemconfig(self._tabs[key]["line_tag"], fill=self.TAB_ACTIVE)
+        self._tab_canvas.itemconfig(self._tabs[key]["line_tag"], fill=const.TAB_ACTIVE)
         self._active_tab = key
         self._on_tab_change(key)
 

@@ -16,11 +16,13 @@ import adb_connect as adbc
 import checks as appchecks
 import nmap_scan as nmaps
 import config.constants as const
+import config.paths as paths
 from config.state import global_state
 from scroll_buttons import Buttons
 from settings import SettingsStyle
 from tab_control import TabControl
 from utils.file_utils import open_file, write_file
+from ui.widgets.rounded_panel import draw_rounded, resize_inner
 
 
 # SOME CONFIGURE FOR LOGGING
@@ -30,10 +32,7 @@ logging.basicConfig(
     datefmt='%H:%M:%S',
     force=True
 )
-# default_pat = Path(__file__).resolve().parent
-default_path = os.path.dirname(os.path.abspath(__file__))
-file_path = os.path.join(default_path, "check.json")
-lang_path = os.path.join(default_path, "lang.json")
+
 
 if platform.system() == "Windows":
     import ctypes
@@ -42,7 +41,7 @@ if platform.system() == "Windows":
     except Exception:
         ctypes.windll.user32.SetProcessDPIAware()
 
-data = open_file(lang_path)
+data = open_file(paths.LANG_FILE_PATH)
 
 now = datetime.now()
 json_default_data = {
@@ -58,11 +57,11 @@ json_default_data = {
 }    
 
 
-if not os.path.exists(file_path):
-    write_file(file_path, json_default_data)
+if not os.path.exists(paths.CONFIG_FILE_PATH):
+    write_file(paths.CONFIG_FILE_PATH, json_default_data)
     check_data = json_default_data
 else:
-    check_data = open_file(file_path)
+    check_data = open_file(paths.CONFIG_FILE_PATH)
 
 
 if platform.system() == "Windows":
@@ -79,41 +78,6 @@ if platform.system() == "Windows":
 
         root.withdraw()
         root.after(10, root.deiconify)
-
-
-
-# FOR MESSAGE BALLON, GEMINI GAVE ME THIS CODE------------------
-class Tooltip:
-    def __init__(self, widget, text):
-        self.widget = widget
-        self.text = text
-        self.tooltip_window = None
-
-        self.widget.bind("<Enter>", self.show_tooltip)
-        self.widget.bind("<Leave>", self.hide_tooltip)
-
-    def show_tooltip(self, event=None):
-        if self.tooltip_window or not self.text:
-            return
-
-        x, y, _, _ = self.widget.bbox("insert")
-        x += self.widget.winfo_rootx() + 25
-        y += self.widget.winfo_rooty() + 25
-
-        self.tooltip_window = tw = Toplevel(self.widget)
-        tw.wm_overrideredirect(True)
-        tw.wm_geometry(f"+{x}+{y}")
-
-        label = Label(tw, text=self.text, background="#ffffe0",
-                      relief="solid", borderwidth=1,
-                      font=("tahoma", 8, "normal"))
-        label.pack()
-
-    def hide_tooltip(self, event=None):
-        if self.tooltip_window:
-            self.tooltip_window.destroy()
-            self.tooltip_window = None
-#--------------------------------------------------------
 
 
 
@@ -354,41 +318,6 @@ class MainApp:
                             command=lambda: self._tab_canvas.xview_scroll(2, "units"))
         _scroll_right.pack(side="left")
 
-    def create_rounded_rect(self, canvas, x1, y1, x2, y2, radius=20, **kwargs):
-        points = [
-            x1+radius, y1,
-            x2-radius, y1,
-            x2, y1,
-            x2, y1+radius,
-            x2, y2-radius,
-            x2, y2,
-            x2-radius, y2,
-            x1+radius, y2,
-            x1, y2,
-            x1, y2-radius,
-            x1, y1+radius,
-            x1, y1,
-        ]
-        return canvas.create_polygon(points, smooth=True, **kwargs)
-    
-    def draw_rounded(self, widget, event=None):
-        widget.delete("rounded_bg")
-        w = widget.winfo_width()
-        h = widget.winfo_height()
-        self.create_rounded_rect(
-            widget,
-            2, 2, w-2, h-2,
-            radius=20,
-            fill=const.ROUNDED_PANELS_COLOR,
-            outline=const.ROUNDED_PANELS_BORDER_COLOR,
-            width=1.5,
-            tags="rounded_bg"
-        )
-        widget.tag_lower("rounded_bg")
-    def resize_inner(self, widget, event=None):
-        w = widget.winfo_width()
-        h = widget.winfo_height()
-        widget.itemconfig("inner", width=w-40, height=h-40)
 
     def _build_tab_connect(self):
         # -TAB_CONNECT LAYOUTS
@@ -407,7 +336,6 @@ class MainApp:
             highlightthickness=0
         )
         self.canvas_rounded_window.grid(row=1, column=1, sticky="nsew", pady=10)
-        self.canvas_rounded_window.bind("<Configure>", self.draw_rounded(self.canvas_rounded_window))
         self.inner_frame = Frame(self.canvas_rounded_window, bg=const.ROUNDED_PANELS_COLOR)
         self.canvas_rounded_window.create_window(
             20, 20,
@@ -415,7 +343,7 @@ class MainApp:
             window=self.inner_frame,
             tags="inner"
         )
-        self.canvas_rounded_window.bind("<Configure>", lambda e: (self.draw_rounded(self.canvas_rounded_window, e), self.resize_inner(self.canvas_rounded_window,e)))
+        self.canvas_rounded_window.bind("<Configure>", lambda e: (draw_rounded(self.canvas_rounded_window, e), resize_inner(self.canvas_rounded_window, e)))
 
 
         self.connected_devices_ips_panel_borders = Canvas(
@@ -424,7 +352,6 @@ class MainApp:
             highlightthickness=0
         )
         self.connected_devices_ips_panel_borders.grid(row=1, column=2, sticky="nsew", pady=10)
-        self.connected_devices_ips_panel_borders.bind("<Configure>", self.draw_rounded(self.connected_devices_ips_panel_borders))
         self.ips_inner_frame = Frame(self.connected_devices_ips_panel_borders, bg=const.ROUNDED_PANELS_COLOR)
         self.connected_devices_ips_panel_borders.create_window(
             20, 20,
@@ -432,7 +359,7 @@ class MainApp:
             window=self.ips_inner_frame,
             tags="inner"
         )
-        self.connected_devices_ips_panel_borders.bind("<Configure>", lambda e: (self.draw_rounded(self.connected_devices_ips_panel_borders, e), self.resize_inner(self.connected_devices_ips_panel_borders,e)))
+        self.connected_devices_ips_panel_borders.bind("<Configure>", lambda e: (draw_rounded(self.connected_devices_ips_panel_borders, e), resize_inner(self.connected_devices_ips_panel_borders, e)))
 
         # -NMAP INPUT ROW
         self.nmap_input_row = Frame(self.inner_frame)
@@ -571,7 +498,7 @@ class MainApp:
         # CATCHING PANED WINDOW EVENT
         self.paned_window.bind("<B1-Motion>", self.changed_paned)
 
-        self.canvas_rounded_window.after(50, self.resize_inner(self.canvas_rounded_window))
+        self.canvas_rounded_window.after(50, resize_inner(self.canvas_rounded_window))
 
 
     def _build_tab_keyevents(self):
@@ -764,9 +691,9 @@ class MainApp:
 
 
     def close_window(self, event):
-        check_data = open_file(file_path)
+        check_data = open_file(paths.CONFIG_FILE_PATH)
         logging.debug(check_data)
-        write_file(self.file_path, check_data)
+        write_file(paths.CONFIG_FILE_PATH, check_data)
         if hasattr(self.checker, "nmap_brain"):
             self.checker.nmap_brain.stop_nmap()
         self.root.after(100, lambda: self.root.destroy())
@@ -810,13 +737,11 @@ class MainApp:
 
     def update_all_widgets(self, lang_code: str):
         logging.debug("UPDATE_ALL_WIDGETS")
-        default_path = os.path.dirname(os.path.abspath(__file__))
-        self.file_path = os.path.join(default_path, "check.json")
         global_state.current_lang = lang_code
-        check_data = open_file(self.file_path)
+        check_data = open_file(paths.CONFIG_FILE_PATH)
 
         check_data["choosen_language"] = lang_code
-        write_file(file_path, check_data)
+        write_file(paths.CONFIG_FILE_PATH, check_data)
 
         if self.my_settings is not None:
             self.my_settings.current_lang = lang_code
@@ -899,7 +824,7 @@ class MainApp:
     def update_path(self, new_path: str):
         self.found_path = new_path
         check_data["choosen_path_for_adb"] = self.found_path
-        write_file(file_path, check_data)
+        write_file(paths.CONFIG_FILE_PATH, check_data)
 
 
     def start_move(self, event):
@@ -1076,13 +1001,13 @@ class MainApp:
             if text not in global_state.choosen_ips:
                 global_state.choosen_ips.append(text)
 
-            write_file(file_path, self.check_data)
+            write_file(paths.CONFIG_FILE_PATH, self.check_data)
         else:
             for ip in global_state.choosen_ips:
                 if text == ip:
                     global_state.choosen_ips.remove(ip)
 
-            write_file(file_path, self.check_data)
+            write_file(paths.CONFIG_FILE_PATH, self.check_data)
             logging.debug("Not choosen")
 
         

@@ -1,8 +1,11 @@
-# UI adbez.py
+# UI adbez.py/tab_control.py
 TAB_W = 110  # Tab width in pixels
 TAB_H = 32  # Tab height in pixels
 TAB_GAP = 2  # Gap between tabs in pixels
 CATEGORY_COUNT = 8  # Maximum number of categories in the categories menu
+
+# UI (tab_control.py)
+TAB_R = 8  # Corner radius for the rounded tab shape
 
 # COLOR PALETTE (adbez.py)
 BG_COLOR = "#1e1e1e"  # Main background color
@@ -11,6 +14,13 @@ HEADER_BAR_COLOR = "#2d2d2d"  # Top headher bar background
 MENU_COLOR = "#2a2a2a"  # Dropdown menu background
 ROUNDED_PANELS_COLOR = "#292423"  # Inside color of rounded panels
 ROUNDED_PANELS_BORDER_COLOR = "#aaaaaa"  # Outline color of roundedn panels
+
+# COLOR PALETTE (tab_control)
+TAB_BG = "#2a2a3a"  # Background color for inactive/default tabs
+TAB_ACTIVE = "#6ec9a4"  # Color for the active/selected tab indicator line
+TAB_HOVER = "#3a3a4a"  # Background color when the mouse hovers over a tab
+TAB_FG = "#ffffff"  # Text (fg) color for the tab labels
+TAB_FONT = ("Segoe UI", 9)  # Font style and size used for the tab text
 
 # COLOR PALETTE (settings.py)
 S_BG = "#F0F2F5"  # Main background for ligth theme

@@ -6,6 +6,7 @@ import re
 import platform
 from tkinter import Button
 import logging
+import config.paths as paths
 from config.state import global_state
 from typing import TYPE_CHECKING
 from utils.file_utils import open_file, write_file, append_file
@@ -16,12 +17,6 @@ logging.basicConfig(
 )
 if TYPE_CHECKING:
     from adbez import MainApp
-
-
-
-default_path = os.path.dirname(os.path.abspath(__file__))
-main_path_py = os.path.join(default_path, "now_logs.txt")
-check_path = os.path.join(default_path, "check.json")
 
 
 
@@ -56,7 +51,7 @@ class NmapUi:
         )
         t = threading.Thread(target=self.brain.try_find, args=(self.tab1_input.get(),))
         t.start()
-        self.check_data = open_file(check_path)
+        self.check_data = open_file(paths.CONFIG_FILE_PATH)
         self.show_ui_things(self.tab1_input.get())
 
 
@@ -119,9 +114,9 @@ class NmapUi:
 
     def finished_nmap(self, test):
         logging.debug(f"finished_nmap: {test}")
-        check_data = open_file(check_path)
+        check_data = open_file(paths.CONFIG_FILE_PATH)
         global_state.founded_ips = self.brain.found_ips
-        write_file(check_path, check_data)
+        write_file(paths.CONFIG_FILE_PATH, check_data)
         logging.debug("[try_find]-File has been saved at: %s",
                       os.path.abspath("now_logs.txt"))
         self.brain.stopla = True
@@ -213,6 +208,12 @@ class NmapBrain:
         self.found_ips = []
 
     def try_find(self, ip: str | list):
+        if not ip:
+            logging.debug("IP list is none, returning...")
+            if self.on_finish:
+                self.on_finish(self)
+            return
+
         logging.debug(f"NMAP IP IS: {ip}")
         self.is_process_running = True
         full_command = ["nmap", "-sn", "-n"] + (ip if isinstance(ip, list) else [ip])
@@ -234,11 +235,11 @@ class NmapBrain:
             self.find_ips(full_output)
 
     def find_ips(self, logs: str) -> str:
-        if not os.path.exists(main_path_py):
-            open(main_path_py,"w").close()
+        if not os.path.exists(paths.LOG_FILE_PATH):
+            open(paths.LOG_FILE_PATH,"w").close()
         logging.debug(f"LOGS==== \n {logs}")
         full_output = logs
-        with open(fr"{main_path_py}", "r+", encoding="utf-8") as file:
+        with open(fr"{paths.LOG_FILE_PATH}", "r+", encoding="utf-8") as file:
             # content = file.read()
             file.seek(0)
             file.write(full_output)

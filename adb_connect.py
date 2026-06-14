@@ -3,13 +3,12 @@ import os
 import platform
 import subprocess
 import threading
+import config.paths as paths
 from config.state import global_state
 from tkinter import Checkbutton, Label, IntVar
 from utils.file_utils import open_file,write_file
 
 
-default_path = os.path.dirname(os.path.abspath(__file__))
-file_path = os.path.join(default_path, "check.json")
 
 class adb_connect:
     def __init__(self, app, on_finish=None):
@@ -83,12 +82,12 @@ class adb_connect:
                 )
                 logging.debug(f"Disconnected to {label_text}")
                 check_btn_ip.grid_forget()
-                check_data = open_file(file_path)
+                check_data = open_file(paths.CONFIG_FILE_PATH)
                 ip_to_remove = label_text.strip()
                 logging.debug(f"Deleting ip: {ip_to_remove}")
                 if ip_to_remove in check_data["connected_ips"]:
                     del check_data["connected_ips"][ip_to_remove]
-                write_file(file_path, check_data)
+                write_file(paths.CONFIG_FILE_PATH, check_data)
                 for i in connected_ips_list:
                     if i == label_text:
                         connected_ips_list.remove(i)
@@ -172,10 +171,10 @@ class adb_connect:
                 self._finish_process()
 
                 self.root.after(0, lambda: self.update_ui("Connected"))
-                check_data = open_file(file_path)
+                check_data = open_file(paths.CONFIG_FILE_PATH)
                 check_data["connected_ips"][self.writing] = "connected"
                 self.check_data["connected_ips"][self.writing] = "connected"
-                write_file(file_path, check_data)
+                write_file(paths.CONFIG_FILE_PATH, check_data)
                 self.test_counter += 1
                 adb_connect.create_checkbutton(
                     self.writing, self.root, self.check_btn_ip,

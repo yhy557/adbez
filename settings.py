@@ -9,6 +9,7 @@ import os
 from typing import TYPE_CHECKING
 from utils.file_utils import open_file, write_file
 import config.constants as const
+import config.paths as paths
 from config.state import global_state
 
 if TYPE_CHECKING:
@@ -46,9 +47,6 @@ class SettingsStyle:
         self.update_func = update_func
         self.auto_finder_func = auto_finder_func
         self.get_text = self.app.get_text
-
-        default_path = os.path.dirname(os.path.abspath(__file__))
-        self.file_path = os.path.join(default_path, "check.json")
 
 
         self.var = IntVar()
@@ -351,7 +349,7 @@ class SettingsStyle:
     
     def change_port_func(self, event):
         self.check_data["choosen_port"] = self.change_port_input.get()
-        write_file(self.file_path, self.check_data)
+        write_file(paths.CONFIG_FILE_PATH, self.check_data)
 
     def make_card(self, parent, title, name):
         outer = Frame(parent, bg=const.BORDER, padx=1, pady=1)
@@ -389,7 +387,7 @@ class SettingsStyle:
         logging.debug(f"auto_nmap_ip: {self.choose_auto_nmap_ip.get()}")
         self.check_data["choosen_nmap_ip"].append(self.choose_auto_nmap_ip.get())
         try:
-            write_file(self.file_path, self.check_data)
+            write_file(paths.CONFIG_FILE_PATH, self.check_data)
         except Exception as e:
             logging.debug(f"LOOK MTF {e}")
         self.choose_auto_nmap_ip.delete(0, 'end')
@@ -417,7 +415,7 @@ class SettingsStyle:
             self.choose_theme("SystemButtonFace", "black")
             self.choose_themeW("SystemButtonFace")
             logging.debug("the election was canceled")
-        write_file(self.file_path, self.check_data)
+        write_file(paths.CONFIG_FILE_PATH, self.check_data)
 
     def check_live_helper_is_on(self, *args):
         if self.live_helper_var.get() == 1:
@@ -425,7 +423,7 @@ class SettingsStyle:
             self.check["is_live_helper_on"] = True
         else:
             self.check["is_live_helper_on"] = False
-        write_file(self.file_path, self.check_data)  #check.json
+        write_file(paths.CONFIG_FILE_PATH, self.check_data)  #check.json
 
     def start_auto_nmap(self, *args):
         if self.auto_nmap_var.get() == 1:
@@ -442,7 +440,7 @@ class SettingsStyle:
             else:
                 pass
             logging.debug("PRESSED AUTO NMAP BUTTON CLOSED")
-        write_file(self.file_path, self.check_data)
+        write_file(paths.CONFIG_FILE_PATH, self.check_data)
 
     def _toggle(self, btn, var):
         if var.get() == 1:

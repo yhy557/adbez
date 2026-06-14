@@ -2,12 +2,13 @@ from tkinter import Button, Frame, Label
 import logging
 import subprocess
 import json
+from config.state import global_state
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - [%(levelname)s] - %(message)s',
     datefmt='%H:%M:%S'
 )
-from config.state import global_state
  
 class Buttons:
     def __init__(self, tab2_seperate_scroll_BTN, root, tab2_load_more_btn,
