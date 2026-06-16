@@ -7,10 +7,11 @@ import json
 import logging
 import os
 from typing import TYPE_CHECKING
-from utils.file_utils import open_file, write_file
 import config.constants as const
 import config.paths as paths
 from config.state import global_state
+from utils.file_utils import open_file, write_file
+from ui.widgets.tooltip import Tooltip
 
 if TYPE_CHECKING:
     from adbez import MainApp
@@ -237,14 +238,30 @@ class SettingsStyle:
         self.choose_auto_nmap_ip = Entry(
             self.auto_nmapF
         )
+        self.choose_auto_nmap_ip.config(bg="lightgray")
         self.choose_auto_nmap_ip.bind("<Return>", self.get_nmap_ip)
+        self.check_data = open_file(paths.CONFIG_FILE_PATH)
+        if not self.check_data["ui_flags"]["has_seen_entry_save_hint"]:
+            self.hint_tooltip = Tooltip(
+                widget=self.choose_auto_nmap_ip,
+                text="Please press Enter key to save",
+                enter_event="<FocusIn>",
+                leave_events=("<Return>",)
+            )
+            def on_first_focus_out(event):
+                self.check_data["ui_flags"]["has_seen_entry_save_hint"] = True
+                write_file(paths.CONFIG_FILE_PATH, self.check_data)
+                self.hint_tooltip.unregister()
+                self.choose_auto_nmap_ip.unbind("<FocusOut>", first_focus_out_id)
+            first_focus_out_id = self.choose_auto_nmap_ip.bind("<FocusOut>", on_first_focus_out, add="+")
+
         choose_path_btn.pack(side="right")
         choose_path_auto_finder.pack(side="right")
         self.choose_auto_nmap_btn.pack(side="right")
         choose_path_btn.bind("<Button-1>", self.choose_path)
         choose_path_auto_finder.bind("<Button-1>", self.auto_finder_adb)
 
-        self.menu_frame_lang, _lang_inner = app.scrollable_menu(self.tab_settings, max_height=100)
+        self.menu_frame_lang, _lang_inner = app.menu_manager.scrollable_menu(self.tab_settings, max_height=100)
         menu_frame_lang1 = Button(_lang_inner, text="English")
         menu_frame_lang2 = Button(_lang_inner, text="Turkce")
         menu_frame_lang3 = Button(_lang_inner, text="Português")
@@ -255,7 +272,7 @@ class SettingsStyle:
         self.lang_button.pack(side="right")
         self.lang_button.bind(
             "<Button-1>",
-            lambda event: app.open_menu(
+            lambda event: app.menu_manager.toggle_menu(
                 event, self.menu_frame_lang, self.lang_button, self.tab_settings
             )
         )
@@ -396,12 +413,14 @@ class SettingsStyle:
         self.root.after(1500, lambda: self.choose_auto_nmap_ip.configure(bg="white"))
         self.root.after(1500, lambda: self.choose_auto_nmap_ip.delete(0, 'end'))
 
-
     def auto_finder_adb(self, event):
         self.auto_finder_func()
         adb_path = self.check_data["choosen_path_for_adb"]
         self.root.after(
             1000, lambda: self.row_label2.configure(text=f"{self.get_text('l326')} ")
+        )
+        self.root.after(
+            1000, lambda: self.row_label2.configure(text=f"{self.get_text('l326')} {adb_path}")
         )
 
     def check_dark_theme_btn(self, *args):

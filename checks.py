@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from adbez import MainApp
 from utils.log_utils import auto_insert
+from utils.file_utils import write_file
 
 from adb_connect import adb_connect
 from config.state import global_state
@@ -54,7 +55,10 @@ class StartupCheck:
             "choosen_path_for_adb": {},
             "choosen_language": "en",
             "is_live_helper_on": False,
-            "is_auto_nmap_on": False
+            "is_auto_nmap_on": False,
+            "ui_flags": {
+                "has_seen_entry_save_hint": False
+            }
         }
         self.check_vars = {}
         if global_state.did_adb_work is not True:
@@ -131,11 +135,14 @@ class StartupCheck:
         """In here,we are checking auto nmap.The nmap_scan is starts If auto nmap is on"""
         target_ips = self.check_data.get("choosen_nmap_ip", [])
 
-        if not target_ips:
-            self.app.root.after(0, lambda: auto_insert(self.app.log_text, "end", "[Auto Nmap is terminated]- Choosen IPs are none"))
-            self.choose_auto_nmap_btn.config(text=self.get_text("l323"), bg="#2D2D2D", fg="white", relief="flat")
-            return
         if self.check_data["is_auto_nmap_on"]:
+            if not target_ips:
+                self.app.root.after(0, lambda: auto_insert(self.app.log_text, "end", "[Auto Nmap is terminated]- Choosen IPs are none"))
+                self.choose_auto_nmap_btn.config(text=self.get_text("l323"), bg="#2D2D2D", fg="white", relief="flat")
+                self.check_data["is_auto_nmap_on"] = False
+                write_file(paths.CONFIG_FILE_PATH, self.check_data)
+                
+                return
             # self.nmap_scan_instance = nmap_ui(app=app)
             self.nmap_brain = NmapBrain(
                 on_line=None,

@@ -23,6 +23,7 @@ from settings import SettingsStyle
 from tab_control import TabControl
 from utils.file_utils import open_file, write_file
 from ui.widgets.rounded_panel import draw_rounded, resize_inner
+from ui.widgets.dropdown_menu import MenuManager
 
 
 # SOME CONFIGURE FOR LOGGING
@@ -53,7 +54,10 @@ json_default_data = {
     "choosen_path_for_adb": {},
     "choosen_language": "en",
     "is_live_helper_on": False,
-    "is_auto_nmap_on": False
+    "is_auto_nmap_on": False,
+    "ui_flags": {
+        "has_seen_entry_save_hint": False
+    }
 }    
 
 
@@ -104,12 +108,15 @@ class MainApp:
 
         # MAIN PANEL
         self.root = Tk()
-        self.root.minsize(800, 350)
         self.root.title("AdbEz")
+        self.root.geometry("1000x700")
+        self.root.minsize(800, 350)
+
+        self.menu_manager = MenuManager(root=self.root)
+
         self.root.config(background="gray")
         self.root.bind("<Map>", self.on_deiconify)
         self.root.bind("<Button-1>", self.close_menus)
-        self.root.geometry("1000x700")
         self.root.overrideredirect(True)
         self.root.config(bg='#1e1e1e')
         self.root.rowconfigure(0, weight=1)
@@ -121,6 +128,8 @@ class MainApp:
         )
         # CATCHING SIZE OF THE WINDOW FOR IP MENU
         self.root.bind("<Configure>", self.catch_size)
+        # CATCHING ROOT BECAUSE OF THE ENTRY FOCUS SHITS
+        self.root.bind("<Button-1>", self._clear_focus, add="+")
 
         self._build_main_window()
         self.root.update_idletasks()
@@ -132,6 +141,7 @@ class MainApp:
         grip_canvas_left.place(relx=0.0, rely=0.01, anchor="w", x=1, y=(self.root.winfo_height()/2))
         grip_canvas_up.propagate(False)
         grip_canvas_left.propagate(False)
+
         def start_resize(event, direction):
             direction.start_x = self.root.winfo_x()
             direction.start_y = self.root.winfo_y()
@@ -244,6 +254,9 @@ class MainApp:
         if platform.system() == "Windows":
             show_in_taskbar(self.root)
 
+    def _clear_focus(self, event):
+            if not isinstance(event.widget, (Entry, Text)):
+                self.root.focus_set()
 
     def _build_main_window(self):
         # OUTER FRAME
@@ -392,7 +405,7 @@ class MainApp:
         self.menu_frame_in1 = Button(self.menu_frame, text="")
         menu_frame_in2 = Button(self.menu_frame, text="127.0.0.0/24")
         # ADB IP MENU
-        self.menu_frame_found,self.menu_frame_found_inner = self.scrollable_menu(
+        self.menu_frame_found,self.menu_frame_found_inner = self.menu_manager.scrollable_menu(
             self.upper_frame, max_height=50)
         self.log_text = Text(lower_frame, height=1)
 
@@ -474,7 +487,7 @@ class MainApp:
         # BUTTON EVENTS-----------------------------------------------
         self.tab1_choose_ip.bind(
             "<Button-1>",
-            lambda event: self.open_menu(
+            lambda event: self.menu_manager.toggle_menu(
                 event, self.menu_frame, self.tab1_choose_ip, self.tab_connect
             )
         )
@@ -483,7 +496,7 @@ class MainApp:
         self.tab1_connect_button.bind("<Button-1>", self.adb_router.connect)
         self.tab1_found_ip.bind(
             "<Button-1>",
-            lambda event: self.open_menu(
+            lambda event: self.menu_manager.toggle_menu(
                 event, self.menu_frame_found, self.tab1_found_ip, self.tab_connect
             )
         )
@@ -589,7 +602,7 @@ class MainApp:
                                     name="l309")
         self.tab2_category_button.bind(
             "<Button-1>",
-            lambda event: self.open_menu(
+            lambda event: self.menu_manager.toggle_menu(
                 event, menu_frame_category, self.tab2_category_button, self.tab_keyevents
             )
         )
@@ -919,60 +932,6 @@ class MainApp:
             if menus.winfo_viewable() and menus.winfo_exists():
                 logging.debug("All menus are closing")
                 menus.place_forget()
-
-    def scrollable_menu(self, parent, max_height=150):
-        max_width = 150
-        outer = Frame(parent, bg=const.MENU_COLOR, bd=1, relief="solid")
-        self.scrollable_menu_canvas = Canvas(outer, bg=const.MENU_COLOR, highlightthickness=0, height=1)
-        scrollbar = Scrollbar(outer, orient="vertical", command=self.scrollable_menu_canvas.yview, width=10)
-        inner = Frame(self.scrollable_menu_canvas, bg=const.MENU_COLOR)
-        
-        inner.bind("<Configure>", lambda e: (
-            self.scrollable_menu_canvas.configure(scrollregion=self.scrollable_menu_canvas.bbox("all")),
-            self.scrollable_menu_canvas.configure(
-                height=min(inner.winfo_reqheight(), max_height), 
-                width=min(inner.winfo_reqwidth(), max_width)
-            )
-        ) if e.widget == inner else None)
-        self.scrollable_menu_canvas.create_window((0, 0), window=inner, anchor="nw")
-        self.scrollable_menu_canvas.configure(yscrollcommand=scrollbar.set, width=inner.winfo_reqwidth())
-
-        self.scrollable_menu_canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-        
-        self.scrollable_menu_canvas.bind("<MouseWheel>", lambda e: self.scrollable_menu_canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
-        self.scrollable_menu_canvas.bind("<Button-4>", lambda e: self.scrollable_menu_canvas.yview_scroll(-1, "units"))
-        self.scrollable_menu_canvas.bind("<Button-5>", lambda e: self.scrollable_menu_canvas.yview_scroll(1, "units"))
-        
-        return outer, inner
-
-    def open_menu(self, event, frame, choosen_button, selected_tab):
-        logging.debug(f"{choosen_button} is opening")
-        self.root.update_idletasks()
-        if frame.winfo_viewable():
-            frame.place_forget()
-            logging.debug(f"{frame} is deleted")
-            return
-        button_x = choosen_button.winfo_rootx()
-        button_y = choosen_button.winfo_rooty()
-        button_xp = selected_tab.winfo_rootx()
-        button_yp = selected_tab.winfo_rooty()
-
-        logging.debug(f"Real screen: {button_x}, {button_y}")
-        logging.debug(f"This window: {button_xp}, {button_yp}")
-        try:
-            frame.place(x=(button_x - button_xp),
-                        y=(button_y - button_yp) + choosen_button.winfo_height(), anchor="nw")
-            children = frame.winfo_children()
-            if children and not isinstance(children[0], Canvas):
-                for child in children:
-                    child.pack(fill="x")
-            frame.lift()
-            self.root.update_idletasks()
-            now_x, now_y = frame.winfo_rootx(), frame.winfo_rooty()
-            logging.debug(f"Created found menu at: {now_x, now_y}")
-        except Exception as e:
-            logging.error("[E]Menu can't be created: %s", e)
 
 
     # IP MENU EVENTS
