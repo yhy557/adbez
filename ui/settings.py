@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 class SettingsStyle:
     def __init__(self, app: 'MainApp', check_data, data, update_func, auto_finder_func):
-        from nmap_scan import NmapBrain
+        from core.nmap_scan import NmapBrain
 
         self.app = app
         self.check_data = check_data

@@ -7,15 +7,15 @@ import shutil
 import socket
 import threading
 import config.paths as paths
-from nmap_scan import NmapBrain,NmapUi
-from settings import SettingsStyle
+from core.nmap_scan import NmapBrain,NmapUi
+from ui.settings import SettingsStyle
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from adbez import MainApp
 from utils.log_utils import auto_insert
 from utils.file_utils import write_file
 
-from adb_connect import adb_connect
+from core.adb_connect import adb_connect
 from config.state import global_state
 logging.basicConfig(
     level=logging.INFO,

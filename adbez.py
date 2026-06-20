@@ -12,15 +12,15 @@ from tkinter import font
 from tkinter import ttk
 import tkinter as tk
 # MY FILES
-import adb_connect as adbc
-import checks as appchecks
-import nmap_scan as nmaps
+import core.adb_connect as adbc
+import core.checks as appchecks
+import core.nmap_scan as nmaps
 import config.constants as const
 import config.paths as paths
 from config.state import global_state
-from scroll_buttons import Buttons
-from settings import SettingsStyle
-from tab_control import TabControl
+from ui.widgets.scroll_buttons import Buttons
+from ui.settings import SettingsStyle
+from ui.tab_control import TabControl
 from utils.file_utils import open_file, write_file
 from ui.widgets.rounded_panel import draw_rounded, resize_inner
 from ui.widgets.dropdown_menu import MenuManager
@@ -334,6 +334,7 @@ class MainApp:
 
     def _build_tab_connect(self):
         # -TAB_CONNECT LAYOUTS
+
         self.paned_window = PanedWindow(self.tab_connect, orient="vertical", bd=1,
                                 relief="sunken", sashwidth=4,
                                 sashrelief="sunken", background="black")
@@ -406,7 +407,7 @@ class MainApp:
         menu_frame_in2 = Button(self.menu_frame, text="127.0.0.0/24")
         # ADB IP MENU
         self.menu_frame_found,self.menu_frame_found_inner = self.menu_manager.scrollable_menu(
-            self.upper_frame, max_height=50)
+            self.upper_frame, max_height=125)
         self.log_text = Text(lower_frame, height=1)
 
         # DEFINITION

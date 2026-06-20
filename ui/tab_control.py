@@ -1,6 +1,6 @@
 import logging
 import config.constants as const
-from scroll_buttons import Buttons
+from ui.widgets.scroll_buttons import Buttons
 
 class TabControl:
     def __init__(self, _tab_canvas, _tabs, all_menu, btn_instance, canvas2, tab2_seperate_scroll_BTN, _content_frame):
