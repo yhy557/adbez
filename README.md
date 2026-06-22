@@ -30,7 +30,8 @@ pip install -r requirements.txt
 python adbez.py
 ```
 
-<img width="600" alt="Image" src="https://github.com/user-attachments/assets/a2348db8-e1c7-41e1-a8a5-64cfbe47af73" />
+<img width="600" alt="Image" src="https://github.com/user-attachments/assets/e5dd2962-0af1-4d92-bee9-4598fccb7b60" />
+
 
 ### Input keyevents tab
 
