@@ -1,14 +1,17 @@
 from tkinter import (Label, Button, Frame, Canvas,
                      Scrollbar, Entry,
                      Text, Checkbutton, IntVar, Variable,
-                     filedialog, )
+                     filedialog, Toplevel, )
 from tkinter import ttk
 import json
 import logging
 import os
-from typing import TYPE_CHECKING
+import subprocess
+import sys
 import config.constants as const
 import config.paths as paths
+from typing import TYPE_CHECKING
+from ui.windows.monitor_window import SystemMonitorGUI
 from config.state import global_state
 from utils.file_utils import open_file, write_file
 from ui.widgets.tooltip import Tooltip
@@ -215,6 +218,21 @@ class SettingsStyle:
             pady=4,
             bd=0
         )
+        self.open_process_monitor_btn = Button(
+            self.background_processF,
+            text=self.get_text("l339"),
+            name="l339",
+            font=const.FONT,
+            bg=const.BTN_BG,
+            fg=const.BTN_FG,
+            activebackground=const.BTN_ACT,
+            activeforeground=const.BTN_FG,
+            relief="flat",
+            cursor="hand2",
+            padx=12,
+            pady=4,
+            bd=0
+        )
         self.choose_auto_nmap_btn = Button(
             self.auto_nmapF,
             text=self.get_text("l324") if self.auto_nmap_var.get() == 1 else self.get_text("l323"),
@@ -257,9 +275,11 @@ class SettingsStyle:
 
         choose_path_btn.pack(side="right")
         choose_path_auto_finder.pack(side="right")
+        self.open_process_monitor_btn.pack(side="right")
         self.choose_auto_nmap_btn.pack(side="right")
         choose_path_btn.bind("<Button-1>", self.choose_path)
         choose_path_auto_finder.bind("<Button-1>", self.auto_finder_adb)
+        self.open_process_monitor_btn.bind("<Button-1>", self.launch_process_monitor)
 
         self.menu_frame_lang, _lang_inner = app.menu_manager.scrollable_menu(self.tab_settings, max_height=100)
         menu_frame_lang1 = Button(_lang_inner, text="English")
@@ -412,6 +432,10 @@ class SettingsStyle:
         self.choose_auto_nmap_ip.configure(bg="lightgreen")
         self.root.after(1500, lambda: self.choose_auto_nmap_ip.configure(bg="white"))
         self.root.after(1500, lambda: self.choose_auto_nmap_ip.delete(0, 'end'))
+
+    def launch_process_monitor(self, event):
+        monitor_window = Toplevel(self.root)
+        SystemMonitorGUI(monitor_window)
 
     def auto_finder_adb(self, event):
         self.auto_finder_func()

@@ -5,6 +5,7 @@ import subprocess
 import threading
 import config.paths as paths
 from config.state import global_state
+from core.process import registry
 from tkinter import Checkbutton, Label, IntVar
 from utils.file_utils import open_file,write_file
 
@@ -16,6 +17,7 @@ class adb_connect:
         self.root = app.root
         self.tab1_label_failed2 = app.tab1_label_failed2
         self.found_path = app.found_path
+        
         self.tab1_stop_adb = app.tab1_stop_adb
         self.connected_devices_ips = app.connected_devices_ips
         self.update_ui = app.update_ui
@@ -75,11 +77,7 @@ class adb_connect:
         background_color = upper_frame.cget("background")
         try:
             if found_path and isinstance(found_path, str):
-                subprocess.Popen(
-                    [found_path, "disconnect", label_text],
-                    stdout=subprocess.PIPE,
-                    text=True
-                )
+                registry.start([found_path, "disconnect", label_text])
                 logging.debug(f"Disconnected to {label_text}")
                 check_btn_ip.grid_forget()
                 check_data = open_file(paths.CONFIG_FILE_PATH)
@@ -239,16 +237,15 @@ class adb_connect:
             return
         self.stopla2 = False
         self.is_process_running = False
-        try:
-            self.current_process_adb = subprocess.Popen(
-                [self.found_path, "connect", self.writing],
-                stdout=subprocess.PIPE,
-                text=True,
-                startupinfo=si
-            )
-            self.test_show_status()
-        except Exception as e:
-            logging.debug(f"[try_connect]-Can't start adb connect: {e}")
+        if not self.found_path:
+            logging.debug(f"[adb_connect] Found path is none = {self.found_path}")
+        else:
+            try:
+                logging.debug(f"[adb_connect-2]FOUND_PATH IS = {repr(self.found_path)}")
+                self.current_process_adb = registry.start([self.found_path, "connect", self.writing])
+                self.test_show_status()
+            except Exception as e:
+                logging.debug(f"[try_connect]-Can't start adb connect: {e}")
 
     def stop_adb(self, event=None):
         system_os = platform.system()

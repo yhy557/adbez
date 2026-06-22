@@ -20,6 +20,16 @@
         "l18": {"text": "Connected"},
         "l19": {"text": "Disconnect"},
         "l20": {"text": "Connected IPs"},
+        "keyevents":{
+            "Navigation": {},
+            "Media_Audio": {},
+            "Keyboard": {},
+            "Editing": {},
+            "System_Power": {},
+            "TV_RemoteControl": {},
+            "AppShortcuts": {},
+            "Other": {}
+        },
         "l21": {"text": "It simulates a press of the soft left key (KEYCODE_SOFT_LEFT) on your device", "keyevent": 1},
         "l22": {"text": "It simulates a press of the soft right key.", "keyevent": 2},
         "l23": {"text": "It simulates a press of the Home button", "keyevent": 3},
@@ -337,7 +347,8 @@
         "l335": {"text": "All processes"},
         "l336": {"text": "View the logs for all operations running in the application"},
         "l337": {"text": "Languages"},
-        "l338": {"text": "Select a language"}
+        "l338": {"text": "Select a language"},
+        "l339": {"text": "Open Process Monitor"}
     },
     "tr": {
         "l1": {"text": "Bazı gerekli ayarlar kontrol ediliyor..."},
@@ -677,7 +688,8 @@
         "l335": {"text": "Bütün işlemler"},
         "l336": {"text": "Uygulamada çalışan bütün işlemlerin loglarını görün"},
         "l337": {"text": "Diller"},
-        "l338": {"text": "Bir dil seçin"}
+        "l338": {"text": "Bir dil seçin"},
+        "l339": {"text": "İşlem izleyiciyi açın"}
     },
     "pt": {
         "l1": {"text": "Algumas verificações estão sendo processadas..."},
@@ -1017,6 +1029,7 @@
         "l335": {"text": "All processes"},
         "l336": {"text": "View the logs for all operations running in the application"},
         "l337": {"text": "Languages"},
-        "l338": {"text": "Select a language"}
+        "l338": {"text": "Select a language"},
+        "l339": {"text": "Open Process Monitor"}
     }
 }

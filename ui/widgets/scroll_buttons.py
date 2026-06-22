@@ -3,6 +3,8 @@ import logging
 import subprocess
 import json
 from config.state import global_state
+import config.paths as paths
+from utils.file_utils import open_file
 
 logging.basicConfig(
     level=logging.INFO,
@@ -28,6 +30,8 @@ class Buttons:
         self.search = search
         self.check_data = check_data
         self.tab2_log_box = tab2_log_box
+
+        self.lang_json_data = open_file(paths.LANG_FILE_PATH)
  
         self.keyevents_buttons = []
         self.keyevents_labels = []
@@ -110,6 +114,7 @@ class Buttons:
         count = category_sizes[text]
  
         for z in range(0, count):
+            # json_key=f"l{self.lang_json_data[]}"
             json_key=f"l{z+21}"
             row_frame = Frame(self.tab2_seperate_scroll_BTN, bg="#292423")
             row_frame.grid(sticky="ew")

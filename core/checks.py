@@ -52,7 +52,7 @@ class StartupCheck:
             "theme": {},
             "choosen_nmap_ip": [],
             "choosen_port": "5555",
-            "choosen_path_for_adb": {},
+            "choosen_path_for_adb": "",
             "choosen_language": "en",
             "is_live_helper_on": False,
             "is_auto_nmap_on": False,
@@ -223,9 +223,10 @@ class StartupCheck:
         for path in tries:
             if os.path.exists(path):
                 self.found_path = path
+                logging.debug(f"[try_find_adb-1] Found path is = {self.found_path}")
 
         if self.found_path:
-            logging.debug("Found: %s", self.found_path)
+            logging.debug("[try_find_adb-2]Found: %s", self.found_path)
             global_state.did_adb_work = True
             self.check_data["choosen_path_for_adb"] = self.found_path
             with open(paths.CONFIG_FILE_PATH, "w", encoding="utf-8") as f:
@@ -233,5 +234,5 @@ class StartupCheck:
         else:
             logging.warning("Not found")
 
-        logging.debug(f"Found path = \n {self.found_path}")
+        logging.debug(f"[try_find_adb-3]Found path = \n {self.found_path}")
 

@@ -8,6 +8,7 @@ from tkinter import Button
 import logging
 import config.paths as paths
 from config.state import global_state
+from core.process import registry
 from typing import TYPE_CHECKING
 from utils.file_utils import open_file, write_file, append_file
 logging.basicConfig(
@@ -17,7 +18,6 @@ logging.basicConfig(
 )
 if TYPE_CHECKING:
     from adbez import MainApp
-
 
 
 class NmapUi:
@@ -217,9 +217,7 @@ class NmapBrain:
         logging.debug(f"NMAP IP IS: {ip}")
         self.is_process_running = True
         full_command = ["nmap", "-sn", "-n"] + (ip if isinstance(ip, list) else [ip])
-        self.current_process = subprocess.Popen(
-            full_command, shell=False, stdout=subprocess.PIPE, text=True
-        )
+        self.current_process = registry.start(full_command)
 
         full_output = ""
         while True:
@@ -261,35 +259,12 @@ class NmapBrain:
         self.stopla = True
 
     def stop_nmap(self):
-        if self.current_process:
-            system_os = platform.system()
-            try:
-                if system_os == "Windows":
-                    startupinfo = subprocess.STARTUPINFO()
-                    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        if registry.remove(self.current_process.pid):
+            self.stopla = True
 
-                    subprocess.call(
-                        [
-                            'taskkill', '/F', '/T', '/PID',
-                            str(self.current_process.pid)
-                        ],
-                        startupinfo=startupinfo
-                    )
-                else:
-                    import signal
-                    try:
-                        os.kill(self.current_process.pid, signal.SIGTERM)
-                        self.current_process.wait(1)
-                    except subprocess.TimeoutExpired:
-                        logging.debug("[stop_nmap]-The process is resisting, so it will be killed directly...")
-                        os.kill(self.current_process.pid, signal.SIGKILL)
-
-                self.stopla = True
-            except Exception as e:
-                logging.debug(
-                    f"[stop_nmap]-Nmap scan is can't terminated: {e}")
-            if self.on_finish:
-                self.on_finish(self)
+        if self.on_finish:
+            self.on_finish(self)
+        
 
 
 #FOR FUTURE USE:

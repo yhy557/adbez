@@ -51,7 +51,7 @@ json_default_data = {
     "theme": {},
     "choosen_nmap_ip": [],
     "choosen_port": "5555",
-    "choosen_path_for_adb": {},
+    "choosen_path_for_adb": "",
     "choosen_language": "en",
     "is_live_helper_on": False,
     "is_auto_nmap_on": False,
@@ -837,6 +837,7 @@ class MainApp:
 
     def update_path(self, new_path: str):
         self.found_path = new_path
+        logging.debug(f"[update_path]FOUND PATH ISSSSSSSSSSSSS= {self.found_path}")
         check_data["choosen_path_for_adb"] = self.found_path
         write_file(paths.CONFIG_FILE_PATH, check_data)
 
