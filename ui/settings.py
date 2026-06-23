@@ -52,6 +52,8 @@ class SettingsStyle:
         self.auto_finder_func = auto_finder_func
         self.get_text = self.app.get_text
 
+        self.monitor_window = None
+
 
         self.var = IntVar()
         self.live_helper_var = IntVar()
@@ -434,8 +436,12 @@ class SettingsStyle:
         self.root.after(1500, lambda: self.choose_auto_nmap_ip.delete(0, 'end'))
 
     def launch_process_monitor(self, event):
-        monitor_window = Toplevel(self.root)
-        SystemMonitorGUI(monitor_window)
+        if self.monitor_window is None or not self.monitor_window.winfo_exists():
+            self.monitor_window = Toplevel(self.root)
+            SystemMonitorGUI(self.monitor_window)
+        else:
+            self.monitor_window.lift()
+            self.monitor_window.focus_force()
 
     def auto_finder_adb(self, event):
         self.auto_finder_func()

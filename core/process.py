@@ -62,7 +62,7 @@ class ProcessRegistry:
         try:
             for pid, data in list(self.processes.items()):
                 process_obj = data["object"]
-                stats[pid] = {"ram": process_obj.memory_info().rss/1024**2, "cpu": process_obj.cpu_percent()}
+                stats[pid] = {"name": process_obj.name(), "ram": process_obj.memory_info().rss/1024**2, "cpu": process_obj.cpu_percent()}
         except (psutil.NoSuchProcess, psutil.AccessDenied) as e:
             logging.error(f"Get stats is stopped = {e}")
         return stats
