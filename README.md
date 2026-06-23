@@ -41,6 +41,7 @@ python adbez.py
 <img width="600" alt="Image" src="https://github.com/user-attachments/assets/f02a83a9-4bdc-4814-896a-48d07bbeaae3" />
 
 ### Processs Monitor
-<img width="600" alt="image" src="https://github.com/user-attachments/assets/b230134d-1d37-4d61-9f78-53bd10bc4c66" />
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/6ce0d3b4-a258-4210-990a-c5ba7e2b5e9f" />
+
 
 *Portugese translation by:* **[@FetoyuDev](https://github.com/FetoyuDev)**
