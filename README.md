@@ -38,7 +38,7 @@ python adbez.py
   </tr>
   <tr>
     <td><img src="https://github.com/user-attachments/assets/e5dd2962-0af1-4d92-bee9-4598fccb7b60" width="400"></td>
-    <td><img src="https://github.com/user-attachments/assets/e67598f5-0730-45e0-a9b6-ff868ff89776" width="400"></td>
+    <td><img src="https://github.com/user-attachments/assets/40fbd4de-911b-4be7-87a7-0bf3b6a60d4d" width="400"></td>
   </tr>
   
   <tr>
