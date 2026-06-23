@@ -33,7 +33,7 @@ python adbez.py
 
 <table>
   <tr>
-    <td align="center"><b>Main tab/b></td>
+    <td align="center"><b>Main tab</b></td>
     <td align="center"><b>Input Keyevents tab</b></td>
   </tr>
   <tr>
