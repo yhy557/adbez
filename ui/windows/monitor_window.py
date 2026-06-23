@@ -178,10 +178,10 @@ class SystemMonitorGUI:
         self.stats_frame = tk.Frame(self.search_bar, bg="#f8f9fa")
         self.stats_frame.pack(side="right", fill="y")
         
-        self.cpu_icon = tk.Label(self.stats_frame, text="⚙ CPU: 100.0%", font=("Segoe UI", 10, "bold"), fg="#212529", bg="#f8f9fa")
+        self.cpu_icon = tk.Label(self.stats_frame, text="CPU: 0.0%", font=("Segoe UI", 10, "bold"), fg="#212529", bg="#f8f9fa")
         self.cpu_icon.pack(side="left", padx=15)
         
-        self.mem_icon = tk.Label(self.stats_frame, text="💾 Mem: 6.8 GB", font=("Segoe UI", 10, "bold"), fg="#212529", bg="#f8f9fa")
+        self.mem_icon = tk.Label(self.stats_frame, text="Mem: 0.0 MB", font=("Segoe UI", 10, "bold"), fg="#212529", bg="#f8f9fa")
         self.mem_icon.pack(side="left", padx=15)
         
         self.table_header = tk.Frame(self.main_area, bg="#f8f9fa", height=30)
@@ -390,6 +390,12 @@ class SystemMonitorGUI:
 
     def insert_data(self):
         stats = registry.get_stats()
+
+        total_ram = sum(data["ram"] for data in stats.values())
+        total_cpu = sum(data["cpu"] for data in stats.values())
+
+        self.mem_icon.config(text=f"Mem: {total_ram:.1f} MB")
+        self.cpu_icon.config(text=f"CPU: {total_cpu:.1f}%")
 
         for pid, data in stats.items():
             name = data["name"]

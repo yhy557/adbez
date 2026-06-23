@@ -20,34 +20,35 @@ class ProcessRegistry:
         return process
 
     def remove(self, process_pid):
-        if process_pid:
-            system_os = platform.system()
-            try:
-                if system_os == "Windows":
-                    startupinfo = subprocess.STARTUPINFO()
-                    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        if process_pid not in self.processes:
+            return False
+        system_os = platform.system()
+        try:
+            if system_os == "Windows":
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
-                    subprocess.call(
-                        [
-                            'taskkill', '/F', '/T', '/PID',
-                            str(process_pid)
-                        ],
-                        startupinfo=startupinfo
-                    )
-                else:
-                    import signal
-                    try:
-                        os.kill(process_pid, signal.SIGTERM)
-                        self.processes[process_pid]["object"].wait(1)
-                    except subprocess.TimeoutExpired:
-                        logging.debug("[stop_nmap]-The process is resisting, so it will be killed directly...")
-                        os.kill(process_pid, signal.SIGKILL)
-                self.processes.pop(process_pid, None)
-                return True
-            except Exception as e:
-                logging.debug(
-                    f"[stop_nmap]-Nmap scan is can't terminated: {e}")
-                return False
+                subprocess.call(
+                    [
+                        'taskkill', '/F', '/T', '/PID',
+                        str(process_pid)
+                    ],
+                    startupinfo=startupinfo
+                )
+            else:
+                import signal
+                try:
+                    os.kill(process_pid, signal.SIGTERM)
+                    self.processes[process_pid]["object"].wait(1)
+                except subprocess.TimeoutExpired:
+                    logging.debug("[stop_nmap]-The process is resisting, so it will be killed directly...")
+                    os.kill(process_pid, signal.SIGKILL)
+            self.processes.pop(process_pid, None)
+            return True
+        except Exception as e:
+            logging.debug(
+                f"[stop_nmap]-Nmap scan is can't terminated: {e}")
+            return False
 
 
     def get(self):

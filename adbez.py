@@ -18,6 +18,8 @@ import core.nmap_scan as nmaps
 import config.constants as const
 import config.paths as paths
 from config.state import global_state
+from core.process import registry
+from concurrent.futures import ThreadPoolExecutor
 from ui.widgets.scroll_buttons import Buttons
 from ui.settings import SettingsStyle
 from ui.tab_control import TabControl
@@ -705,6 +707,11 @@ class MainApp:
 
 
     def close_window(self, event):
+        pids = list(registry.processes.keys())
+        if pids:
+            with ThreadPoolExecutor(max_workers=len(pids)) as executor:
+                executor.map(registry.remove, pids)
+
         check_data = open_file(paths.CONFIG_FILE_PATH)
         logging.debug(check_data)
         write_file(paths.CONFIG_FILE_PATH, check_data)
@@ -997,21 +1004,20 @@ class NmapRouter:
     def __init__(self, app):
         self.app = app
         self.active_nmap = None
-        self.active_nmap_list = []
 
     def scan(self, event=None):
         instance = nmaps.NmapUi(
             self.app,
-            on_finish=lambda inst: self.active_nmap_list.remove(inst)
-                      if inst in self.active_nmap_list else None
+            on_finish=lambda inst: global_state.active_nmap_list.remove(inst)
+                      if inst in global_state.active_nmap_list else None
         )
-        self.active_nmap_list.append(instance)
+        global_state.active_nmap_list.append(instance)
 
 
     def stop_nmap_event(self, event):
-        logging.debug(f"active_nmap_list= {self.active_nmap_list}")
-        if self.active_nmap_list:
-            self.active_nmap_list[0].stop_nmap_ui()
+        logging.debug(f"active_nmap_list= {global_state.active_nmap_list}")
+        if global_state.active_nmap_list:
+            global_state.active_nmap_list[-1].stop_nmap_ui()
 
 
 if __name__ == "__main__":

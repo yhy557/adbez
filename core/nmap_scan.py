@@ -142,6 +142,8 @@ class NmapUi:
             self.root.after(
                 0,
                 lambda: self.settings_instance.apply_button_style(self.root))
+        if self.on_finish:
+            self.on_finish(self)
         return
 
     def scanning_animation(self, count: int = 0) -> None:
@@ -257,8 +259,11 @@ class NmapBrain:
     def finished_nmap(self):
         logging.debug(f"[write_found_ips]-IPs ===  {self.found_ips}")
         self.stopla = True
+        
 
     def stop_nmap(self):
+        if self.stopla:
+            return
         if registry.remove(self.current_process.pid):
             self.stopla = True
 

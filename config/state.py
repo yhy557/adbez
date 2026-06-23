@@ -13,6 +13,7 @@ class AppState:
     active_processes: list = field(default_factory=list)
     button_references: list = field(default_factory=list)
     active_adb_list: list = field(default_factory=list)
+    active_nmap_list: list = field(default_factory=list)
     current_lang: str = "en"
     current_theme: str = ""
 
