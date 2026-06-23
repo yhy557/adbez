@@ -30,6 +30,8 @@ pip install -r requirements.txt
 python adbez.py
 ```
 
+<img width="600" alt="Image" src="https://github.com/user-attachments/assets/e5dd2962-0af1-4d92-bee9-4598fccb7b60" />
+
 <table>
   <tr>
     <td align="center"><b>Main tab/b></td>
