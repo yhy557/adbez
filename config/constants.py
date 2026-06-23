@@ -12,8 +12,8 @@ BG_COLOR = "#1e1e1e"  # Main background color
 BORDER_COLOR = "#3d3d3d"  # Panel borders
 HEADER_BAR_COLOR = "#2d2d2d"  # Top headher bar background
 MENU_COLOR = "#2a2a2a"  # Dropdown menu background
-ROUNDED_PANELS_COLOR = "#292423"  # Inside color of rounded panels
-ROUNDED_PANELS_BORDER_COLOR = "#aaaaaa"  # Outline color of roundedn panels
+ROUNDED_PANELS_COLOR = "#16161e"  # Inside color of rounded panels
+ROUNDED_PANELS_BORDER_COLOR = "#2e2e42"  # Outline color of roundedn panels
 
 # COLOR PALETTE (tab_control)
 TAB_BG = "#2a2a3a"  # Background color for inactive/default tabs

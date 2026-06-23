@@ -341,7 +341,13 @@ class MainApp:
                                 relief="sunken", sashwidth=4,
                                 sashrelief="sunken", background="black")
         self.paned_window.pack(fill="both", expand=True)
-        self.upper_frame = Frame(self.paned_window)
+
+        self.upper_frame = Frame(self.paned_window, bg="#292423")
+        self.upper_frame.rowconfigure(1, weight=1)
+        self.upper_frame.rowconfigure(2, weight=1)
+        self.upper_frame.columnconfigure(1, weight=1)
+        self.upper_frame.columnconfigure(2, weight=1)
+
         self.paned_window.add(self.upper_frame, minsize=300)
         lower_frame = Frame(self.paned_window, background="black")
         self.paned_window.add(lower_frame, minsize=50)
@@ -353,13 +359,31 @@ class MainApp:
         )
         self.canvas_rounded_window.grid(row=1, column=1, sticky="nsew", pady=10)
         self.inner_frame = Frame(self.canvas_rounded_window, bg=const.ROUNDED_PANELS_COLOR)
+        self.inner_frame.columnconfigure(0, weight=1)
+        self.inner_frame.rowconfigure(2, weight=1)
         self.canvas_rounded_window.create_window(
-            20, 20,
+            20, 10,
             anchor="nw",
             window=self.inner_frame,
             tags="inner"
         )
         self.canvas_rounded_window.bind("<Configure>", lambda e: (draw_rounded(self.canvas_rounded_window, e), resize_inner(self.canvas_rounded_window, e)))
+        
+        self.canvas_rounded_window_adb = Canvas(
+            self.upper_frame,
+            bg=self.upper_frame.cget("bg"),
+            highlightthickness=0
+        )
+        self.canvas_rounded_window_adb.grid(row=2, column=1, sticky="nsew", pady=5)
+        self.inner_frame_adb = Frame(self.canvas_rounded_window_adb, bg=const.ROUNDED_PANELS_COLOR)
+        self.inner_frame_adb.columnconfigure(0, weight=1)
+        self.canvas_rounded_window_adb.create_window(
+            10, 10,
+            anchor="nw",
+            window=self.inner_frame_adb,
+            tags="inner"
+        )
+        self.canvas_rounded_window_adb.bind("<Configure>", lambda e: (draw_rounded(self.canvas_rounded_window_adb, e), resize_inner(self.canvas_rounded_window_adb, e)))
 
 
         self.connected_devices_ips_panel_borders = Canvas(
@@ -367,10 +391,10 @@ class MainApp:
             bg=self.upper_frame.cget("bg"),
             highlightthickness=0
         )
-        self.connected_devices_ips_panel_borders.grid(row=1, column=2, sticky="nsew", pady=10)
+        self.connected_devices_ips_panel_borders.grid(row=1, column=2, sticky="nsew", padx=5, pady=10, rowspan=2)
         self.ips_inner_frame = Frame(self.connected_devices_ips_panel_borders, bg=const.ROUNDED_PANELS_COLOR)
         self.connected_devices_ips_panel_borders.create_window(
-            20, 20,
+            20, 10,
             anchor="nw",
             window=self.ips_inner_frame,
             tags="inner"
@@ -378,24 +402,32 @@ class MainApp:
         self.connected_devices_ips_panel_borders.bind("<Configure>", lambda e: (draw_rounded(self.connected_devices_ips_panel_borders, e), resize_inner(self.connected_devices_ips_panel_borders, e)))
 
         # -NMAP INPUT ROW
-        self.nmap_input_row = Frame(self.inner_frame)
-        self.nmap_input_row.grid(row=0, column=0, sticky="ew", padx=(10))
+        self.nmap_input_row = Frame(self.inner_frame, bg=const.ROUNDED_PANELS_COLOR)
+        self.nmap_choose_btn_row = Frame(self.inner_frame, bg=const.ROUNDED_PANELS_COLOR)
+        self.nmap_input_row.grid(row=1, column=0, sticky="ew", padx=(10))
+        self.nmap_choose_btn_row.grid(row=1, column=1, sticky="ew")
+        self.nmap_input_row.columnconfigure(0, weight=0)
         self.nmap_input_row.columnconfigure(1, minsize=300)
         self.nmap_input_row.columnconfigure(0, weight=0)
         self.nmap_input_row.columnconfigure(1, weight=1)
         self.nmap_input_row.columnconfigure(2, weight=0)
+        
+        
         # -ADB INPUT ROW
-        self.adb_input_row = Frame(self.inner_frame)
-        self.adb_btn_container = Frame(self.inner_frame)
-        self.adb_btn_container.grid(row=3, column=0, sticky="n")
-        self.adb_input_row.grid(row=2, column=0, sticky="ew", padx=(10))
+        self.adb_input_row = Frame(self.inner_frame_adb)
+        self.adb_found_btn_row = Frame(self.inner_frame_adb, bg=const.ROUNDED_PANELS_COLOR)
+        self.adb_btn_container = Frame(self.inner_frame_adb, bg=const.ROUNDED_PANELS_COLOR)
+        self.adb_btn_container.grid(row=2, column=0, sticky="n")
+        self.adb_input_row.grid(row=1, column=0, sticky="ew", padx=(10))
+        self.adb_found_btn_row.grid(row=1, column=1, sticky="n")
 
         self.adb_input_row.columnconfigure(0, weight=0)
         self.adb_input_row.columnconfigure(1, weight=1)
         self.adb_input_row.columnconfigure(2, weight=0)
+        self.adb_input_row.columnconfigure(3, weight=0)
         # -NMAP BUTTON ROW
-        self.nmap_btn_container = Frame(self.inner_frame)
-        self.nmap_btn_container.grid(row=1, column=0, sticky="n")
+        self.nmap_btn_container = Frame(self.inner_frame, bg=const.ROUNDED_PANELS_COLOR)
+        self.nmap_btn_container.grid(row=2, column=0, sticky="n")
         self.nmap_btn_container.columnconfigure(0, weight=0)
         self.nmap_btn_container.columnconfigure(1, weight=0)
 
@@ -413,12 +445,12 @@ class MainApp:
         self.log_text = Text(lower_frame, height=1)
 
         # DEFINITION
-        self.tab1_label = Label(self.inner_frame, text=self.get_text("l3"), name="l3")
-        self.tab1_input = Entry(self.nmap_input_row, font="bold")
+        self.tab1_label = Label(self.inner_frame, text=self.get_text("l3"), name="l3", bg=const.ROUNDED_PANELS_COLOR)
+        self.tab1_input = Entry(self.nmap_input_row, font="bold", bg=const.ROUNDED_PANELS_COLOR)
         self.tab1_nmap_button = Button(
             self.nmap_btn_container, text=self.get_text("l4"), name="l4"
         )
-        self.tab1_label2 = Label(self.inner_frame, text=self.get_text("l5"), name="l5")
+        self.adb_main_label = Label(self.inner_frame_adb, text=self.get_text("l5"), name="l5")
         self.tab1_input2 = Entry(self.adb_input_row, font="bold")
         self.tab1_connect_button = Button(
             self.adb_btn_container, text=self.get_text("l6"), name="l6"
@@ -428,7 +460,7 @@ class MainApp:
         tab1_disconnect_button = Button(
             self.adb_btn_container, text=self.get_text("l19"), name="l19"
         )
-        tab1_disconnect_button.grid(row=1, column=0)
+        tab1_disconnect_button.grid(row=0, column=2)
         tab1_disconnect_button.bind("<Button-1>", lambda e: adbc.adb_connect.disconnect_ip(
             self.tab1_input2, self.found_path, check_data, self.connected_devices_ips, self.upper_frame,
             self.root, self.check_btn_ip, self.checkbutton_map
@@ -456,24 +488,24 @@ class MainApp:
         # SO WE WILL CREATE OUR OWN MENU
         # tab1_choose_ip = ttk.Menubutton(nmap_input_row, text="Choose")
         self.tab1_choose_ip = Button(
-            self.nmap_input_row, text=self.get_text("l13"),
+            self.nmap_choose_btn_row, text=self.get_text("l13"),
             name="l13", takefocus=False, width=10, cursor="hand2"
         )
         self.tab1_found_ip = Button(
-            self.adb_input_row, text=self.get_text("l14"), name="l14", takefocus=False,
+            self.adb_found_btn_row, text=self.get_text("l14"), name="l14", takefocus=False,
             cursor="hand2"
         )
 
         # self.tab1_label.grid(row=0, column=0, sticky="n", pady=(0, 72), padx=(0, 285))
-        self.tab1_label.grid(row=0, column=0, sticky="n", pady=(0, 72))
-        self.tab1_input.grid(row=0, column=1, sticky="ew", pady=(0, 10))
-        self.tab1_choose_ip.grid(row=0, column=2, sticky="we", padx=(15, 0), pady=(0, 10))
+        self.tab1_label.grid(row=0, column=0, sticky="n")
+        self.tab1_input.grid(row=0, column=1, sticky="ew")
+        self.tab1_choose_ip.grid(row=0, column=2, sticky="ew")
         self.tab1_nmap_button.grid(row=0, column=0, sticky="ew")
 
-        # self.tab1_label2.grid(row=2, column=0, sticky="n", pady=(0,62), padx=(0, 295))
-        self.tab1_label2.grid(row=2, column=0, sticky="n", pady=(0,62))
+        # self.adb_main_label.grid(row=2, column=0, sticky="n", pady=(0,62), padx=(0, 295))
+        self.adb_main_label.grid(row=0, column=0, sticky="n")
         self.tab1_input2.grid(row=0, column=1, sticky="ew")
-        self.tab1_found_ip.grid(row=0, column=2, sticky="ew", padx=(15, 0))
+        self.tab1_found_ip.grid(row=0, column=3, sticky="ew", padx=(15, 0))
         self.tab1_connect_button.grid(row=0, column=0, sticky="ew", padx=(5, 0))
         self.log_text.pack(fill="both", expand=True)
 

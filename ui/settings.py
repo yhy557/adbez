@@ -37,7 +37,7 @@ class SettingsStyle:
         self.adb_input_row = self.app.adb_input_row
         self.adb_btn_container = self.app.adb_btn_container
         self.tab1_label = self.app.tab1_label
-        self.tab1_label2 = self.app.tab1_label2
+        self.adb_main_label = self.app.adb_main_label
         self.log_text = self.app.log_text
         self.tab1_input = self.app.tab1_input
         self.tab1_input2 = self.app.tab1_input2
@@ -564,7 +564,7 @@ class SettingsStyle:
         self.adb_btn_container.config(bg=color)
         self.nmap_btn_container.configure(bg=color)
         self.tab1_label.config(bg=color, fg=fg_color)
-        self.tab1_label2.config(bg=color, fg=fg_color)
+        self.adb_main_label.config(bg=color, fg=fg_color)
         self.log_text.configure(bg=color, fg=fg_color)
         self.settings_main_frame.config(bg=color)
         self.settings_style_frame.config(bg=color)
@@ -575,7 +575,7 @@ class SettingsStyle:
     def choose_themeW(self, color):
         self.paned_window.config(bg="black")
         self.tab1_label.config(bg=color, fg="black")
-        self.tab1_label2.config(bg=color, fg="black")
+        self.adb_main_label.config(bg=color, fg="black")
         self.tab1_input.config(bg=color)
         self.tab1_input2.config(bg=color)
 
