@@ -30,17 +30,26 @@ pip install -r requirements.txt
 python adbez.py
 ```
 
-<img width="600" alt="Image" src="https://github.com/user-attachments/assets/e5dd2962-0af1-4d92-bee9-4598fccb7b60" />
 
+<table>
+  <tr>
+    <td align="center"><b>Main tab</b></td>
+    <td align="center"><b>Input Keyevents tab</b></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/e5dd2962-0af1-4d92-bee9-4598fccb7b60" width="400"></td>
+    <td><img src="https://github.com/user-attachments/assets/e67598f5-0730-45e0-a9b6-ff868ff89776" width="400"></td>
+  </tr>
+  
+  <tr>
+    <td align="center"><b>Settings tab</b></td>
+    <td align="center"><b>Process Monitor</b></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/f02a83a9-4bdc-4814-896a-48d07bbeaae3" width="400"></td>
+    <td><img src="https://github.com/user-attachments/assets/6ce0d3b4-a258-4210-990a-c5ba7e2b5e9f" width="400"></td>
+  </tr>
+</table>
 
-### Input keyevents tab
-
-<img width="600" alt="Image" src="https://github.com/user-attachments/assets/e67598f5-0730-45e0-a9b6-ff868ff89776" />
-
-### Settings tab
-<img width="600" alt="Image" src="https://github.com/user-attachments/assets/f02a83a9-4bdc-4814-896a-48d07bbeaae3" />
-
-### Processs Monitor
-<img width="600" alt="image" src="https://github.com/user-attachments/assets/b230134d-1d37-4d61-9f78-53bd10bc4c66" />
 
 *Portugese translation by:* **[@FetoyuDev](https://github.com/FetoyuDev)**
