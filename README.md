@@ -37,7 +37,7 @@ python adbez.py
     <td align="center"><b>Input Keyevents tab</b></td>
   </tr>
   <tr>
-    <td><img src="https://github.com/user-attachments/assets/4e62727e-19d7-45b5-9346-52e9dcfe6e89" width="400/></td>
+    <td><img src="https://github.com/user-attachments/assets/4e62727e-19d7-45b5-9346-52e9dcfe6e89" width="400"/></td>
     <td><img src="https://github.com/user-attachments/assets/40fbd4de-911b-4be7-87a7-0bf3b6a60d4d" width="400"></td>
   </tr>
   
