@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 from utils.log_utils import auto_insert
 from utils.file_utils import write_file
 
-from core.adb_connect import adb_connect
+from core.adb_connect import AdbUi
 from config.state import global_state
 logging.basicConfig(
     level=logging.INFO,
@@ -161,15 +161,14 @@ class StartupCheck:
         self.app.root.after(0, lambda: auto_insert(self.app.log_text, "end", "[Auto Nmap is finished]"))
 
     def _load_connected_ips(self):
-        """In here, we are loading last saved connected_ips"""
         json_ip = self.check_data["connected_ips"]
         self.connected_devicesips.configure(text="\n".join(json_ip.keys()))
         if len(self.check_data["connected_ips"]) > 0:
             for writing in self.check_data["connected_ips"]:
-                adb_connect.create_checkbutton(
+                AdbUi.create_checkbutton(
                     writing, self.app.root, self.app.check_btn_ip,
                     self.app.checkbutton_map, self.app.check_vars,
-                    self.check_data, self.app.check_event
+                    self.app.check_event
                 )
 
     def _apply_theme(self):

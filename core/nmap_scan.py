@@ -10,6 +10,7 @@ import config.paths as paths
 from config.state import global_state
 from core.process import registry
 from typing import TYPE_CHECKING
+from ui.widgets.IpsListCard import MakeIpCard
 from utils.file_utils import open_file, write_file, append_file
 logging.basicConfig(
     level=logging.INFO,
@@ -18,6 +19,7 @@ logging.basicConfig(
 )
 if TYPE_CHECKING:
     from adbez import MainApp
+
 
 
 class NmapUi:
@@ -40,9 +42,6 @@ class NmapUi:
         self.current_ip_has_adb = False
         self.is_process_running = False
 
-
-        logging.debug(
-            f"button_references type: {type(global_state.button_references)}")
 
         self.brain = NmapBrain(
             on_line = lambda line: self.root.after(0, lambda: self.update_ui(line)),
@@ -98,19 +97,14 @@ class NmapUi:
 
     def add_ips_in_menu(self, ip: str):
         logging.debug("[add_ips_in_menu]-Clicked")
-        active_buttons = self.app.menu_frame_found_inner.winfo_children()
+        """active_buttons = make_ip_card.main_frame.winfo_children()
         for widget in active_buttons:
             if isinstance(widget, Button) and widget.cget("text") == str(ip):
-                return
-        new_button = Button(self.app.menu_frame_found_inner, text=f"{ip}")
-        new_button.pack(fill="x")
-        new_button.bind(
-            "<Button-1>",
-            lambda event, ip=ip: self.found_enter_choosed_ip(event, ip)
-        )
-
-        global_state.button_references.append(new_button)
-        logging.debug(f"[add_ips_in_menu]-found ips: {new_button}")
+                return"""
+        if ip in global_state.created_card_ips:
+            return
+        MakeIpCard(self.app.inner_frame_ips_list, ip)
+        logging.debug(f"[add_ips_in_menu]-found ips: {ip}")
 
     def finished_nmap(self, test):
         logging.debug(f"finished_nmap: {test}")
@@ -164,7 +158,7 @@ class NmapUi:
             self.log_text.insert("1.0", "Status: Scanning Completed")
             self.log_text.config(state="disabled")
             return
-    
+
     def stop_nmap_ui(self):
         self.brain.stop_nmap()
         if len(global_state.active_processes) == 0:
@@ -182,7 +176,7 @@ class NmapUi:
             global_state.shared_nmap_processes.remove(self.my_process_btn)
 
             self.root.after(0, lambda: self.my_process_btn.destroy())
-    
+
     def show_close_proccess(self, event):
         self.brain.stop_nmap()
 
@@ -218,7 +212,7 @@ class NmapBrain:
 
         logging.debug(f"NMAP IP IS: {ip}")
         self.is_process_running = True
-        full_command = ["nmap", "-sn", "-n"] + (ip if isinstance(ip, list) else [ip])
+        full_command = ["nmap", "-unprivileged", "-sT"] + (ip if isinstance(ip, list) else [ip])
         self.current_process = registry.start(full_command)
 
         full_output = ""
@@ -255,11 +249,11 @@ class NmapBrain:
         if self.on_finish:
             self.on_finish(self)
         return self.found_ips
-    
+
     def finished_nmap(self):
         logging.debug(f"[write_found_ips]-IPs ===  {self.found_ips}")
         self.stopla = True
-        
+
 
     def stop_nmap(self):
         if self.stopla:

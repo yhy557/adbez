@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from tkinter import (Toplevel, Label, Button, Tk, PanedWindow,
                      Frame, Canvas, Scrollbar, Y, Entry,
-                     Text, Checkbutton)
+                     Text, Checkbutton, IntVar)
 from tkinter import font
 from tkinter import ttk
 import tkinter as tk
@@ -20,6 +20,7 @@ import config.paths as paths
 from config.state import global_state
 from core.process import registry
 from concurrent.futures import ThreadPoolExecutor
+from ui.widgets.scrollbar import SmoothScrollbar
 from ui.widgets.scroll_buttons import Buttons
 from ui.settings import SettingsStyle
 from ui.tab_control import TabControl
@@ -89,10 +90,10 @@ if platform.system() == "Windows":
 
 class MainApp:
     def __init__(self):
-        self.nmap_router = NmapRouter(self)
-        self.adb_router = AdbRouter(self)
         self.found_path = check_data["choosen_path_for_adb"]
         self.check_data = check_data
+        self.adb_router = AdbRouter(self)
+        self.nmap_router = NmapRouter(self)
 
         self.checkbutton_map = {}
         self.check_vars = {}
@@ -101,7 +102,7 @@ class MainApp:
         self._tab_canvas = None
         self._content_frame = None
 
-        self._tabs = {}   # key -> {frame, text_id, bg_tag, lang_key}
+        self._tabs = {}
         self.load_clicked = 0
         self.test_counter = 0
 
@@ -311,11 +312,37 @@ class MainApp:
         _tab_bar = Frame(frm, bg="#1e1e1e")
         _tab_bar.pack(fill="x", pady=(0, 4))
 
+        horizontal_scrollbar_frame = Frame(frm, height=10)
+        horizontal_scrollbar_frame.pack_propagate(False)
+        horizontal_scrollbar_frame.pack(fill="x")
+
         self._content_frame = Frame(frm, bg="#1e1e1e")
         self._content_frame.pack(fill="both", expand=True)
 
         self._tab_canvas = Canvas(
-            _tab_bar, bg="#1e1e1e", height=const.TAB_H, highlightthickness=0)
+            _tab_bar, bg="#1e1e1e", height=const.TAB_H, highlightthickness=0
+        )
+
+        #----------------------------------------------------------
+
+        """self.scrollbar_horizontal = Scrollbar(
+            horizontal_scrollbar_frame,orient="horizontal",
+            bg="black",
+            troughcolor="#123321",
+            activebackground="#123321",
+            bd=0
+        )
+        self.scrollbar_horizontal.pack(fill="both", expand=True)"""
+        # This freaking tkinter Scrollbar doesn't have features i want so i will create a custom scrollbar(ui/widget/scrollbar.py)
+
+        h_scrollbar = SmoothScrollbar(
+            horizontal_scrollbar_frame,
+            command=self._tab_canvas.xview,
+            orient="horizontal"
+        )
+        h_scrollbar.pack(fill="x", expand=True)
+        self._tab_canvas.configure(xscrollcommand=h_scrollbar.set)
+        #----------------------------------------------------------
 
         _scroll_left = Button(_tab_bar, text="◀", bg="#1e1e1e", fg="white", bd=0,
                             activebackground="#2a2a3a", width=2,
@@ -368,23 +395,6 @@ class MainApp:
             tags="inner"
         )
         self.canvas_rounded_window.bind("<Configure>", lambda e: (draw_rounded(self.canvas_rounded_window, e), resize_inner(self.canvas_rounded_window, e)))
-        
-        self.canvas_rounded_window_adb = Canvas(
-            self.upper_frame,
-            bg=self.upper_frame.cget("bg"),
-            highlightthickness=0
-        )
-        self.canvas_rounded_window_adb.grid(row=2, column=1, sticky="nsew", pady=5)
-        self.inner_frame_adb = Frame(self.canvas_rounded_window_adb, bg=const.ROUNDED_PANELS_COLOR)
-        self.inner_frame_adb.columnconfigure(0, weight=1)
-        self.canvas_rounded_window_adb.create_window(
-            10, 10,
-            anchor="nw",
-            window=self.inner_frame_adb,
-            tags="inner"
-        )
-        self.canvas_rounded_window_adb.bind("<Configure>", lambda e: (draw_rounded(self.canvas_rounded_window_adb, e), resize_inner(self.canvas_rounded_window_adb, e)))
-
 
         self.connected_devices_ips_panel_borders = Canvas(
             self.upper_frame,
@@ -401,6 +411,9 @@ class MainApp:
         )
         self.connected_devices_ips_panel_borders.bind("<Configure>", lambda e: (draw_rounded(self.connected_devices_ips_panel_borders, e), resize_inner(self.connected_devices_ips_panel_borders, e)))
 
+        self.ips_inner_frame.rowconfigure(3, weight=1)
+        self.ips_inner_frame.columnconfigure(0, weight=1)
+
         # -NMAP INPUT ROW
         self.nmap_input_row = Frame(self.inner_frame, bg=const.ROUNDED_PANELS_COLOR)
         self.nmap_choose_btn_row = Frame(self.inner_frame, bg=const.ROUNDED_PANELS_COLOR)
@@ -414,22 +427,46 @@ class MainApp:
         
         
         # -ADB INPUT ROW
-        self.adb_input_row = Frame(self.inner_frame_adb)
-        self.adb_found_btn_row = Frame(self.inner_frame_adb, bg=const.ROUNDED_PANELS_COLOR)
-        self.adb_btn_container = Frame(self.inner_frame_adb, bg=const.ROUNDED_PANELS_COLOR)
-        self.adb_btn_container.grid(row=2, column=0, sticky="n")
-        self.adb_input_row.grid(row=1, column=0, sticky="ew", padx=(10))
-        self.adb_found_btn_row.grid(row=1, column=1, sticky="n")
+        self.adb_input_row = Frame(self.ips_inner_frame)
+        self.adb_btn_container = Frame(self.ips_inner_frame, bg="red")
+        # -CONNECTED DEVICES LABEL
+        self.connected_devices_label = Label(self.ips_inner_frame, text=self.get_text("l14"), bg=const.ROUNDED_PANELS_COLOR, name="l14")
+
+        self.connected_devices_label.grid(row=0, column=0, columnspan=2, sticky="n", pady=(5,0))
+        self.adb_input_row.grid(row=1, column=0, sticky="ew", padx=(5))
+        self.adb_btn_container.grid(row=2, column=0, sticky="nsew", columnspan=2, padx=10, pady=5)
+        # -CONNECTED DEVICES IPS FRAME
+        self.ips_list_frame = Frame(self.ips_inner_frame, bg=const.ROUNDED_PANELS_COLOR)
+        self.ips_list_frame.grid(row=3, column=0, sticky="nsew", padx=10, pady=5)
+
+        self.ips_list_frame.columnconfigure(0, weight=1)
+        self.ips_list_frame.rowconfigure(0, weight=1)
+        self.ips_list_frame.rowconfigure(1, weight=1)
 
         self.adb_input_row.columnconfigure(0, weight=0)
         self.adb_input_row.columnconfigure(1, weight=1)
-        self.adb_input_row.columnconfigure(2, weight=0)
-        self.adb_input_row.columnconfigure(3, weight=0)
         # -NMAP BUTTON ROW
         self.nmap_btn_container = Frame(self.inner_frame, bg=const.ROUNDED_PANELS_COLOR)
         self.nmap_btn_container.grid(row=2, column=0, sticky="n")
         self.nmap_btn_container.columnconfigure(0, weight=0)
         self.nmap_btn_container.columnconfigure(1, weight=0)
+        
+        self.ips_list_rounded_window = Canvas(
+            self.ips_list_frame,
+            bg=const.ROUNDED_PANELS_COLOR,
+            highlightthickness=0
+        )
+        self.ips_list_rounded_window.grid(row=0, column=0, sticky="nsew", pady=10)
+        self.inner_frame_ips_list = Frame(self.ips_list_rounded_window, bg=const.ROUNDED_PANELS_COLOR)
+        self.inner_frame_ips_list.columnconfigure(0, weight=1)
+        self.inner_frame_ips_list.rowconfigure(2, weight=1)
+        self.ips_list_rounded_window.create_window(
+            20, 10,
+            anchor="nw",
+            window=self.inner_frame_ips_list,
+            tags="inner"
+        )
+        self.ips_list_rounded_window.bind("<Configure>", lambda e: (draw_rounded(self.ips_list_rounded_window, e), resize_inner(self.ips_list_rounded_window, e)))
 
         self.ongoing_processes = ttk.Frame(self.upper_frame)
         connected_container = ttk.Frame(self.upper_frame)
@@ -450,7 +487,7 @@ class MainApp:
         self.tab1_nmap_button = Button(
             self.nmap_btn_container, text=self.get_text("l4"), name="l4"
         )
-        self.adb_main_label = Label(self.inner_frame_adb, text=self.get_text("l5"), name="l5")
+        self.adb_main_label = Label(self.ips_inner_frame, text=self.get_text("l5"), name="l5")
         self.tab1_input2 = Entry(self.adb_input_row, font="bold")
         self.tab1_connect_button = Button(
             self.adb_btn_container, text=self.get_text("l6"), name="l6"
@@ -460,11 +497,8 @@ class MainApp:
         tab1_disconnect_button = Button(
             self.adb_btn_container, text=self.get_text("l19"), name="l19"
         )
-        tab1_disconnect_button.grid(row=0, column=2)
-        tab1_disconnect_button.bind("<Button-1>", lambda e: adbc.adb_connect.disconnect_ip(
-            self.tab1_input2, self.found_path, check_data, self.connected_devices_ips, self.upper_frame,
-            self.root, self.check_btn_ip, self.checkbutton_map
-        ))
+        tab1_disconnect_button.grid(row=0, column=1, sticky="w")
+        tab1_disconnect_button.bind("<Button-1>", self.adb_router.disconnect)
 
         processes_lists_text = Label(
             self.ongoing_processes,
@@ -491,10 +525,10 @@ class MainApp:
             self.nmap_choose_btn_row, text=self.get_text("l13"),
             name="l13", takefocus=False, width=10, cursor="hand2"
         )
-        self.tab1_found_ip = Button(
+        """self.tab1_found_ip = Button(
             self.adb_found_btn_row, text=self.get_text("l14"), name="l14", takefocus=False,
             cursor="hand2"
-        )
+        )"""
 
         # self.tab1_label.grid(row=0, column=0, sticky="n", pady=(0, 72), padx=(0, 285))
         self.tab1_label.grid(row=0, column=0, sticky="n")
@@ -505,8 +539,8 @@ class MainApp:
         # self.adb_main_label.grid(row=2, column=0, sticky="n", pady=(0,62), padx=(0, 295))
         self.adb_main_label.grid(row=0, column=0, sticky="n")
         self.tab1_input2.grid(row=0, column=1, sticky="ew")
-        self.tab1_found_ip.grid(row=0, column=3, sticky="ew", padx=(15, 0))
-        self.tab1_connect_button.grid(row=0, column=0, sticky="ew", padx=(5, 0))
+        """self.tab1_found_ip.grid(row=0, column=3, sticky="ew", padx=(15, 0))"""
+        self.tab1_connect_button.grid(row=0, column=0, sticky="w")
         self.log_text.pack(fill="both", expand=True)
 
         # STOP NMAP-ADB BUTTON
@@ -529,12 +563,12 @@ class MainApp:
 
         self.tab1_nmap_button.bind("<Button-1>", self.nmap_router.scan)
         self.tab1_connect_button.bind("<Button-1>", self.adb_router.connect)
-        self.tab1_found_ip.bind(
+        """self.tab1_found_ip.bind(
             "<Button-1>",
             lambda event: self.menu_manager.toggle_menu(
                 event, self.menu_frame_found, self.tab1_found_ip, self.tab_connect
             )
-        )
+        )"""
         # nmap ip menu events
         self.menu_frame_in1.bind("<Button-1>", self.enter_choosed_ip)
         menu_frame_in2.bind("<Button-1>", self.enter_choosed_ip)
@@ -966,7 +1000,7 @@ class MainApp:
 
 
     def close_menus(self, event):
-        dont_close = [self.tab1_choose_ip, self.tab1_found_ip, self.tab2_category_button, self.my_settings.lang_button]
+        dont_close = [self.tab1_choose_ip, self.tab2_category_button, self.my_settings.lang_button]
         if event.widget in dont_close or isinstance(event.widget, Scrollbar):
             return
         for menus in self.all_menu:
@@ -1016,20 +1050,64 @@ class MainApp:
 class AdbRouter:
     def __init__(self, app):
         self.app = app
-        # TO ACCESS THE FUNCTIONS WITHIN THE CLASS-
-        self.active_adb = None
-
+        self.brain = adbc.AdbConnectBrain(adb_path=app.found_path)
 
     def connect(self, event):
-        instance = adbc.adb_connect(
+        self.brain.adb_path = self.app.found_path
+        instance = adbc.AdbUi(
             self.app,
-            on_finish=lambda inst: global_state.active_adb_list.remove(inst) if inst in global_state.active_adb_list else None
+            on_finish=lambda inst: global_state.active_adb_list.remove(inst)
+                      if inst in global_state.active_adb_list else None
         )
         global_state.active_adb_list.append(instance)
 
     def stop_adb_event(self, event):
         if global_state.active_adb_list:
-            global_state.active_adb_list[0].stop_adb()
+            global_state.active_adb_list[0].brain.stop_connect()
+
+    def disconnect(self, event):
+        written = self.app.tab1_input2.get().strip()
+        if not written:
+            written_list = global_state.adb_connect_choosen_ips
+            for ips in written_list:
+                ip = ips
+                self.brain.adb_path = self.app.found_path
+                self.brain.disconnect_ip(ip)
+                self._cleanup_ui(ip)
+        else:
+            ip = written if ":" in written else written.partition(":")[0]
+            self.brain.adb_path = self.app.found_path
+            self.brain.disconnect_ip(ip)
+            self._cleanup_ui(ip)
+
+    def _cleanup_ui(self, ip):
+        app = self.app
+        app.root.update_idletasks()
+
+        if ip in app.checkbutton_map:
+            app.checkbutton_map[ip].destroy()
+            del app.checkbutton_map[ip]
+
+        connected_ips_text = app.connected_devices_ips.cget("text")
+        connected_ips_list = connected_ips_text.split()
+        background_color = app.upper_frame.cget("background")
+
+        app.check_btn_ip.grid_forget()
+
+        check_data = open_file(paths.CONFIG_FILE_PATH)
+        if ip in check_data["connected_ips"]:
+            del check_data["connected_ips"][ip]
+        write_file(paths.CONFIG_FILE_PATH, check_data)
+
+        for i in connected_ips_list:
+            if i == ip:
+                connected_ips_list.remove(i)
+                new_text = "\n".join(connected_ips_list)
+                app.root.update_idletasks()
+                app.connected_devices_ips.configure(text=new_text)
+
+        if app.connected_devices_ips.cget("text") == "":
+            app.connected_devices_ips.configure(background=background_color)
 
 
 class NmapRouter:

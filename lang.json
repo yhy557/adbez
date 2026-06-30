@@ -348,7 +348,8 @@
         "l336": {"text": "View the logs for all operations running in the application"},
         "l337": {"text": "Languages"},
         "l338": {"text": "Select a language"},
-        "l339": {"text": "Open Process Monitor"}
+        "l339": {"text": "Open Process Monitor"},
+        "l340": {"text": "Not Connected"}
     },
     "tr": {
         "l1": {"text": "Bazı gerekli ayarlar kontrol ediliyor..."},
@@ -689,7 +690,8 @@
         "l336": {"text": "Uygulamada çalışan bütün işlemlerin loglarını görün"},
         "l337": {"text": "Diller"},
         "l338": {"text": "Bir dil seçin"},
-        "l339": {"text": "İşlem izleyiciyi açın"}
+        "l339": {"text": "İşlem izleyiciyi açın"},
+        "l340": {"text": "Bağlanılmadı"}
     },
     "pt": {
         "l1": {"text": "Algumas verificações estão sendo processadas..."},
@@ -1030,6 +1032,7 @@
         "l336": {"text": "View the logs for all operations running in the application"},
         "l337": {"text": "Languages"},
         "l338": {"text": "Select a language"},
-        "l339": {"text": "Open Process Monitor"}
+        "l339": {"text": "Open Process Monitor"},
+        "l340": {"text": "Not Connected"}
     }
 }
